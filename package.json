@@ -8,14 +8,17 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run lint && npm run typecheck && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run build",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "lucide-react": "^1.28.0",
     "next": "16.2.12",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-server-dom-webpack": "^19.3.0",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.6.0"
   },
@@ -24,9 +27,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-rsc": "^0.5.35",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vinext": "^0.0.7",
+    "vite": "^7.3.6"
+  },
+  "type": "module"
 }

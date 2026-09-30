@@ -40,7 +40,9 @@ export function usePersistentState<T>(key: string, initialValue: T) {
   }, [initialValue, snapshot]);
 
   const setValue = useCallback((next: SetStateAction<T>) => {
-    const nextValue = typeof next === "function" ? (next as (current: T) => T)(value) : next;
+    let current = value;
+    try { current = JSON.parse(getSnapshot()) as T; } catch { /* Retain the last valid state. */ }
+    const nextValue = typeof next === "function" ? (next as (current: T) => T)(current) : next;
     const nextSnapshot = JSON.stringify(nextValue);
     memorySnapshots.set(key, nextSnapshot);
     try {
@@ -49,7 +51,7 @@ export function usePersistentState<T>(key: string, initialValue: T) {
       // El estado continúa disponible en memoria durante esta sesión.
     }
     window.dispatchEvent(new CustomEvent(storageEvent, { detail: key }));
-  }, [key, value]);
+  }, [getSnapshot, key, value]);
 
   return [value, setValue] as const;
 }

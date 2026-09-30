@@ -1,0 +1,74 @@
+/* PULSO — a calm, editorial training workspace. */
+:root { --background:#f5f6f2; --text-primary:#19241e; --text-secondary:#59685e; --text-muted:#728076; --accent:#b4ee48; --accent-bright:#c8fa6f; --accent-dark:#edf6db; --border:#dfe5dc; --shadow-card:0 5px 20px #24332205; }
+body { background:var(--background); }
+.page-container { max-width:1240px; padding:0 24px 120px; }
+.page-stack { gap:30px; padding-top:32px; }
+.page-header { padding:10px 0 0; }
+.page-header h1 { font-size:clamp(32px,5vw,48px); font-weight:650; letter-spacing:-.055em; line-height:1.12; }
+.page-subtitle { font-size:14px; line-height:1.7; max-width:650px; }
+.eyebrow { font-size:11px; color:#4a6c29; }
+.wordmark { font-size:25px; letter-spacing:-.055em; }
+.wordmark span,.nav-brand span { color:#6cb51b; }
+.header-date { color:var(--text-secondary); font-size:12px; }
+.avatar { width:42px; height:42px; background:#e3eddb; color:#34552b; box-shadow:none; border:1px solid #cddcc2; }
+.button { min-height:50px; border-radius:14px; font-size:14px; box-shadow:none; }
+.button-primary { background:var(--accent); color:#203013; }
+.button-primary:hover { background:var(--accent-bright); }
+.icon-button { box-shadow:none; flex-shrink:0; }
+.section-header h2 { font-size:22px; font-weight:650; letter-spacing:-.04em; }
+.section-header a { font-size:12px; color:#526b3d; }
+.hero-copy { padding:32px; border-radius:26px; background:#20372b; box-shadow:none; min-height:230px; }
+.hero-intro h1 { font-size:clamp(42px,6vw,64px); line-height:1.06; font-weight:550; letter-spacing:-.065em; }
+.hero-intro h1 em { display:inline; font-style:normal; white-space:normal; }
+.hero-intro p { font-size:11px; letter-spacing:.12em; }
+.hero-intro>span { font-size:15px; color:#c6d6c7; }
+.hero-progress { width:128px; height:128px; box-shadow:none; }
+.hero-progress:before { background:#20372b; inset:6px; }
+.hero-progress strong { font-size:35px; }
+.hero-progress span,.hero-progress small { font-size:9px; }
+.hero-breakdown { background:transparent; border:0; border-top:1px solid #ffffff24; border-radius:0; padding:16px 0 0; }
+.hero-breakdown span { font-size:12px; }
+.hero-breakdown .pending { background:transparent; }
+.daily-note { padding:20px 24px; border:1px solid #d9e6c8; background:#eef5e5; border-radius:18px; box-shadow:none; }
+.daily-note p { font-size:14px; line-height:1.65; }
+.daily-note small { font-size:10px; color:#41632c; }
+.personal-plan { border-radius:18px; padding:22px; box-shadow:none; }
+.personal-plan small { font-size:10px; }.personal-plan strong { font-size:17px; }.personal-plan span { font-size:12px; line-height:1.5; }
+.personal-plan button { min-height:44px; font-size:12px; }
+.metric-card { border-radius:20px; padding:24px; background:#fff; min-height:190px; box-shadow:none; }
+.metric-card>p { font-size:13px; margin-top:16px; }.metric-card strong { font-size:34px; }.metric-card>span { font-size:12px; }.metric-card strong small { font-size:14px; }
+.metric-card:hover,.weight-card:hover,.workout-feature:hover { transform:none; }
+.weight-card { border-radius:20px; background:#fff; box-shadow:none; padding:24px; }
+.weight-card strong { font-size:36px; }.weight-card p { color:#486b32; }
+.workout-feature { display:grid; grid-template-columns:1fr; border-radius:24px; box-shadow:none; }
+.workout-visual { height:300px; min-height:0; }
+.workout-visual img { object-fit:cover; object-position:center 45%; }
+.workout-visual>span { background:#20372be8; font-size:10px; color:white; }
+.workout-copy { padding:25px; }.workout-copy h3 { font-size:29px; font-weight:650; }.workout-description { font-size:14px; line-height:1.7; }
+.workout-benefit { font-size:10px; color:#526d37; }.workout-meta { font-size:12px; }
+.habit-list { box-shadow:none; border-radius:20px; background:#fff; }.habit-row { min-height:80px; }.habit-row strong { font-size:14px; }.habit-row small { font-size:12px; }.habit-count { font-size:12px; }
+.nav-brand { display:none; }
+.bottom-nav { background:#fffffff5; border-color:var(--border); box-shadow:0 8px 35px #20372b15; }
+.bottom-nav-inner { height:72px; }.nav-item { font-size:10px; color:#67766a; }.nav-item-active { color:#263f22; }.nav-item-active .nav-icon { background:#eaf4dd; box-shadow:none; }.nav-item-primary .nav-icon { background:var(--accent); color:#24361d; box-shadow:none; border-radius:13px; }
+.week-picker { background:white; padding:8px; border:1px solid var(--border); border-radius:20px; }.week-picker button { height:68px; border-radius:13px; }.week-picker span { font-size:12px; }.week-picker strong { font-size:17px; }
+.session-overview { border-radius:24px; background:#20372b; border:0; padding:28px; color:white; box-shadow:none; }.session-top h2 { color:white; font-size:30px; }.session-top p { color:#c4d2c5; font-size:14px; }.session-stats strong { color:white; }.session-stats { color:#cad8c7; }.session-stats small { font-size:11px; }.session-score { background:#ffffff12; color:var(--accent); width:80px; height:92px; }.session-score span { color:#c3d0bc; }.session-overview .progress-track { background:#ffffff20; }
+.readiness-check,.readiness-result { border-radius:20px; padding:24px; box-shadow:none; }.readiness-check h2,.readiness-result h2 { font-size:25px; }.readiness-check small,.readiness-result small { font-size:10px; }.readiness-check header p,.readiness-result p { font-size:13px; }.readiness-question { grid-template-columns:155px 1fr; }.readiness-question>span { font-size:13px; }.readiness-question button { min-height:44px; font-size:12px; }.readiness-result span,.readiness-result em { font-size:12px; }.readiness-result>button { font-size:12px; min-height:44px; }
+.library-intro { margin:-4px 0 20px; font-size:14px; color:var(--text-secondary); line-height:1.6; }
+.exercise-filters { display:flex; gap:8px; margin-bottom:22px; }.exercise-filters button { min-height:40px; padding:0 22px; border:1px solid var(--border); border-radius:24px; background:white; color:var(--text-secondary); font-size:13px; cursor:pointer; }.exercise-filters button[aria-pressed=true] { background:#20372b; color:white; border-color:#20372b; }
+.exercise-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.exercise-card { display:block; min-width:0; padding:0; background:white; border:1px solid var(--border); border-radius:22px; overflow:hidden; text-align:left; cursor:pointer; transition:box-shadow .2s,transform .2s; }
+.exercise-card:hover { transform:translateY(-3px); box-shadow:0 12px 28px #20372b12; }
+.exercise-card-image { position:relative; aspect-ratio:3/2; background:#eeeae2; }.exercise-card-image img { object-fit:contain; }.exercise-card-image>span { position:absolute; left:12px; top:12px; background:#ffffffeb; padding:6px 10px; border-radius:20px; color:#314331; font-size:11px; }.exercise-card-image>b { position:absolute; right:14px; bottom:10px; font-size:22px; color:#263828; background:#ffffffdc; padding:2px 9px; border-radius:9px; }
+.exercise-card-copy { padding:20px; }.exercise-card-copy>small { font-size:9px; letter-spacing:.1em; font-weight:750; color:#527036; }.exercise-card h3 { margin:8px 0; font-size:23px; font-weight:650; letter-spacing:-.035em; }.exercise-card p { margin:0; min-height:44px; font-size:13px; line-height:1.6; color:var(--text-secondary); }.exercise-card footer { display:flex; justify-content:space-between; gap:8px; padding-top:17px; margin-top:18px; border-top:1px solid var(--border); font-size:11px; }.exercise-card footer>span:last-child { display:flex; align-items:center; color:#43602d; font-weight:700; }
+.sticky-action { bottom:94px; padding:12px 0; }.sticky-action .button { box-shadow:0 5px 20px #20372b15; }
+.sheet-modal { background:#fff; border-radius:26px; box-shadow:0 20px 90px #14201530; }.technique-modal { width:min(100%,760px); padding:20px 26px 26px; }.technique-modal header h2 { font-size:30px; }.technique-modal header p { font-size:13px; }.technique-purpose { background:#20372b; }.technique-purpose p,.technique-section>p,.technique-grid p { font-size:14px; line-height:1.7; }.technique-purpose small,.technique-section>small,.technique-grid small { font-size:10px; }.technique-section li span { font-size:12px; }.technique-section li { padding:16px 8px; }.technique-warning p,.technique-warning strong,.technique-warning span { font-size:12px; }.exercise-demo>div,.exercise-demo.compact>div { aspect-ratio:3/2; }.exercise-demo img { object-fit:contain; }.exercise-demo figcaption { font-size:12px; line-height:1.6; }.exercise-demo>div>span { font-size:9px; }
+.session-page { max-width:780px; }.active-exercise h1 { font-size:clamp(32px,5vw,46px); }.active-exercise>span { font-size:14px; }.exercise-demo.compact { width:min(100%,640px); }.session-cue { padding:20px; border-radius:18px; }.session-cue span { font-size:14px; }.session-cue strong { font-size:11px; }.session-cue>button { min-height:44px; font-size:12px; }.session-feedback h2 { font-size:28px; }.session-feedback label { font-size:13px; }.effort-scale button small { font-size:10px; }.feedback-choice button { font-size:12px; }.session-feedback>a { font-size:13px; }.feedback-thanks span { font-size:13px; }
+.nutrition-summary,.food-suggestion,.progress-hero,.featured-article,.article-card,.key-metrics article { border-radius:22px; box-shadow:none; }.meal-list { border-radius:22px; }.meal-row { padding:22px; min-height:86px; }.meal-row h3 { font-size:17px; }.meal-row p { font-size:13px; }.meal-row h3 span { font-size:12px; }.food-suggestion p { font-size:20px; }.food-suggestion small { font-size:12px; }.article-card h3 { font-size:18px; }.article-card p { font-size:12px; }.segmented button { font-size:13px; }.category-scroll button { min-height:42px; font-size:12px; }
+.assessment-backdrop { background:#f1f4eb; }.assessment-backdrop:before { display:none; }.assessment-shell { width:min(100%,820px); padding:30px 40px; }.assessment-copy h1,.assessment-result h1 { font-size:clamp(34px,6vw,58px); line-height:1.08; color:#20372b; }.assessment-copy>span { font-size:15px; }.assessment-options>button { background:#fff; min-height:108px; border-radius:18px; border-color:#dce4d5; box-shadow:none; }.assessment-options>button.selected { background:#eaf4dc; border-color:#78a846; box-shadow:none; }.assessment-options strong { font-size:16px; }.assessment-options small { font-size:13px; color:#65735c; }.assessment-other textarea { background:white; font-size:14px; min-height:90px; }.assessment-other>span { font-size:13px; }.assessment-progress { background:#dfe7d7; }.assessment-progress span { box-shadow:none; background:#79ac39; }.assessment-disclaimer { font-size:11px; }.assessment-copy p { color:#4d7135; }.assessment-limit { color:#496b30; background:#e2eccf; }.result-grid article { background:white; }.result-grid small { font-size:12px; }
+@media(min-width:1000px) {
+ .app-shell { padding-left:220px; }.page-container { padding:0 40px 64px; }.bottom-nav { inset:0 auto 0 0; width:220px; transform:none; border-radius:0; border:0; border-right:1px solid var(--border); box-shadow:none; background:#fff; padding:35px 18px; }.nav-brand { display:block; padding:0 15px 45px; font-size:30px; font-weight:850; letter-spacing:-.07em; }.nav-brand small { display:block; margin-top:10px; font-size:11px; font-weight:400; letter-spacing:0; color:var(--text-secondary); }.bottom-nav-inner { display:flex; flex-direction:column; gap:8px; height:auto; }.nav-item { flex-direction:row; justify-content:flex-start; padding:12px 16px; gap:12px; border-radius:13px; font-size:14px; }.nav-item-active { background:#edf4e4; font-weight:750; }.nav-item-active:after { display:none; }.nav-item-primary .nav-icon,.nav-item-active .nav-icon { background:transparent; }.nav-icon { width:25px; height:28px; }.home-page { grid-template-columns:1.1fr 1fr; gap:26px; }.home-header { grid-column:1/-1; }.home-page>.hero-copy { grid-column:1/-1; }.home-page>.daily-note { grid-column:1/-1; }.home-page>.personal-plan { grid-column:1/-1; }.home-page>section:has(.workout-feature) { grid-column:1; grid-row:5 / span 2; }.home-page>section:has(.summary-grid),.home-page>section:has(.weight-card),.home-page>section:has(.habit-list) { grid-column:2; }.sticky-action { bottom:12px; }.assessment-shell { min-height:100dvh; }.assessment-backdrop { padding:0; }.session-page { padding-top:30px; }
+}
+@media(max-width:640px) {
+ .home-page>.home-header{order:0}.home-page>.hero-copy{order:1}.home-page>.daily-note{order:2}.home-page>section:has(.workout-feature){order:3}.home-page>.personal-plan{order:4}.home-page>section:has(.summary-grid){order:5}.home-page>section:has(.habit-list){order:6}.home-page>section:has(.weight-card){order:7}
+ .page-container { padding:0 18px 112px; }.page-stack { gap:24px; padding-top:22px; }.header-date { display:none; }.hero-copy { padding:24px 20px; grid-template-columns:minmax(0,1fr) 94px; gap:24px 12px; }.hero-intro h1 { font-size:39px; }.hero-intro h1 em { display:block; }.hero-intro>span { font-size:13px; }.hero-progress { width:94px; height:94px; }.hero-progress strong { font-size:27px; }.hero-progress span,.hero-progress small { font-size:7px; }.hero-breakdown span { font-size:9px; white-space:normal; }.hero-breakdown { gap:4px; }.exercise-gallery { grid-template-columns:1fr; gap:18px; }.exercise-card-copy { padding:20px; }.exercise-card h3 { font-size:24px; }.exercise-card p { min-height:0; }.exercise-card footer { font-size:12px; }.workout-visual { height:260px; }.summary-grid { gap:12px; }.metric-card { padding:18px; }.metric-card>span { font-size:11px; }.readiness-check,.readiness-result { padding:18px; }.readiness-question { grid-template-columns:1fr; }.readiness-question button { font-size:11px; }.session-top h2 { font-size:27px; }.session-overview { padding:22px; }.session-score { width:65px; }.technique-modal { padding:14px 18px 24px; }.technique-grid { grid-template-columns:1fr; }.technique-section li span { font-size:11px; }.technique-modal header h2 { font-size:26px; }.session-cue { align-items:stretch; }.assessment-shell { padding:18px 8px; }.assessment-options>button { min-height:90px; }.assessment-copy h1 { font-size:39px; }.personal-plan strong { font-size:16px; }
+}
