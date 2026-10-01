@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, BookOpen, ChevronRight, Clock3, Moon, Salad, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChevronRight, Clock3, Dumbbell, Moon, Salad, Sparkles } from "lucide-react";
 import { articles } from "@/data/mock-data";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, Sheet } from "@/components/ui";
 import type { Article } from "@/types";
 
-const categories = ["Recomendado", "Entrenamiento", "Alimentación", "Descanso"];
+type Category = "Recomendado" | Article["category"];
+
+const categories: Category[] = ["Recomendado", "Entrenamiento", "Alimentación", "Descanso"];
 
 const articleDetails: Record<number, { intro: string; action: string }> = {
   1: { intro: "El agua, la sal, el horario de la última comida y el tránsito intestinal pueden mover la balanza de un día a otro sin que hayas ganado grasa.", action: "Compara promedios de siete días y pésate en condiciones similares. Recién ahí decide si necesitas ajustar algo." },
@@ -17,18 +19,131 @@ const articleDetails: Record<number, { intro: string; action: string }> = {
   6: { intro: "Subir dificultad sólo tiene sentido cuando completas todas las series con técnica estable y sin dolor durante dos sesiones seguidas.", action: "Agrega primero una o dos repeticiones. Si la técnica cambia, vuelve al número anterior y consolídalo." },
 };
 
-export default function GuidePage() {
-  const [category, setCategory] = useState("Recomendado");
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const visible = category === "Recomendado" ? articles : articles.filter((article) => article.category === category);
+const categoryTone: Record<Article["category"], string> = {
+  Entrenamiento: "cnt-tone-train",
+  Alimentación: "cnt-tone-food",
+  Descanso: "cnt-tone-rest",
+};
+
+function CategoryIcon({ category, size = 20 }: { category: Article["category"]; size?: number }) {
+  if (category === "Alimentación") return <Salad size={size} />;
+  if (category === "Descanso") return <Moon size={size} />;
+  return <Dumbbell size={size} />;
+}
+
+function FeaturedArticle({ article, onOpen }: { article: Article; onOpen: () => void }) {
   return (
-    <div className="page-stack guide-page">
-      <PageHeader eyebrow="APRENDE A TU RITMO" title="Tu guía" subtitle="Información práctica para sostener tu progreso." />
-      <div className="category-scroll">{categories.map((item) => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>
-      {category === "Recomendado" && <article className="featured-article"><div className="editorial-art"><div className="orb one" /><div className="orb two" /><BookOpen size={52} /></div><div><span><Sparkles size={14} /> RECOMENDADO SEGÚN TU PROGRESO</span><h2>{articles[0].title}</h2><p>Distingue una variación normal de una tendencia antes de cambiar tu alimentación.</p><button onClick={() => setSelectedArticle(articles[0])}>Abrir guía de 4 minutos <ArrowUpRight size={17} /></button></div></article>}
-      <section className="article-section"><div className="section-header"><h2>{category === "Recomendado" ? "Explora" : category}</h2><span>{visible.length} artículos</span></div><div className="article-grid">{visible.filter((article) => !article.featured || category !== "Recomendado").map((article) => <article className="article-card" key={article.id}><div className={`article-icon ${article.category.toLowerCase()}`}>{article.category === "Alimentación" ? <Salad size={23} /> : article.category === "Descanso" ? <Moon size={23} /> : <BookOpen size={23} />}</div><div><span>{article.category}</span><h3>{article.title}</h3><p><Clock3 size={13} /> {article.readTime} de lectura</p></div><button className="icon-button" onClick={() => setSelectedArticle(article)} aria-label={`Leer ${article.title}`}><ChevronRight size={18} /></button></article>)}</div></section>
-      <aside className="guide-quote"><span>“</span><p>Lo que puedes sostener vale más que lo que haces perfecto por unos días.</p><small>RECORDATORIO DE LA SEMANA</small></aside>
-      {selectedArticle && <div className="modal-backdrop" onMouseDown={() => setSelectedArticle(null)}><article className="sheet-modal article-modal" role="dialog" aria-modal="true" aria-labelledby="article-title" onMouseDown={(event) => event.stopPropagation()}><div className="modal-handle" /><header><div><span>{selectedArticle.category.toUpperCase()} · {selectedArticle.readTime}</span><h2 id="article-title">{selectedArticle.title}</h2></div><button className="icon-button" onClick={() => setSelectedArticle(null)} aria-label="Cerrar"><X size={20} /></button></header><div className="article-body"><p>{articleDetails[selectedArticle.id].intro}</p><h3>Qué hacer con esta información</h3><p>{articleDetails[selectedArticle.id].action}</p><aside>Orientación educativa general. Si aparecen dolor persistente, mareos o cambios de peso inexplicables, consulta a un profesional de salud.</aside></div></article></div>}
+    <article className="card card-forest card-l cnt-featured">
+      <div className="cnt-featured-art" aria-hidden="true">
+        <span className="cnt-ring one" />
+        <span className="cnt-ring two" />
+        <BookOpen size={44} />
+      </div>
+      <div className="cnt-featured-copy">
+        <p className="eyebrow"><Sparkles size={13} /> Recomendado según tu progreso</p>
+        <h2>{article.title}</h2>
+        <p>Distingue una variación normal de una tendencia antes de cambiar tu alimentación.</p>
+        <button type="button" className="btn btn-primary" onClick={onOpen}>
+          Leer en <span className="num">{article.readTime}</span>
+          <ArrowUpRight size={17} />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function ArticleCard({ article, index, onOpen }: { article: Article; index: number; onOpen: () => void }) {
+  return (
+    <button type="button" className="cnt-article" onClick={onOpen} aria-label={`Leer ${article.title}`}>
+      <span className="cnt-article-top">
+        <span className={`cnt-article-icon ${categoryTone[article.category]}`}>
+          <CategoryIcon category={article.category} />
+        </span>
+        <span className="cnt-article-index num">{String(index + 1).padStart(2, "0")}</span>
+      </span>
+      <span className="cnt-article-cat">{article.category}</span>
+      <strong>{article.title}</strong>
+      <span className="cnt-article-meta">
+        <Clock3 size={13} />
+        <span className="num">{article.readTime}</span> de lectura
+        <ChevronRight size={16} className="cnt-article-go" />
+      </span>
+    </button>
+  );
+}
+
+function ArticleDetail({ article }: { article: Article }) {
+  const detail = articleDetails[article.id];
+  return (
+    <div className="cnt-detail">
+      {detail ? (
+        <>
+          <p className="cnt-detail-lead">{detail.intro}</p>
+          <section className="cnt-detail-action">
+            <p className="eyebrow">Qué hacer con esta información</p>
+            <p>{detail.action}</p>
+          </section>
+        </>
+      ) : (
+        <p className="muted">Pronto tendrás esta lectura completa.</p>
+      )}
+      <p className="cnt-detail-note">
+        Orientación educativa general. Si aparecen dolor persistente, mareos o cambios de peso inexplicables, consulta a un profesional de salud.
+      </p>
+    </div>
+  );
+}
+
+export default function GuidePage() {
+  const [category, setCategory] = useState<Category>("Recomendado");
+  const [selected, setSelected] = useState<Article | null>(null);
+  const featured = articles.find((article) => article.featured) ?? articles[0];
+  const recommended = category === "Recomendado";
+  const visible = recommended
+    ? articles.filter((article) => article.id !== featured?.id)
+    : articles.filter((article) => article.category === category);
+
+  return (
+    <div className="page cnt-page">
+      <PageHeader backHref="/perfil" eyebrow="Aprende a tu ritmo" title="Tu guía" subtitle="Información práctica para sostener tu progreso." />
+
+      <div className="scroll-x cnt-categories" role="group" aria-label="Categorías">
+        {categories.map((item) => (
+          <button key={item} type="button" className="chip" aria-pressed={category === item} onClick={() => setCategory(item)}>
+            {item}
+          </button>
+        ))}
+      </div>
+
+      {recommended && featured && <FeaturedArticle article={featured} onOpen={() => setSelected(featured)} />}
+
+      <section className="section">
+        <div className="section-head">
+          <h2>{recommended ? "Explora" : category}</h2>
+          <span className="subtle cnt-count"><span className="num">{visible.length}</span> {visible.length === 1 ? "artículo" : "artículos"}</span>
+        </div>
+        <div className="cnt-article-grid">
+          {visible.map((article, index) => (
+            <ArticleCard key={article.id} article={article} index={index} onOpen={() => setSelected(article)} />
+          ))}
+        </div>
+      </section>
+
+      <aside className="cnt-quote">
+        <span className="cnt-quote-mark" aria-hidden="true">“</span>
+        <p>Lo que puedes sostener vale más que lo que haces perfecto por unos días.</p>
+        <small className="eyebrow">Recordatorio de la semana</small>
+      </aside>
+
+      <Sheet
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        eyebrow={selected ? `${selected.category} · ${selected.readTime}` : undefined}
+        title={selected?.title}
+        className="cnt-sheet"
+      >
+        {selected && <ArticleDetail article={selected} />}
+      </Sheet>
     </div>
   );
 }

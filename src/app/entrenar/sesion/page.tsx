@@ -1,3 +1,8 @@
-import { Suspense } from "react";
-import { WorkoutTracker } from "@/components/training/workout-tracker";
-export default function SessionPage() { return <Suspense fallback={<p>Cargando entrenamiento…</p>}><WorkoutTracker/></Suspense>; }
+import type { Metadata } from "next";
+import { SessionLogger } from "@/components/session/session-logger";
+
+export const metadata: Metadata = { title: "Entrenamiento en curso" };
+
+export default function SessionPage() {
+  return <SessionLogger />;
+}
