@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#20372b">
+  <title>Sin conexión | PULSO</title>
+  <style>
+    :root { --bg: #f5f6f2; --ink: #19241e; --ink-2: #59685e; --forest: #20372b; --lime: #b4ee48; --lime-ink: #1f3012; --lime-text: #4a6c29; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #090c0a; --ink: #f1f5ee; --ink-2: #a5afa8; --forest: #17271e; --lime: #c7f432; --lime-ink: #142008; --lime-text: #c7f432; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
+    .mark { font-weight: 800; font-size: 26px; letter-spacing: -.05em; }
+    .mark span { color: var(--lime-text); }
+    h1 { margin: 8px 0 0; font-size: 34px; line-height: 1.05; letter-spacing: -.045em; font-weight: 650; }
+    p { margin: 0; color: var(--ink-2); line-height: 1.55; }
+    .card { padding: 18px; border-radius: 18px; background: var(--forest); color: #f3f7ee; }
+    .card p { color: #c6d6c7; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    a, button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 14px; font: inherit; font-weight: 650; text-decoration: none; border: 0; cursor: pointer; }
+    .primary { background: var(--lime); color: var(--lime-ink); }
+    .secondary { background: transparent; color: var(--ink); border: 1px solid currentColor; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark">PULSO<span>.</span></div>
+    <h1>Esta pantalla aún no está guardada en tu teléfono.</h1>
+    <p>Estás sin conexión. Las pantallas que ya abriste funcionan igual, y todo lo que registras se guarda en este dispositivo.</p>
+    <div class="card"><p>Puedes entrenar sin internet: abre Hoy o Entrenar e inicia tu sesión como siempre.</p></div>
+    <div class="actions">
+      <a class="primary" href="/entrenar">Ir a Entrenar</a>
+      <a class="secondary" href="/">Volver a Hoy</a>
+      <button class="secondary" type="button" onclick="location.reload()">Reintentar</button>
+    </div>
+  </main>
+</body>
+</html>

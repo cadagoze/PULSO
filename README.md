@@ -66,7 +66,9 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ## Datos
 
-Todo se guarda en el almacenamiento local del navegador; no hay backend ni cuentas. Desde Perfil puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos).
+Todo se guarda en el almacenamiento local del navegador; no hay backend ni cuentas. Desde Perfil puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos) y funciona sin conexión: el service worker (`public/sw.js`) guarda las pantallas principales, los programas y las fichas de ejercicio (lista en `/precache.json`). Sólo se activa en producción; si cambias su lógica, sube `VERSION` en `public/sw.js`.
+
+El build para Cloudflare (`npm run build:vinext`) requiere Node 22 (`nvm use`, ver `.nvmrc`).
 
 ## Limitaciones
 

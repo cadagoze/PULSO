@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { BottomNavigation, focusRoutes } from "@/components/navigation/bottom-navigation";
+import { OfflineSupport } from "@/components/layout/offline-support";
 import { useSettings } from "@/lib/store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <main className={focus ? "page-container focus-mode" : "page-container"}>{children}</main>
       <BottomNavigation />
+      <OfflineSupport />
     </div>
   );
 }
