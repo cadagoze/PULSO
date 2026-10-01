@@ -68,3 +68,50 @@ export function weekNumber(date = new Date()) {
   const yearStart = new Date(Date.UTC(value.getUTCFullYear(), 0, 1));
   return Math.ceil((((value.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
+
+const LB_PER_KG = 2.20462;
+
+/** Convierte kg almacenados a la unidad visible, con un decimal como máximo. */
+export function toDisplayWeight(kg: number, unit: "kg" | "lb") {
+  const value = unit === "lb" ? kg * LB_PER_KG : kg;
+  return Math.round(value * 10) / 10;
+}
+
+/** Convierte un valor ingresado por el usuario a kg para almacenarlo. */
+export function fromDisplayWeight(value: number, unit: "kg" | "lb") {
+  return unit === "lb" ? Math.round((value / LB_PER_KG) * 100) / 100 : value;
+}
+
+export function formatNumber(value: number, digits = 1) {
+  return value.toLocaleString("es-CL", { maximumFractionDigits: digits });
+}
+
+export function formatShortDate(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("es-CL", { day: "numeric", month: "short" }).replace(".", "");
+}
+
+export function formatRelativeDay(date: string, now = new Date()) {
+  const today = localDateKey(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date === today) return "Hoy";
+  if (date === localDateKey(yesterday)) return "Ayer";
+  const days = Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${date}T12:00:00`).getTime()) / 86_400_000);
+  return days > 0 && days < 7 ? `Hace ${days} días` : formatShortDate(date);
+}
+
+export function greeting(now = new Date()) {
+  const hour = now.getHours();
+  return hour < 12 ? "Buenos días" : hour < 20 ? "Buenas tardes" : "Buenas noches";
+}
+
+/** Texto en minúsculas y sin tildes, para búsquedas. */
+export function normalizeText(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** Número de día local (estable durante todo el día, sin saltos por horario de verano). Semilla compartida del generador. */
+export function localDaySeed(now: number) {
+  const date = new Date(now);
+  return Math.round(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
+}
