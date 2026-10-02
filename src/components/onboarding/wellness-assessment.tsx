@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   Activity as ActivityIcon,
   Armchair,
@@ -9,38 +11,35 @@ import {
   ArrowRight,
   BatteryLow,
   Building2,
-  CalendarDays,
-  Check,
   CircleCheck,
   Clock3,
   Dumbbell,
   Flame,
   Footprints,
-  HeartPulse,
   Hourglass,
   House,
   PersonStanding,
   Repeat,
   Scale,
-  Sparkles,
-  Target,
   Timer,
   Utensils,
   X,
   Zap,
 } from "lucide-react";
-import { equipmentOptions } from "@/data/mock-data";
+import { Button } from "@/components/ui";
 import { usePreference, useSettings } from "@/lib/store";
-import { cn } from "@/lib/utils";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
+import { AssessmentResult } from "./assessment-result";
+import { AssessmentSplash } from "./assessment-splash";
+import { ChoiceStepView, LocationStep, NameStep } from "./assessment-steps";
 
 type Goal = "strength" | "weight" | "energy" | "habits";
 type Activity = "sedentary" | "walking" | "some" | "regular";
 type TimeAvailable = 10 | 20 | 30;
 type Limitation = "none" | "knees" | "back" | "shoulders";
 type Barrier = "time" | "consistency" | "food" | "discomfort";
-type StepKey = "goals" | "activities" | "times" | "limitations" | "barriers";
-type SelectionValue = string | number;
+export type StepKey = "goals" | "activities" | "times" | "limitations" | "barriers";
+export type SelectionValue = string | number;
 
 interface AssessmentAnswers {
   goals: Goal[];
@@ -68,14 +67,14 @@ export interface AssessmentProfile extends AssessmentAnswers {
   };
 }
 
-interface StepOption {
+export interface StepOption {
   value: SelectionValue;
   label: string;
   detail: string;
   icon: ReactNode;
 }
 
-interface ChoiceStep {
+export interface ChoiceStep {
   kind: "multi";
   key: StepKey;
   eyebrow: string;
@@ -94,12 +93,12 @@ interface SpecialStep {
 
 type FlowStep = ChoiceStep | SpecialStep;
 
-const iconSize = 22;
+const iconSize = 20;
 
 const flow: FlowStep[] = [
   {
     kind: "name",
-    eyebrow: "Bienvenida",
+    eyebrow: "Para empezar",
     title: "¿Cómo te llamamos?",
     description: "Así personalizamos tus saludos. Puedes dejarlo en blanco.",
   },
@@ -202,14 +201,30 @@ interface Extras {
 
 const emptyExtras: Extras = { name: "", location: null, equipment: [] };
 
+/** Foto del panel editorial de escritorio (las preguntas en móvil van sin foto, limpias). */
+const sidePhoto = "/images/editorial/brisk-march-start.webp";
+const disclaimer = "Orientación general de bienestar. No reemplaza una evaluación médica o nutricional.";
+const focusable = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+/** «02», «07»: números de paso con dos cifras, como en un índice editorial. */
+const pad = (value: number) => String(value).padStart(2, "0");
+
+/** Portada: visible, saliendo (se desvanece sobre la primera pregunta) o cerrada. */
+type Intro = "open" | "leaving" | "closed";
+
 export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (profile: AssessmentProfile) => void; onCancel?: () => void }) {
   const [stepIndex, setStepIndex] = useState(0);
+  // 1 avanza (entra desde la derecha), -1 retrocede (entra desde la izquierda).
+  const [direction, setDirection] = useState<1 | -1>(1);
+  // La portada es la bienvenida de la primera vez; al repetir la evaluación desde Perfil se empieza directo.
+  const [intro, setIntro] = useState<Intro>(onCancel ? "closed" : "open");
   const [answers, setAnswers] = useState<AssessmentAnswers>(emptyAnswers);
   const [, setPreference] = usePreference();
   const [settings, updateSettings] = useSettings();
   // Al repetir la evaluación, el nombre guardado aparece ya escrito.
   const [extras, setExtras] = useState<Extras>(() => ({ ...emptyExtras, name: settings.name }));
   const scrollRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const showingResult = stepIndex === flow.length;
   const step = flow[Math.min(stepIndex, flow.length - 1)];
   const profile = useMemo(() => buildProfile(answers, extras), [answers, extras]);
@@ -217,10 +232,30 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
   const canContinue = step.kind === "multi"
     ? (answers[step.key] as SelectionValue[]).length > 0 || answers.customAnswers[step.key].trim().length > 0
     : step.kind === "name" || extras.location !== null;
+  const canGoBack = stepIndex > 0 || !onCancel;
+
+  // La pantalla de evaluación tapa la página: sin desplazamiento detrás mientras está abierta.
+  useEffect(() => {
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = overflow; };
+  }, []);
+
+  // Cada pregunta nueva recibe el foco en su título (lectores de pantalla y teclado).
+  useEffect(() => {
+    if (intro === "closed" && !showingResult) titleRef.current?.focus({ preventScroll: true });
+  }, [intro, stepIndex, showingResult]);
 
   function goTo(index: number) {
-    setStepIndex(Math.max(0, Math.min(flow.length, index)));
+    const next = Math.max(0, Math.min(flow.length, index));
+    setDirection(next < stepIndex ? -1 : 1);
+    setStepIndex(next);
     scrollRef.current?.scrollTo({ top: 0 });
+  }
+
+  function goBack() {
+    if (stepIndex > 0) goTo(stepIndex - 1);
+    else if (!onCancel) setIntro("open");
   }
 
   function toggleSelection(key: StepKey, value: SelectionValue) {
@@ -253,290 +288,151 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
     goTo(0);
   }
 
+  // Diálogo modal: Escape cierra (si se puede cerrar) y el foco no sale de la evaluación.
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && onCancel) {
+      event.stopPropagation();
+      onCancel();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(focusable)).filter((item) => !item.closest("[inert]"));
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+
   const continueLabel = step.kind === "name" && !extras.name.trim()
     ? "Omitir"
     : stepIndex === flow.length - 1
       ? "Ver mi plan"
       : "Continuar";
 
-  return (
-    <div className="onb-backdrop">
-      <div className="onb-shell" role="dialog" aria-modal="true" aria-label="Evaluación inicial de PULSO" ref={scrollRef}>
-        <header className="onb-top">
-          <div className="wordmark">PULSO<span>.</span></div>
-          {!showingResult && (
-            <span className="onb-count num" aria-hidden="true">
-              {String(stepIndex + 1).padStart(2, "0")}
-              <span>/{String(flow.length).padStart(2, "0")}</span>
-            </span>
-          )}
-          {onCancel && (
-            <button className="btn-icon small" onClick={onCancel} aria-label="Cerrar evaluación">
-              <X size={18} />
-            </button>
-          )}
+  const questions = (
+    <>
+      <aside className="onb-media photo grain on-dark" aria-hidden="true">
+        <Image src={sidePhoto} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="photo-img" />
+        <div className="onb-media-top photo-content">
+          <span className="meta">PULSO · Evaluación inicial</span>
+          <span className="meta">Tu salud en movimiento.</span>
+        </div>
+        <p key={stepIndex} className="onb-media-num photo-content">
+          <span className="num-display">{pad(stepIndex + 1)}</span>
+          <span className="onb-media-total">/{pad(flow.length)}</span>
+        </p>
+      </aside>
+
+      <div className="onb-scroll" ref={scrollRef}>
+        <header className="onb-head">
+          <div className="onb-top">
+            <span className="wordmark">PULSO<span>.</span></span>
+            {onCancel && (
+              <button type="button" className="btn-icon small" onClick={onCancel} aria-label="Cerrar evaluación">
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          <div
+            className="onb-progress"
+            role="progressbar"
+            aria-label={`Paso ${stepIndex + 1} de ${flow.length}`}
+            aria-valuemin={1}
+            aria-valuemax={flow.length}
+            aria-valuenow={stepIndex + 1}
+          >
+            <span style={{ "--value": (stepIndex + 1) / flow.length } as CSSProperties} />
+          </div>
         </header>
 
-        {!showingResult ? (
-          <>
-            <div
-              className="onb-progress"
-              role="progressbar"
-              aria-label={`Paso ${stepIndex + 1} de ${flow.length}`}
-              aria-valuemin={1}
-              aria-valuemax={flow.length}
-              aria-valuenow={stepIndex + 1}
-            >
-              <span style={{ width: `${((stepIndex + 1) / flow.length) * 100}%` }} />
+        <div className="onb-stage">
+          <section key={stepIndex} className="onb-step" aria-labelledby="onb-step-title">
+            <div className="onb-step-index">
+              <p className="onb-num" aria-hidden="true">
+                <span className="num-display">{pad(stepIndex + 1)}</span>
+                <span className="onb-num-total">/{pad(flow.length)}</span>
+              </p>
+              <p className="meta">{step.eyebrow}</p>
+            </div>
+            <div className="onb-step-copy">
+              <h1 id="onb-step-title" ref={titleRef} tabIndex={-1} className="onb-title">{step.title}</h1>
+              <p className="onb-description">{step.description}</p>
             </div>
 
-            <main className="onb-body" key={stepIndex}>
-              <section className="onb-copy">
-                <p className="eyebrow">{step.eyebrow}</p>
-                <h1>{step.title}</h1>
-                <p className="onb-description">{step.description}</p>
-              </section>
+            {step.kind === "name" && (
+              <NameStep
+                value={extras.name}
+                onChange={(name) => setExtras((current) => ({ ...current, name }))}
+                onSubmit={() => goTo(stepIndex + 1)}
+              />
+            )}
 
-              {step.kind === "name" && (
-                <NameStep
-                  value={extras.name}
-                  onChange={(name) => setExtras((current) => ({ ...current, name }))}
-                  onSubmit={() => goTo(stepIndex + 1)}
-                />
-              )}
+            {step.kind === "location" && (
+              <LocationStep
+                options={locationOptions}
+                location={extras.location}
+                equipment={extras.equipment}
+                onLocation={(location) => setExtras((current) => ({ ...current, location }))}
+                onEquipment={(equipment) => setExtras((current) => ({ ...current, equipment }))}
+              />
+            )}
 
-              {step.kind === "location" && (
-                <LocationStep
-                  location={extras.location}
-                  equipment={extras.equipment}
-                  onLocation={(location) => setExtras((current) => ({ ...current, location }))}
-                  onEquipment={(equipment) => setExtras((current) => ({ ...current, equipment }))}
-                />
-              )}
+            {step.kind === "multi" && (
+              <ChoiceStepView
+                step={step}
+                selected={answers[step.key] as SelectionValue[]}
+                custom={answers.customAnswers[step.key]}
+                onToggle={(value) => toggleSelection(step.key, value)}
+                onCustom={(value) => setCustomAnswer(step.key, value)}
+              />
+            )}
 
-              {step.kind === "multi" && (
-                <ChoiceStepView
-                  step={step}
-                  selected={answers[step.key] as SelectionValue[]}
-                  custom={answers.customAnswers[step.key]}
-                  onToggle={(value) => toggleSelection(step.key, value)}
-                  onCustom={(value) => setCustomAnswer(step.key, value)}
-                />
-              )}
-            </main>
+            <p className="onb-disclaimer">{disclaimer}</p>
+          </section>
 
-            <footer className="onb-actions">
-              <button className="btn btn-ghost onb-back" onClick={() => goTo(stepIndex - 1)} disabled={stepIndex === 0}>
-                <ArrowLeft size={18} />
-                Atrás
-              </button>
-              <button className="btn btn-primary onb-next" disabled={!canContinue} onClick={() => goTo(stepIndex + 1)}>
-                {continueLabel}
-                <ArrowRight size={18} />
-              </button>
-            </footer>
-          </>
-        ) : (
-          <ResultView profile={profile} onActivate={finish} onRestart={restart} onBack={() => goTo(flow.length - 1)} />
-        )}
-
-        <p className="onb-disclaimer">Orientación general de bienestar. No reemplaza una evaluación médica o nutricional.</p>
+          <footer className="onb-actions">
+            <Button variant="secondary" size="l" className="onb-back" onClick={goBack} disabled={!canGoBack}>
+              <ArrowLeft size={18} />
+              Atrás
+            </Button>
+            <Button size="l" className="onb-next" disabled={!canContinue} onClick={() => goTo(stepIndex + 1)}>
+              {continueLabel}
+              <ArrowRight size={18} />
+            </Button>
+          </footer>
+        </div>
       </div>
+    </>
+  );
+
+  const view = (
+    <div className="onb" style={{ "--dir": direction } as CSSProperties} role="dialog" aria-modal="true" aria-label="Evaluación inicial de PULSO" onKeyDown={onKeyDown}>
+      {intro !== "open" && (showingResult ? (
+        <AssessmentResult
+          profile={profile}
+          retake={Boolean(onCancel)}
+          disclaimer={disclaimer}
+          onActivate={finish}
+          onBack={() => goTo(flow.length - 1)}
+          onRestart={restart}
+          onCancel={onCancel}
+        />
+      ) : questions)}
+      {intro !== "closed" && (
+        <AssessmentSplash
+          steps={flow.length}
+          leaving={intro === "leaving"}
+          onStart={() => { setDirection(1); setIntro("leaving"); }}
+          onLeft={() => setIntro("closed")}
+        />
+      )}
     </div>
   );
-}
 
-function NameStep({ value, onChange, onSubmit }: { value: string; onChange: (value: string) => void; onSubmit: () => void }) {
-  return (
-    <form
-      className="onb-name"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-    >
-      <label className="sr-only" htmlFor="onb-name-input">Tu nombre</label>
-      <input
-        id="onb-name-input"
-        className="onb-name-input"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="Tu nombre"
-        autoComplete="given-name"
-        maxLength={40}
-      />
-      <p className="subtle">Tus datos se guardan sólo en este dispositivo.</p>
-    </form>
-  );
-}
-
-function OptionCard({ selected, label, detail, icon, onClick, multi = true }: { selected: boolean; label: string; detail: string; icon: ReactNode; onClick: () => void; multi?: boolean }) {
-  return (
-    <button
-      type="button"
-      className={cn("onb-option", selected && "selected")}
-      aria-pressed={selected}
-      onClick={onClick}
-    >
-      <span className="onb-option-icon" aria-hidden="true">{icon}</span>
-      <span className="onb-option-text">
-        <strong>{label}</strong>
-        <small>{detail}</small>
-      </span>
-      <span className={cn("onb-option-check", !multi && "round")} aria-hidden="true">
-        {selected && <Check size={14} strokeWidth={3} />}
-      </span>
-    </button>
-  );
-}
-
-function ChoiceStepView({ step, selected, custom, onToggle, onCustom }: { step: ChoiceStep; selected: SelectionValue[]; custom: string; onToggle: (value: SelectionValue) => void; onCustom: (value: string) => void }) {
-  const [showOther, setShowOther] = useState(custom.length > 0);
-  return (
-    <>
-      <div className="onb-options">
-        {step.options.map((option) => (
-          <OptionCard
-            key={option.value}
-            selected={selected.includes(option.value)}
-            label={option.label}
-            detail={option.detail}
-            icon={option.icon}
-            onClick={() => onToggle(option.value)}
-          />
-        ))}
-      </div>
-      {showOther ? (
-        <label className="field onb-other">
-          <span>Otra respuesta <small className="subtle">opcional</small></span>
-          <textarea value={custom} onChange={(event) => onCustom(event.target.value)} placeholder={step.otherPlaceholder} maxLength={180} rows={2} />
-          <small className="subtle num">{custom.length}/180</small>
-        </label>
-      ) : (
-        <button type="button" className="link-button onb-other-toggle" onClick={() => setShowOther(true)}>
-          + Agregar otra respuesta
-        </button>
-      )}
-    </>
-  );
-}
-
-function LocationStep({ location, equipment, onLocation, onEquipment }: { location: TrainingLocation | null; equipment: TrainingEquipment[]; onLocation: (value: TrainingLocation) => void; onEquipment: (value: TrainingEquipment[]) => void }) {
-  function toggle(value: TrainingEquipment) {
-    onEquipment(equipment.includes(value) ? equipment.filter((item) => item !== value) : [...equipment, value]);
-  }
-  return (
-    <>
-      <div className="onb-options onb-options-two">
-        {locationOptions.map((option) => (
-          <OptionCard
-            key={option.value}
-            multi={false}
-            selected={location === option.value}
-            label={option.label}
-            detail={option.detail}
-            icon={option.icon}
-            onClick={() => onLocation(option.value)}
-          />
-        ))}
-      </div>
-      {location === "home" && (
-        <section className="onb-equipment" aria-label="Equipamiento disponible">
-          <h2>¿Qué tienes en casa?</h2>
-          <p className="subtle">Marca lo que tengas. Si no marcas nada, entrenaremos con tu peso corporal.</p>
-          <div className="chips">
-            {equipmentOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className="chip"
-                aria-pressed={equipment.includes(option.value)}
-                onClick={() => toggle(option.value)}
-              >
-                {equipment.includes(option.value) && <Check size={14} />}
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-    </>
-  );
-}
-
-function ResultView({ profile, onActivate, onRestart, onBack }: { profile: AssessmentProfile; onActivate: () => void; onRestart: () => void; onBack: () => void }) {
-  const { recommendation } = profile;
-  const place = profile.location === "gym"
-    ? "En el gimnasio"
-    : profile.equipment?.length
-      ? `En casa · ${profile.equipment.length} ${profile.equipment.length === 1 ? "implemento" : "implementos"}`
-      : "En casa · peso corporal";
-  return (
-    <main className="onb-result">
-      <div className="onb-result-hero">
-        <span className="onb-result-mark" aria-hidden="true"><Sparkles size={24} /></span>
-        <p className="eyebrow">Tu plan inicial{profile.name ? ` · ${profile.name}` : ""}</p>
-        <h1>{recommendation.focus}</h1>
-        <p>{recommendation.dailyMessage}</p>
-      </div>
-
-      <div className="onb-result-grid">
-        <article>
-          <CalendarDays size={18} />
-          <strong className="num">{recommendation.sessionsPerWeek}</strong>
-          <small>sesiones por semana</small>
-        </article>
-        <article>
-          <Clock3 size={18} />
-          <strong className="num">{recommendation.sessionMinutes}</strong>
-          <small>minutos por sesión</small>
-        </article>
-        <article className="wide">
-          <Target size={18} />
-          <span>
-            <small>Prioridades</small>
-            <b>{recommendation.goalLabel}</b>
-          </span>
-        </article>
-        <article className="wide">
-          {profile.location === "gym" ? <Building2 size={18} /> : <House size={18} />}
-          <span>
-            <small>Dónde</small>
-            <b>{place}</b>
-          </span>
-        </article>
-      </div>
-
-      <div className="onb-habit">
-        <span className="icon-tile"><Check size={18} /></span>
-        <div>
-          <small className="eyebrow">Tu primer hábito</small>
-          <strong>{recommendation.firstHabit}</strong>
-        </div>
-      </div>
-
-      {recommendation.caution && (
-        <aside className="notice warn">
-          <HeartPulse size={18} />
-          <p>{recommendation.caution}</p>
-        </aside>
-      )}
-
-      <div className="onb-result-actions">
-        <button className="btn btn-primary btn-block" onClick={onActivate}>
-          Activar mi plan
-          <ArrowRight size={18} />
-        </button>
-        <div className="onb-result-links">
-          <button className="btn btn-ghost btn-small" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Volver
-          </button>
-          <button className="btn btn-ghost btn-small" onClick={onRestart}>Empezar de nuevo</button>
-        </div>
-      </div>
-    </main>
-  );
+  // Se monta en <body>: así no la afecta la animación de entrada de la ruta (un transform en un ancestro
+  // descoloca los elementos fijos). Sólo se muestra en el cliente (tras hidratar o al tocar un botón).
+  return typeof document === "undefined" ? null : createPortal(view, document.body);
 }
 
 function buildProfile(answers: AssessmentAnswers, extras: Extras = emptyExtras): AssessmentProfile {
