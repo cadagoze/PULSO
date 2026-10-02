@@ -2,57 +2,55 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { exercises } from "@/data/mock-data";
-import { muscleLabels } from "@/data/catalog";
+import { muscleLabels, patternLabels } from "@/data/catalog";
+import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { equipmentText } from "@/components/exercises/exercise-technique";
-import { AvailabilityHint, LevelDots } from "@/components/library/library-card";
+import { AvailabilityHint, LevelDots, LibraryCard } from "@/components/library/library-card";
 import { alternativesFor, availableEquipment, isAvailable } from "@/lib/generator";
 import { exerciseById } from "@/lib/training";
 import { usePreference } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import type { Equipment, Exercise } from "@/types";
+import type { Exercise } from "@/types";
 
-function ExerciseRow({ exercise, equipment }: { exercise: Exercise; equipment: Set<Equipment> }) {
-  return (
-    <li>
-      <Link href={`/ejercicios/${exercise.id}`} className="lib-row">
-        <ExerciseVisual exercise={exercise} size="thumb" />
-        <span className="lib-row-text">
-          <b>{exercise.name}</b>
-          <span>{equipmentText(exercise)}</span>
+/** Un peldaño de la progresión: más fácil, el actual o más difícil. */
+function LadderStep({ exercise, label, current = false, fallback }: { exercise?: Exercise; label: string; current?: boolean; fallback?: string }) {
+  if (!exercise) {
+    return (
+      <li className="lib-step lib-step-none">
+        <span className="list-row">
+          <span className="lib-step-blank" aria-hidden="true" />
+          <span className="grow">
+            <small className="meta">{label}</small>
+            <strong>{fallback}</strong>
+          </span>
         </span>
-        <AvailabilityHint available={isAvailable(exercise, equipment)} />
-        <ChevronRight size={18} className="lib-row-chevron" aria-hidden="true" />
-      </Link>
+      </li>
+    );
+  }
+  const content = (
+    <>
+      <ExerciseVisual exercise={exercise} size="thumb" />
+      <span className="grow">
+        <small className="meta">{label}</small>
+        <strong>{exercise.name}</strong>
+        <LevelDots level={exercise.level} />
+      </span>
+      {current ? <span className="badge badge-ink">Estás aquí</span> : <ChevronRight size={18} className="lib-step-chevron" aria-hidden="true" />}
+    </>
+  );
+  return (
+    <li className={cn("lib-step", current && "lib-step-current")}>
+      {current
+        ? <span className="list-row" aria-current="true">{content}</span>
+        : <Link href={`/ejercicios/${exercise.id}`} className="list-row">{content}</Link>}
     </li>
   );
 }
 
-function LadderStep({ exercise, label, current = false }: { exercise?: Exercise; label: string; current?: boolean }) {
-  if (!exercise) {
-    return (
-      <div className="lib-step lib-step-none">
-        <span className="lib-step-label">{label}</span>
-        <p>{current ? "" : label === "Más fácil" ? "Es el punto de partida" : "Es la versión más exigente"}</p>
-      </div>
-    );
-  }
-  const body = (
-    <>
-      <span className="lib-step-label">{label}</span>
-      <b>{exercise.name}</b>
-      <LevelDots level={exercise.level} />
-    </>
-  );
-  return current ? (
-    <div className="lib-step lib-step-current" aria-current="true">{body}</div>
-  ) : (
-    <Link href={`/ejercicios/${exercise.id}`} className={cn("lib-step", "lib-step-link")}>{body}</Link>
-  );
-}
-
+/** Progresión (más fácil y más difícil), sustitutos del mismo patrón y otros ejercicios del mismo músculo. */
 export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
   const [preference] = usePreference();
   const equipment = useMemo(() => availableEquipment(preference), [preference]);
@@ -67,34 +65,47 @@ export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
 
   return (
     <div className="lib-alts">
-      <section aria-labelledby="lib-ladder-title">
-        <h3 id="lib-ladder-title" className="lib-sub">Progresión</h3>
-        <div className="lib-ladder">
-          <LadderStep exercise={easier} label="Más fácil" />
-          <ArrowRight size={16} className="lib-ladder-arrow" aria-hidden="true" />
-          <LadderStep exercise={exercise} label="Actual" current />
-          <ArrowRight size={16} className="lib-ladder-arrow" aria-hidden="true" />
-          <LadderStep exercise={harder} label="Más difícil" />
+      <section className="lib-alt-section" aria-labelledby="lib-ladder-title">
+        <div className="lib-section-head">
+          <h3 id="lib-ladder-title" className="meta">Progresión</h3>
         </div>
+        <ol className="list lib-ladder">
+          <LadderStep exercise={easier} label="Más fácil" fallback="Es el punto de partida" />
+          <LadderStep exercise={exercise} label="Actual" current />
+          <LadderStep exercise={harder} label="Más difícil" fallback="Es la versión más exigente" />
+        </ol>
       </section>
 
-      <section aria-labelledby="lib-alt-title">
-        <h3 id="lib-alt-title" className="lib-sub">Mismo movimiento</h3>
+      <section className="lib-alt-section" aria-labelledby="lib-alt-title">
+        <div className="lib-section-head">
+          <h3 id="lib-alt-title" className="meta">Mismo movimiento</h3>
+          <span className="meta lib-section-note">{patternLabels[exercise.pattern]}</span>
+        </div>
         {alternatives.length ? (
-          <ul className="lib-rows">
-            {alternatives.map((item) => <ExerciseRow key={item.id} exercise={item} equipment={equipment} />)}
-          </ul>
+          <div className="lib-rows">
+            {alternatives.map((item) => (
+              <ExerciseCard
+                key={item.id}
+                exercise={item}
+                href={`/ejercicios/${item.id}`}
+                meta={equipmentText(item)}
+                trailing={<AvailabilityHint available={isAvailable(item, equipment)} />}
+              />
+            ))}
+          </div>
         ) : (
-          <p className="subtle">No hay otras variantes de este patrón en la biblioteca.</p>
+          <p className="lib-alt-empty">No hay otras variantes de este patrón en la biblioteca.</p>
         )}
       </section>
 
       {mainMuscle && sameMuscle.length > 0 && (
-        <section aria-labelledby="lib-same-title">
-          <h3 id="lib-same-title" className="lib-sub">También para {muscleLabels[mainMuscle].toLowerCase()}</h3>
-          <ul className="lib-rows">
-            {sameMuscle.map((item) => <ExerciseRow key={item.id} exercise={item} equipment={equipment} />)}
-          </ul>
+        <section className="lib-alt-section" aria-labelledby="lib-same-title">
+          <div className="lib-section-head">
+            <h3 id="lib-same-title" className="meta">También para {muscleLabels[mainMuscle].toLowerCase()}</h3>
+          </div>
+          <div className="scroll-x lib-alt-row">
+            {sameMuscle.map((item) => <LibraryCard key={item.id} exercise={item} available={isAvailable(item, equipment)} className="lib-card-s" />)}
+          </div>
         </section>
       )}
     </div>

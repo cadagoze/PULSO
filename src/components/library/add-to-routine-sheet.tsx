@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Check, Plus } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { recordFor } from "@/lib/training";
@@ -20,31 +21,35 @@ export function AddToRoutineSheet({ exercise, open, onClose, onAdded }: { exerci
   };
 
   return (
-    <Sheet open={open} onClose={onClose} eyebrow={exercise.name} title="Agregar a rutina">
-      <ul className="lib-routines">
-        {routines.map((routine) => {
-          const included = routine.records.some((record) => record.exerciseId === exercise.id);
-          return (
-            <li key={routine.id}>
-              <button type="button" className="lib-routine" disabled={included} onClick={() => add(routine.id, routine.name)}>
-                <span className="lib-routine-text">
-                  <b>{routine.name}</b>
-                  <span>
-                    {routine.records.length} ejercicios
-                    {routine.days.length ? ` · ${routine.days.map((day) => dayNames[day] ?? "").join(" ")}` : ""}
+    <Sheet open={open} onClose={onClose} eyebrow={exercise.name} title="Agregar a rutina" className="lib-routine-sheet">
+      {routines.length ? (
+        <ul className="list lib-routines">
+          {routines.map((routine) => {
+            const included = routine.records.some((record) => record.exerciseId === exercise.id);
+            return (
+              <li key={routine.id}>
+                <button type="button" className="list-row lib-routine" disabled={included} onClick={() => add(routine.id, routine.name)}>
+                  <span className="grow">
+                    <strong>{routine.name}</strong>
+                    <small>
+                      <span className="num">{routine.records.length}</span> {routine.records.length === 1 ? "ejercicio" : "ejercicios"}
+                      {routine.days.length ? ` · ${routine.days.map((day) => dayNames[day] ?? "").join(" ")}` : ""}
+                    </small>
                   </span>
-                </span>
-                {included ? (
-                  <span className="badge badge-muted"><Check size={12} />Ya está</span>
-                ) : (
-                  <span className="lib-routine-add" aria-hidden="true"><Plus size={18} /></span>
-                )}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="subtle lib-routines-note">Se agrega con {exercise.sets} series al final de la rutina. Puedes ajustarla en Entrenar.</p>
+                  {included ? (
+                    <span className="badge badge-muted"><Check size={12} aria-hidden="true" />Ya está</span>
+                  ) : (
+                    <span className="lib-routine-add" aria-hidden="true"><Plus size={18} /></span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="lib-routines-empty">Aún no tienes rutinas guardadas. <Link href="/entrenar" className="link-button">Crea una en Entrenar</Link></p>
+      )}
+      <p className="lib-routines-note">Se agrega con <span className="num">{exercise.sets}</span> series al final de la rutina. Puedes ajustarla en Entrenar.</p>
     </Sheet>
   );
 }
