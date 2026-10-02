@@ -1,116 +1,128 @@
-/* PULSO — content (Guía y Comidas) */
-.cnt-page { gap: 28px; }
-.cnt-count { font-size: 13px; font-weight: 600; }
-.cnt-categories { margin-top: -8px; }
-.cnt-categories .chip { min-height: 44px; padding: 0 18px; font-size: 14px; }
+/* PULSO — Comidas y hábitos, y Guía.
+ * Bloque editorial de números, filas ligeras con check y una portada tipográfica.
+ * La textura sólo aparece en el banner de idea y en la portada de la guía. */
 
-/* ─── Guía: destacado ──────────────────────────────────────────────────── */
-.cnt-featured { position: relative; overflow: hidden; display: grid; gap: 22px; padding: 24px; }
-.cnt-featured-art { position: relative; display: grid; place-items: center; height: 112px; border-radius: 20px; background: var(--forest-2); color: var(--lime); overflow: hidden; }
-.cnt-ring { position: absolute; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--lime) 35%, transparent); }
-.cnt-ring.one { width: 120px; height: 120px; }
-.cnt-ring.two { width: 220px; height: 220px; border-color: color-mix(in srgb, var(--lime) 16%, transparent); box-shadow: inset 0 0 0 40px color-mix(in srgb, var(--lime) 4%, transparent); }
-.cnt-featured-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-.cnt-featured-copy .eyebrow { display: inline-flex; align-items: center; gap: 6px; }
-.cnt-featured-copy h2 { font-size: clamp(24px, 6.4vw, 32px); font-weight: 650; letter-spacing: -.045em; line-height: 1.1; color: var(--on-forest); text-wrap: balance; }
-.cnt-featured-copy > p:not(.eyebrow) { font-size: 15px; max-width: 46ch; }
-.cnt-featured-copy .btn { margin-top: 8px; }
+/* ─── Estructura ───────────────────────────────────────────────────────── */
+.cnt-page { gap: 32px; }
+.cnt-lead, .cnt-main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.cnt-lead { gap: 28px; }
+.cnt-section { display: flex; flex-direction: column; gap: 12px; }
+.cnt-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cnt-hint { font-size: 12.5px; color: var(--ink-2); text-align: right; }
 
-/* ─── Guía: artículos ──────────────────────────────────────────────────── */
-.cnt-article-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
-.cnt-article { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 18px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); transition: border-color .15s, transform .15s, box-shadow .15s; }
-.cnt-article:hover { border-color: var(--line-strong); box-shadow: var(--shadow); }
-.cnt-article:active { transform: scale(.99); }
-.cnt-article-top { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 2px; }
-.cnt-article-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; }
-.cnt-tone-train { background: var(--lime-soft); color: var(--lime-text); }
-.cnt-tone-food { background: var(--warning-soft); color: var(--warning); }
-.cnt-tone-rest { background: var(--violet-soft); color: var(--violet); }
-.cnt-article-index { font-size: 12px; color: var(--ink-3); }
-.cnt-article-cat { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-.cnt-article strong { font-size: 17px; font-weight: 650; letter-spacing: -.025em; line-height: 1.25; color: var(--ink); text-wrap: pretty; }
-.cnt-article-meta { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: auto; padding-top: 8px; font-size: 12.5px; color: var(--ink-2); }
-.cnt-article-go { margin-left: auto; color: var(--ink-3); transition: transform .15s; }
-.cnt-article:hover .cnt-article-go { transform: translateX(2px); color: var(--lime-text); }
+/* ─── Comidas: el día en números ───────────────────────────────────────── */
+.cnt-day { display: flex; flex-direction: column; gap: 16px; }
+.cnt-day-numbers { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 32px; }
+.cnt-day .nmetric { gap: 10px; }
+.cnt-fraction .nmetric-label { display: flex; align-items: center; gap: 7px; }
+/* Meta cumplida: check que aparece con un pequeño rebote (después del check de la fila). */
+.cnt-goal { display: grid; place-items: center; width: 18px; height: 18px; flex: none; border-radius: 50%; background: var(--lime); color: var(--lime-ink); animation: pop var(--motion-base) var(--ease-spring) var(--motion-base) backwards; }
+.cnt-fraction.is-met .nmetric-label { color: var(--ink); }
+.cnt-day-line { max-width: 46ch; font-size: 14px; line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+.cnt-day-line b { color: var(--ink); font-weight: 600; }
 
-/* ─── Guía: cita ───────────────────────────────────────────────────────── */
-.cnt-quote { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 28px 24px 24px 24px; border-left: 3px solid var(--lime); background: var(--surface-2); border-radius: 0 var(--radius) var(--radius) 0; }
-.cnt-quote-mark { position: absolute; top: -8px; right: 18px; font-size: 96px; line-height: 1; font-weight: 700; color: color-mix(in srgb, var(--lime-text) 22%, transparent); }
-.cnt-quote p { position: relative; font-size: clamp(20px, 5.4vw, 26px); font-weight: 600; letter-spacing: -.035em; line-height: 1.25; max-width: 30ch; text-wrap: balance; }
+/* ─── Comidas y hábitos: filas ─────────────────────────────────────────── */
+.cnt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.cnt-row { position: relative; isolation: isolate; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 76px; padding: 16px 16px 16px 20px; text-align: left; transition: background-color var(--motion-fast); }
+/* El tinte lima suave es una capa que sólo cambia de opacidad. */
+.cnt-row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--lime-soft); opacity: 0; transition: opacity var(--motion-base) var(--ease-standard); }
+.cnt-row.is-done::before { opacity: 1; }
+.cnt-list > li + li > .cnt-row::after { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 1px; background: var(--line); }
+@media (hover: hover) { .cnt-row:hover { background: var(--surface-2); } }
+.cnt-row:active { background: var(--surface-2); }
+.cnt-row.is-done:active::before { opacity: .7; }
+.cnt-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cnt-row-meta { margin-bottom: 3px; }
+.cnt-row-title { font-size: 16.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.25; }
+.cnt-row-detail { font-size: 13.5px; line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+.cnt-row-note { font-size: 13px; line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
+.cnt-row-cta { flex: none; }
+.cnt-check { position: relative; display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); color: var(--ink-2); }
+.cnt-check-fill { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: var(--lime); color: var(--lime-ink); }
+.cnt-row.is-fresh .cnt-check-fill { animation: pop var(--motion-base) var(--ease-spring) backwards; }
+/* Al registrar una comida, el check y el tinte esperan a que la hoja termine de bajar. */
+.cnt-meal.is-fresh .cnt-check-fill { animation-delay: var(--motion-base); }
+.cnt-meal.is-fresh::before { transition-delay: var(--motion-base); }
 
-/* ─── Guía: detalle ────────────────────────────────────────────────────── */
+/* ─── Comidas: idea para la próxima comida ─────────────────────────────── */
+.cnt-idea { display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 24px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+.cnt-idea > * { position: relative; z-index: 3; }
+.cnt-idea-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.cnt-idea-title { max-width: 22ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 23px; font-weight: 600; letter-spacing: -.03em; line-height: 1.08; text-wrap: balance; }
+.cnt-idea-detail { max-width: 48ch; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+
+/* ─── Comidas: equilibrio del día ──────────────────────────────────────── */
+.cnt-balance { display: flex; flex-direction: column; gap: 22px; padding: 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.cnt-balance-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.cnt-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.cnt-bars li { display: grid; grid-template-columns: 104px minmax(0, 1fr) 18px; align-items: center; gap: 12px; font-size: 14px; }
+.cnt-bars b { font-weight: 600; text-align: right; }
+
+/* ─── Comidas: registro (hoja) ─────────────────────────────────────────── */
+.cnt-form { display: flex; flex-direction: column; gap: 22px; }
+.cnt-fieldset { display: flex; flex-direction: column; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.cnt-legend { padding: 0; font-size: 14px; font-weight: 600; color: var(--ink); }
+legend.cnt-legend { margin-bottom: 12px; }
+.cnt-legend-hint { margin-left: 4px; font-weight: 500; color: var(--ink-2); }
+.cnt-fieldset .chip { min-height: 44px; }
+.cnt-satiety-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cnt-satiety-value { font-size: 14px; color: var(--ink-2); }
+.cnt-satiety-value b { font-weight: 600; color: var(--ink); }
+.cnt-satiety-scale { display: flex; justify-content: space-between; margin-top: -4px; font-size: 12px; color: var(--ink-2); }
+.cnt-form-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+/* ─── Guía ─────────────────────────────────────────────────────────────── */
+.cnt-guide .page-header h1 { font-size: clamp(60px, 18vw, 96px); letter-spacing: -.05em; line-height: .9; }
+/* Sin imán de desplazamiento: así la categoría elegida puede asomar completa sin saltar al inicio. */
+.cnt-filters { gap: 8px; scroll-snap-type: none; }
+.cnt-filters .chip { min-height: 44px; padding: 0 18px; }
+.cnt-cover { min-height: 420px; padding: 22px; border-radius: var(--radius-xl); }
+.cnt-cover .routine-card-number .num-display { font-size: clamp(120px, 38vw, 184px); }
+.cnt-cover .routine-card-title { font-size: clamp(26px, 7.2vw, 34px); text-wrap: balance; }
+.cnt-cover .routine-card-meta { max-width: 42ch; font-size: 14.5px; line-height: 1.45; }
+.cnt-cover .routine-card-body { padding-top: 22px; }
+.cnt-cover .routine-card-action { margin-top: 4px; }
+.cnt-cover.cnt-cover-aside { display: none; }
+
+.cnt-reads { list-style: none; margin: 0; padding: 0; }
+.cnt-reads > li + li { box-shadow: inset 0 1px 0 var(--line); }
+.cnt-read { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: start; gap: 12px; width: calc(100% + 24px); margin: 0 -12px; padding: 18px 12px; border-radius: var(--radius); text-align: left; transition: background-color var(--motion-fast); }
+@media (hover: hover) { .cnt-read:hover { background: var(--surface); } }
+.cnt-read:active { background: var(--surface-2); }
+.cnt-read-index { padding-top: 1px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; color: var(--ink-3); }
+.cnt-read-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cnt-read-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cnt-read-title { font-size: 17px; font-weight: 600; letter-spacing: -.02em; line-height: 1.28; text-wrap: pretty; }
+.cnt-read-time { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 36px; }
+.cnt-read-time b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums lining-nums; letter-spacing: -.05em; line-height: .84; }
+
+.cnt-quote { display: flex; flex-direction: column; gap: 14px; padding-top: 28px; border-top: 1px solid var(--line); }
+.cnt-quote-text { margin: 0; }
+.cnt-quote-text p { max-width: 19ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(26px, 7.4vw, 38px); font-weight: 600; letter-spacing: -.04em; line-height: 1.05; text-wrap: balance; }
+
 .cnt-sheet .sheet-head h2 { text-wrap: balance; }
-.cnt-detail { display: flex; flex-direction: column; gap: 16px; }
-.cnt-detail-lead { font-size: 17px; line-height: 1.55; color: var(--ink); }
-.cnt-detail-action { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: var(--radius); background: var(--lime-soft); }
-.cnt-detail-action p:not(.eyebrow) { font-size: 15px; line-height: 1.5; color: var(--ink); }
-.cnt-detail-note { font-size: 12.5px; color: var(--ink-2); padding-top: 12px; border-top: 1px solid var(--line); }
+.cnt-reader { display: flex; flex-direction: column; gap: 18px; }
+.cnt-reader-lead { font-size: 17px; line-height: 1.55; color: var(--ink); }
+.cnt-reader-action { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }
+.cnt-reader-action p:not(.meta) { font-size: 15px; line-height: 1.5; }
+.cnt-reader-note { padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-2); }
 
-/* ─── Comidas: resumen ─────────────────────────────────────────────────── */
-.cnt-meals-layout { display: flex; flex-direction: column; gap: 28px; }
-.cnt-meals-main, .cnt-meals-side { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
-.cnt-summary { display: flex; align-items: center; gap: 20px; }
-.cnt-ring-value { font-size: 28px; font-weight: 600; letter-spacing: -.04em; }
-.cnt-ring-value small { font-size: 15px; color: var(--ink-3); }
-.cnt-ring-label { font-size: 11px; color: var(--ink-2); font-weight: 600; }
-.cnt-summary-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
-.cnt-summary-copy h2 { font-size: 20px; }
-.cnt-summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 0; }
-.cnt-summary-stats > div { display: flex; flex-direction: column-reverse; gap: 0; min-width: 0; }
-.cnt-summary-stats dt { font-size: 11.5px; color: var(--ink-2); line-height: 1.3; }
-.cnt-summary-stats dd { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.2; }
-.cnt-summary-stats dd small { font-size: 13px; color: var(--ink-3); }
-
-/* ─── Comidas: línea del día ───────────────────────────────────────────── */
-.cnt-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.cnt-meal { position: relative; display: grid; grid-template-columns: 46px 20px minmax(0, 1fr) 44px; gap: 12px; align-items: start; padding: 14px 0; }
-.cnt-meal + .cnt-meal { border-top: 1px solid var(--line); }
-.cnt-meal::before { content: ""; position: absolute; left: calc(46px + 12px + 9px); top: 0; bottom: 0; width: 2px; background: var(--line); }
-.cnt-meal:first-child::before { top: 24px; }
-.cnt-meal:last-child::before { bottom: calc(100% - 24px); }
-.cnt-meal-time { font-size: 13px; font-weight: 600; color: var(--ink-2); padding-top: 3px; }
-.cnt-meal-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; margin-top: 3px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line-strong); }
-.cnt-meal.is-done .cnt-meal-dot { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
-.cnt-meal-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.cnt-meal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.cnt-meal-head h3 { font-size: 17px; font-weight: 650; letter-spacing: -.025em; }
-.cnt-meal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.cnt-meal-tags > span { padding: 3px 9px; border-radius: 8px; background: var(--surface-2); font-size: 12px; font-weight: 600; color: var(--ink-2); }
-.cnt-meal-tags .cnt-meal-satiety { background: var(--lime-soft); color: var(--lime-text); }
-.cnt-meal-note { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
-.cnt-meal-action { margin-top: -6px; }
-.cnt-meal:not(.is-done) .cnt-meal-action { background: var(--forest); border-color: var(--forest); color: var(--lime); }
-
-/* ─── Comidas: sugerencia y equilibrio ─────────────────────────────────── */
-.cnt-suggestion { display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); border-color: transparent; }
-.cnt-suggestion-icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 4px; border-radius: 12px; background: var(--violet-soft); color: var(--violet); }
-.cnt-suggestion h2 { font-size: 20px; line-height: 1.2; text-wrap: balance; }
-.cnt-suggestion-detail { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink-2); }
-.cnt-suggestion-detail svg { flex: none; margin-top: 3px; color: var(--lime-text); }
-.cnt-balance { list-style: none; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-.cnt-balance li { display: grid; grid-template-columns: 96px minmax(0, 1fr) 20px; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
-.cnt-balance-track { height: 8px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
-.cnt-balance-track i { display: block; height: 100%; border-radius: inherit; background: var(--lime-text); transition: width .4s ease; }
-.cnt-balance b { text-align: right; font-weight: 600; }
-
-/* ─── Comidas: formulario ──────────────────────────────────────────────── */
-.cnt-form { display: flex; flex-direction: column; gap: 20px; }
-.cnt-fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.cnt-fieldset legend { padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
-.cnt-fieldset .chip { min-height: 44px; font-size: 14px; }
-.cnt-satiety-value { color: var(--ink); font-weight: 600; }
-.cnt-satiety input[type="range"] { width: 100%; height: 44px; accent-color: var(--lime-text); cursor: pointer; }
-.cnt-satiety-scale { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 500; color: var(--ink-3); margin-top: -6px; }
-
-/* ─── Escritorio ───────────────────────────────────────────────────────── */
-@media (min-width: 720px) {
-  .cnt-featured { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: center; padding: 28px; }
-  .cnt-featured-art { height: 100%; min-height: 220px; }
-  .cnt-article { min-height: 188px; padding: 18px; }
-  .cnt-article-top { margin-bottom: 6px; }
+/* ─── Tableta: una columna de lectura cómoda ───────────────────────────── */
+@media (min-width: 720px) and (max-width: 1023px) {
+  .cnt-split { width: 100%; max-width: 680px; margin-inline: auto; }
 }
+
+/* ─── Escritorio: lo editorial fijo a la izquierda, las filas a la derecha ── */
 @media (min-width: 1024px) {
-  .cnt-meals-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
-  .cnt-meals-side { position: sticky; top: 24px; }
-  .cnt-quote { padding: 36px 40px 32px; }
+  .cnt-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 72px; align-items: start; padding-top: 40px; }
+  .cnt-lead { position: sticky; top: 40px; }
+  /* Guía: como Inicio, la portada queda fija a la izquierda y el título, los filtros y la lista a la derecha. */
+  .cnt-guide { grid-template-areas: "cover lead" "cover list" "cover quote"; row-gap: 40px; }
+  .cnt-guide .cnt-main { display: contents; }
+  .cnt-guide .cnt-lead { grid-area: lead; position: static; }
+  .cnt-guide .cnt-cover, .cnt-guide .cnt-cover.cnt-cover-aside { grid-area: cover; position: sticky; top: 40px; display: flex; height: calc(100dvh - var(--nav-h) - var(--nav-gap) - 88px); min-height: 480px; max-height: 760px; }
+  .cnt-guide .cnt-section { grid-area: list; }
+  .cnt-guide .cnt-quote { grid-area: quote; }
+  .cnt-filters { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+  .cnt-guide .page-header h1 { font-size: 104px; }
 }
