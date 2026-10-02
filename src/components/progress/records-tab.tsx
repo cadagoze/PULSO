@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Medal, Trophy } from "lucide-react";
-import { EmptyState } from "@/components/ui";
-import { exerciseName, recordValueLabel, weightLabel, type Unit } from "@/components/progress/format";
-import { exerciseBests, recordKindLabels, type ExerciseBests } from "@/lib/progression";
+import { ChevronRight, Medal } from "lucide-react";
+import { EmptyState, NumberMetric } from "@/components/ui";
+import { exerciseName, weightLabel, type Unit } from "@/components/progress/format";
+import { RecordRow } from "@/components/progress/record-row";
+import { exerciseBests, type ExerciseBests } from "@/lib/progression";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, sortedWorkouts } from "@/lib/training";
 import { formatShortDate } from "@/lib/utils";
-import type { PersonalRecordHit, WorkoutEntry } from "@/types";
+import type { WorkoutEntry } from "@/types";
 
 interface ExerciseSummary {
   id: number;
@@ -36,13 +37,13 @@ function summaries(workouts: WorkoutEntry[]): ExerciseSummary[] {
     .sort((a, b) => b.lastDate.localeCompare(a.lastDate) || exerciseName(a.id).localeCompare(exerciseName(b.id), "es"));
 }
 
+/** Récords recientes (en naranja: es su color) y la mejor marca de cada ejercicio, con enlace a su progreso. */
 export function RecordsTab() {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
   const list = summaries(workouts);
-  const feed = sortedWorkouts(workouts)
-    .flatMap((workout) => (workout.prs ?? []).map((pr) => ({ pr, date: workout.date, key: `${workout.id}-${pr.exerciseId}-${pr.kind}` })))
-    .slice(0, 8);
+  const hits = sortedWorkouts(workouts).flatMap((workout) => (workout.prs ?? []).map((pr) => ({ pr, date: workout.date, key: `${workout.id}-${pr.exerciseId}-${pr.kind}` })));
+  const feed = hits.slice(0, 8);
 
   if (!list.length) {
     return (
@@ -57,22 +58,26 @@ export function RecordsTab() {
   }
 
   return (
-    <div className="prog-stack">
-      <section className="card card-l card-forest prog-feed" aria-labelledby="prog-feed-title">
-        <p className="eyebrow">Récords recientes</p>
-        <h2 id="prog-feed-title" className="sr-only">Récords recientes</h2>
+    <div className="prog-stack prog-records">
+      <div className="prog-records-numbers">
+        <NumberMetric size="l" value={String(hits.length).padStart(2, "0")} label={hits.length === 1 ? "récord personal" : "récords personales"} />
+        <NumberMetric size="l" value={String(list.length).padStart(2, "0")} label={list.length === 1 ? "ejercicio con marca" : "ejercicios con marca"} />
+      </div>
+
+      <section className="section" aria-labelledby="prog-feed-title">
+        <h2 id="prog-feed-title" className="meta">Récords recientes</h2>
         {feed.length ? (
-          <ul className="prog-feed-list">
+          <ul className="list prog-list">
             {feed.map((item) => (
-              <FeedItem key={item.key} pr={item.pr} date={item.date} unit={settings.unit} />
+              <li key={item.key}><RecordRow pr={item.pr} date={item.date} unit={settings.unit} badge={false} /></li>
             ))}
           </ul>
         ) : (
-          <p className="prog-feed-empty">Todavía no superas una marca. Repite tus ejercicios y aquí aparecerá cada mejora.</p>
+          <p className="notice">Todavía no superas una marca. Repite tus ejercicios y aquí aparecerá cada mejora.</p>
         )}
       </section>
 
-      <section className="prog-stack-s" aria-labelledby="prog-bests-title">
+      <section className="section" aria-labelledby="prog-bests-title">
         <div className="section-head">
           <h2 id="prog-bests-title">Mejores marcas por ejercicio</h2>
           <span className="subtle num">{list.length}</span>
@@ -86,22 +91,6 @@ export function RecordsTab() {
         </ul>
       </section>
     </div>
-  );
-}
-
-function FeedItem({ pr, date, unit }: { pr: PersonalRecordHit; date: string; unit: Unit }) {
-  return (
-    <li className="prog-feed-item">
-      <span className="prog-feed-icon" aria-hidden="true"><Trophy size={16} /></span>
-      <span className="prog-feed-main">
-        <strong>{exerciseName(pr.exerciseId)}</strong>
-        <small>{recordKindLabels[pr.kind]} · {formatShortDate(date)}</small>
-      </span>
-      <span className="prog-feed-values num">
-        <s>{recordValueLabel(pr.kind, pr.previous, unit)}</s>
-        <b>{recordValueLabel(pr.kind, pr.value, unit)}</b>
-      </span>
-    </li>
   );
 }
 
@@ -136,7 +125,7 @@ function BestCard({ item, unit }: { item: ExerciseSummary; unit: Unit }) {
 function BestStat({ label, value }: { label: string; value: string }) {
   return (
     <span className="prog-best-stat">
-      <small>{label}</small>
+      <small className="meta">{label}</small>
       <b className="num">{value}</b>
     </span>
   );

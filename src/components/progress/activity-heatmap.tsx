@@ -1,11 +1,12 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { activityGrid, type HeatDay } from "@/lib/analytics";
 import { localDateKey } from "@/lib/utils";
 import type { WorkoutEntry } from "@/types";
 
 const WEEKS = 16;
-const dayLetters = ["L", "M", "X", "J", "V", "S", "D"];
+const dayLetters = ["L", "M", "M", "J", "V", "S", "D"];
 
 function level(sets: number) {
   if (sets <= 0) return 0;
@@ -32,6 +33,7 @@ function monthLabels(grid: HeatDay[][]) {
   });
 }
 
+/** Constancia de las últimas 16 semanas: una columna por semana, de lunes a domingo; más series, más intenso. */
 export function ActivityHeatmap({ workouts, now }: { workouts: WorkoutEntry[]; now: Date }) {
   const grid = activityGrid(workouts, WEEKS, now);
   const months = monthLabels(grid);
@@ -39,32 +41,25 @@ export function ActivityHeatmap({ workouts, now }: { workouts: WorkoutEntry[]; n
   const activeDays = grid.flat().filter((day) => day.sessions > 0).length;
 
   return (
-    <section className="card prog-heat-card" aria-labelledby="prog-heat-title">
-      <div className="prog-card-head">
-        <div>
-          <h2 id="prog-heat-title">Actividad</h2>
-          <p className="muted prog-card-sub">
-            <span className="num">{activeDays}</span> {activeDays === 1 ? "día activo" : "días activos"} en {WEEKS} semanas
-          </p>
-        </div>
-      </div>
-      <div className="prog-heat" style={{ gridTemplateColumns: `14px repeat(${WEEKS}, minmax(0, 1fr))` }}>
+    <figure className="prog-heat-figure">
+      <div className="prog-heat" style={{ "--weeks": WEEKS } as CSSProperties}>
         <span aria-hidden="true" />
         {months.map((month, index) => (
           <span key={`m-${index}`} className="prog-heat-month" aria-hidden="true">{month}</span>
         ))}
         {dayLetters.map((letter, row) => (
-          <HeatRow key={letter} letter={letter} days={grid.map((week) => week[row])} today={today} />
+          <HeatRow key={row} letter={letter} days={grid.map((week) => week[row])} today={today} />
         ))}
       </div>
-      <div className="prog-heat-legend" aria-hidden="true">
-        <span>Menos</span>
-        {[0, 1, 2, 3, 4].map((value) => (
-          <i key={value} className={`prog-heat-cell l${value}`} />
-        ))}
-        <span>Más series</span>
-      </div>
-    </section>
+      <figcaption className="prog-heat-caption">
+        <span><b className="num">{activeDays}</b> {activeDays === 1 ? "día activo" : "días activos"} en {WEEKS} semanas</span>
+        <span className="prog-heat-legend" aria-hidden="true">
+          Menos
+          {[0, 1, 2, 3, 4].map((value) => <i key={value} className={`prog-heat-cell l${value}`} />)}
+          Más
+        </span>
+      </figcaption>
+    </figure>
   );
 }
 

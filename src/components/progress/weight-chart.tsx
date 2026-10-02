@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Unit } from "@/components/progress/format";
 import { formatShortDate, toDisplayWeight } from "@/lib/utils";
@@ -40,8 +41,10 @@ function ticksFor([low, high]: [number, number]) {
   return ticks;
 }
 
+/** Registros (puntos) y media de 7 registros (línea, que se dibuja una vez al aparecer; respeta «reducir movimiento»). */
 export function WeightChart({ entries, unit }: { entries: WeightEntry[]; unit: Unit }) {
-  const data = series(entries, unit);
+  // Datos estables entre renders: la línea sólo vuelve a dibujarse si cambian los registros.
+  const data = useMemo(() => series(entries, unit), [entries, unit]);
   const domain = paddedDomain(data);
   const ticks = ticksFor(domain);
   const number = (value: number) => value.toLocaleString("es-CL", { maximumFractionDigits: 1 });
@@ -96,7 +99,9 @@ export function WeightChart({ entries, unit }: { entries: WeightEntry[]; unit: U
               strokeWidth={2.5}
               dot={false}
               activeDot={false}
-              isAnimationActive={false}
+              isAnimationActive="auto"
+              animationDuration={700}
+              animationEasing="ease-out"
             />
             <Line
               type="linear"

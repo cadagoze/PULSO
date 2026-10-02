@@ -20,6 +20,28 @@ export function weightLabel(kg: number, unit: Unit) {
   return `${toDisplayWeight(kg, unit).toLocaleString("es-CL", { maximumFractionDigits: 1 })} ${unit}`;
 }
 
+/** Número y unidad por separado, para las cifras grandes (`NumberMetric`). Mismo criterio que `volumeLabel`. */
+export function volumeParts(kg: number, unit: Unit) {
+  const value = unit === "lb" ? kg * LB_PER_KG : kg;
+  if (value >= 10_000) return { value: (value / 1000).toLocaleString("es-CL", { maximumFractionDigits: 1 }), unit: unit === "lb" ? "mil lb" : "t" };
+  return { value: Math.round(value).toLocaleString("es-CL"), unit };
+}
+
+/** Minutos hasta las dos horas; desde ahí, horas con un decimal. */
+export function minutesParts(minutes: number) {
+  if (minutes >= 120) return { value: (minutes / 60).toLocaleString("es-CL", { maximumFractionDigits: 1 }), unit: "h" };
+  return { value: Math.round(minutes).toLocaleString("es-CL"), unit: "min" };
+}
+
+export function minutesLabel(minutes: number) {
+  const parts = minutesParts(minutes);
+  return `${parts.value} ${parts.unit}`;
+}
+
+export function sessionsLabel(count: number) {
+  return `${count.toLocaleString("es-CL")} ${count === 1 ? "sesión" : "sesiones"}`;
+}
+
 export function exerciseName(id: number) {
   return exerciseById(id)?.name ?? "Ejercicio";
 }

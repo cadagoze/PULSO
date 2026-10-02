@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Ruler } from "lucide-react";
-import { EmptyState, Sheet } from "@/components/ui";
+import { Button, EmptyState, Sheet } from "@/components/ui";
 import { signed } from "@/components/progress/format";
 import { useMeasurements } from "@/lib/store";
 import { formatNumber, formatShortDate, localDateKey } from "@/lib/utils";
@@ -69,18 +69,18 @@ export function MeasurementsSection() {
       const withValue = sorted.filter((entry) => entry[field.key] !== undefined);
       const first = withValue[0];
       const last = withValue.at(-1);
-      return { ...field, first: first?.[field.key], last: last?.[field.key], lastDate: last?.date };
+      return { ...field, first: first?.[field.key], last: last?.[field.key], lastDate: last?.date, count: withValue.length };
     })
     .filter((row) => row.last !== undefined);
 
   return (
-    <section className="prog-stack-s" aria-labelledby="prog-measures-title">
+    <section className="section" aria-labelledby="prog-measures-title">
       <div className="section-head">
         <h2 id="prog-measures-title">Medidas</h2>
-        <button type="button" className="btn btn-secondary btn-small" onClick={openSheet}>
+        <Button variant="secondary" size="s" onClick={openSheet}>
           <Plus size={16} aria-hidden="true" />
           Registrar medidas
-        </button>
+        </Button>
       </div>
 
       {rows.length ? (
@@ -101,13 +101,13 @@ export function MeasurementsSection() {
                   <td className="num">{row.first !== undefined ? cm(row.first) : "—"}</td>
                   <td className="num">{row.last !== undefined ? cm(row.last) : "—"}</td>
                   <td className="num prog-table-delta">
-                    {row.first !== undefined && row.last !== undefined ? signed(row.last - row.first, cm) : "—"}
+                    {row.count > 1 && row.first !== undefined && row.last !== undefined ? signed(row.last - row.first, cm) : "—"}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="subtle prog-measures-foot">
+          <p className="meta prog-measures-foot">
             {sorted.length} {sorted.length === 1 ? "registro" : "registros"} · último el {formatShortDate(sorted[sorted.length - 1].date)}
           </p>
         </div>
@@ -136,7 +136,7 @@ export function MeasurementsSection() {
           <input type="date" value={date} max={today} onChange={(event) => setDate(event.target.value)} />
         </label>
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button type="button" className="btn btn-primary btn-block" onClick={save}>Guardar medidas</button>
+        <Button block onClick={save}>Guardar medidas</Button>
       </Sheet>
     </section>
   );

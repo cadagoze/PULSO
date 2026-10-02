@@ -1,9 +1,10 @@
 "use client";
 
-import { Award, CalendarCheck, CalendarRange, Crown, Dumbbell, Footprints, Layers, Medal, Repeat, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
-import { ProgressBar, ProgressRing } from "@/components/ui";
+import { Award, CalendarCheck, CalendarRange, Check, Crown, Dumbbell, Footprints, Layers, Medal, Repeat, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { NumberMetric, ProgressBar } from "@/components/ui";
 import { achievements, type Achievement } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 const groups: Array<{ id: Achievement["group"]; label: string; detail: string }> = [
   { id: "constancia", label: "Constancia", detail: "Volver una y otra vez" },
@@ -35,29 +36,28 @@ function progressText(item: Achievement) {
   return `${current} de ${target.toLocaleString("es-CL")}${info?.unit ? ` ${info.unit}` : ""}`;
 }
 
+/** Logros: cuántos llevas en grande y cada hito con su avance. */
 export function AchievementsTab() {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
   const list = achievements(workouts, settings.weeklyGoal, settings.pausedWeeks);
   const unlocked = list.filter((item) => item.unlocked).length;
+  const next = list.filter((item) => !item.unlocked).sort((a, b) => b.progress - a.progress)[0];
 
   return (
-    <div className="prog-stack">
-      <section className="card card-l card-forest prog-ach-summary" aria-labelledby="prog-ach-title">
-        <ProgressRing value={(unlocked / list.length) * 100} size={92} stroke={10} label={`${unlocked} de ${list.length} logros`}>
-          <strong className="num prog-ach-pct">{Math.round((unlocked / list.length) * 100)}%</strong>
-        </ProgressRing>
-        <div>
-          <p className="eyebrow">Logros</p>
-          <h2 id="prog-ach-title" className="num prog-ach-count">
-            {unlocked} <span>de {list.length} logros</span>
-          </h2>
-          <p>{unlocked === list.length ? "Los tienes todos. Impresionante." : "Cada sesión te acerca al siguiente."}</p>
-        </div>
+    <div className="prog-stack prog-achievements">
+      <section className="prog-ach-summary" aria-labelledby="prog-ach-title">
+        <h2 id="prog-ach-title" className="meta">Logros desbloqueados</h2>
+        <NumberMetric
+          size="xl"
+          value={<>{unlocked}<span className="nmetric-soft">/{list.length}</span></>}
+          label={unlocked === list.length ? "Los tienes todos. Impresionante." : next ? `Siguiente: ${next.title} · ${progressText(next)}` : "Cada sesión te acerca al siguiente."}
+        />
+        <ProgressBar value={(unlocked / list.length) * 100} label={`${unlocked} de ${list.length} logros`} />
       </section>
 
       {groups.map((group) => (
-        <section key={group.id} className="prog-stack-s" aria-labelledby={`prog-ach-${group.id}`}>
+        <section key={group.id} className="section" aria-labelledby={`prog-ach-${group.id}`}>
           <div className="section-head">
             <h2 id={`prog-ach-${group.id}`}>{group.label}</h2>
             <span className="subtle prog-ach-group-detail">{group.detail}</span>
@@ -78,7 +78,7 @@ export function AchievementsTab() {
 function Badge({ item }: { item: Achievement }) {
   const Icon = meta[item.id]?.icon ?? Award;
   return (
-    <article className={`prog-badge ${item.unlocked ? "unlocked" : "locked"}`} aria-label={`${item.title}: ${item.unlocked ? "desbloqueado" : progressText(item)}`}>
+    <article className={cn("prog-badge", item.unlocked ? "unlocked" : "locked")} aria-label={`${item.title}: ${item.unlocked ? "desbloqueado" : progressText(item)}`}>
       <span className="prog-badge-icon" aria-hidden="true">
         <Icon size={22} />
       </span>
@@ -86,7 +86,7 @@ function Badge({ item }: { item: Achievement }) {
         <strong>{item.title}</strong>
         <small>{item.detail}</small>
         {item.unlocked ? (
-          <span className="prog-badge-done">Desbloqueado</span>
+          <span className="prog-badge-done"><Check size={13} strokeWidth={3} aria-hidden="true" />Desbloqueado</span>
         ) : (
           <span className="prog-badge-progress">
             <ProgressBar value={item.progress * 100} label={`Progreso de ${item.title}`} />

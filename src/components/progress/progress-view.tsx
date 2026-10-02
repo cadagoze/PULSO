@@ -1,51 +1,67 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { PageHeader, Segmented } from "@/components/ui";
+import { ArrowLeft } from "lucide-react";
 import { AchievementsTab } from "@/components/progress/achievements-tab";
 import { BodyTab } from "@/components/progress/body-tab";
 import { HistoryTab } from "@/components/progress/history-tab";
+import { isPeriod, type Period } from "@/components/progress/period";
+import type { ChartMetric } from "@/components/progress/period-chart";
+import { isSubview, progressViews, useBackToSummary, type ProgressSubview } from "@/components/progress/progress-nav";
 import { RecordsTab } from "@/components/progress/records-tab";
 import { SummaryTab } from "@/components/progress/summary-tab";
 
-const tabs = [
-  { value: "resumen", label: "Resumen" },
-  { value: "historial", label: "Historial" },
-  { value: "records", label: "Récords" },
-  { value: "cuerpo", label: "Cuerpo" },
-  { value: "logros", label: "Logros" },
-] as const;
+const subtitles: Record<ProgressSubview, string> = {
+  historial: "Cada sesión con sus series, cargas y récords.",
+  records: "Tus mejores marcas, ejercicio por ejercicio.",
+  cuerpo: "Peso y medidas: cambios que se ven con el tiempo.",
+  logros: "Hitos de constancia, fuerza y volumen.",
+};
 
-type Tab = (typeof tabs)[number]["value"];
-
-function isTab(value: string | null): value is Tab {
-  return tabs.some((tab) => tab.value === value);
-}
-
+/**
+ * Progreso: por defecto, el resumen del periodo (Semana | Mes | Año, en `?periodo=`).
+ * Las vistas completas se abren con `?tab=historial|records|cuerpo|logros`, como antes.
+ */
 export function ProgressView() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const raw = params.get("tab");
-  const tab: Tab = isTab(raw) ? raw : "resumen";
-  const label = tabs.find((item) => item.value === tab)?.label ?? "Resumen";
+  const tab = params.get("tab");
+  const initial = params.get("periodo");
+  // El periodo responde al instante; la URL se actualiza después para conservarlo al volver.
+  const [period, setPeriod] = useState<Period>(isPeriod(initial) ? initial : "semana");
+  const [metric, setMetric] = useState<ChartMetric | null>(null);
 
-  function change(next: Tab) {
-    router.replace(next === "resumen" ? pathname : `${pathname}?tab=${next}`, { scroll: false });
+  function changePeriod(next: Period) {
+    setPeriod(next);
+    router.replace(next === "semana" ? pathname : `${pathname}?periodo=${next}`, { scroll: false });
   }
 
+  if (isSubview(tab)) return <Subview key={tab} view={tab} />;
+  return <SummaryTab period={period} onPeriod={changePeriod} metric={metric} onMetric={setMetric} />;
+}
+
+function Subview({ view }: { view: ProgressSubview }) {
+  const back = useBackToSummary();
+  const title = progressViews.find((item) => item.value === view)?.label ?? "Progreso";
   return (
-    <div className="page prog-page">
-      <PageHeader eyebrow="TU EVOLUCIÓN" title="Progreso" />
-      <div className="prog-tabs">
-        <Segmented options={[...tabs]} value={tab} onChange={change} label="Secciones de progreso" />
-      </div>
-      <div role="tabpanel" aria-label={label} className="prog-panel">
-        {tab === "resumen" && <SummaryTab />}
-        {tab === "historial" && <HistoryTab />}
-        {tab === "records" && <RecordsTab />}
-        {tab === "cuerpo" && <BodyTab />}
-        {tab === "logros" && <AchievementsTab />}
+    <div className="page prog-page prog-subview">
+      <header className="page-header">
+        <div>
+          <button type="button" className="icon-button back" onClick={back} aria-label="Volver a Progreso">
+            <ArrowLeft size={20} />
+          </button>
+          <p className="meta">Progreso</p>
+          <h1>{title}</h1>
+          <p className="page-subtitle">{subtitles[view]}</p>
+        </div>
+      </header>
+      <div role="region" aria-label={title} className="prog-panel rise">
+        {view === "historial" && <HistoryTab />}
+        {view === "records" && <RecordsTab />}
+        {view === "cuerpo" && <BodyTab />}
+        {view === "logros" && <AchievementsTab />}
       </div>
     </div>
   );

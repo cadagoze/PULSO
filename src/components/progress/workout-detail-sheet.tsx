@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { Check, Copy, Play, Trash2, TriangleAlert, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
-import { exerciseName, kindLetters, kindNames, longDayLabel, recordValueLabel, volumeLabel, type Unit } from "@/components/progress/format";
+import { exerciseName, kindLetters, kindNames, longDayLabel, recordValueLabel, volumeParts, type Unit } from "@/components/progress/format";
+import { workoutVolume } from "@/components/progress/period";
 import { recordKindLabels } from "@/lib/progression";
 import { useStartWorkout } from "@/lib/session";
 import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
@@ -33,6 +34,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
 
   const records = workout?.records ?? [];
   const name = workout?.name ?? "Entrenamiento";
+  const volume = volumeParts(workout ? workoutVolume(workout) : 0, settings.unit);
 
   function repeat() {
     if (!records.length) return;
@@ -45,7 +47,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
       ...current,
       { id: newId("rutina"), name, days: [], restSeconds: settings.defaultRest, records: freshRecords(records), updatedAt: new Date().toISOString() },
     ]);
-    showToast(`"${name}" se guardó en tus rutinas`);
+    showToast(`Guardada en tus rutinas · ${name}`);
   }
 
   function remove() {
@@ -67,15 +69,16 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
         {workout && (
           <>
             <dl className="prog-detail-stats">
-              <div><dt>Duración</dt><dd className="num">{Math.round(workout.durationMinutes)} min</dd></div>
-              <div><dt>Series</dt><dd className="num">{workout.sets}</dd></div>
-              <div><dt>Volumen</dt><dd className="num">{volumeLabel(workout.volume ?? 0, settings.unit)}</dd></div>
+              <div><dt className="meta">Duración</dt><dd><span className="num">{Math.round(workout.durationMinutes)}</span><small>min</small></dd></div>
+              <div><dt className="meta">Series</dt><dd><span className="num">{workout.sets}</span></dd></div>
+              <div><dt className="meta">Volumen</dt><dd><span className="num">{volume.value}</span><small>{volume.unit}</small></dd></div>
             </dl>
 
             {workout.prs && workout.prs.length > 0 && (
               <section className="prog-detail-prs" aria-label="Récords de esta sesión">
+                <p className="meta">{workout.prs.length === 1 ? "Récord de esta sesión" : `${workout.prs.length} récords en esta sesión`}</p>
                 {workout.prs.map((pr) => (
-                  <p key={`${pr.exerciseId}-${pr.kind}`}>
+                  <p key={`${pr.exerciseId}-${pr.kind}`} className="prog-detail-pr">
                     <Trophy size={15} aria-hidden="true" />
                     <span>
                       <strong>{exerciseName(pr.exerciseId)}</strong> · {recordKindLabels[pr.kind]}{" "}
@@ -135,7 +138,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
       {toast && (
         <div className="toast prog-toast" role="status">
           <Check size={16} aria-hidden="true" />
-          {toast}
+          <span className="prog-toast-text">{toast}</span>
         </div>
       )}
     </>
