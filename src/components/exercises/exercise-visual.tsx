@@ -26,7 +26,7 @@ export function ExerciseVisual({ exercise, size = "card", className, eager = fal
     if (panel) {
       return (
         <div className={cn("exercise-visual exercise-visual-immersive photo on-dark", className)}>
-          <Image src={panel} alt={exercise.imageAlt ?? exercise.name} fill sizes="(max-width: 720px) 100vw, 720px" preload={eager} loading={eager ? "eager" : undefined} className="photo-img" style={{ objectPosition: "center 30%" }} />
+          <Image src={panel} alt={`${exercise.name}: posición final`} fill sizes="(max-width: 720px) 100vw, 720px" preload={eager} loading={eager ? "eager" : undefined} className="photo-img" style={{ objectPosition: "center 30%" }} />
         </div>
       );
     }
