@@ -24,7 +24,7 @@ export function HomeHeader({ now, line }: { now: number; line: string }) {
       <div className="home-header-bar">
         <span className="wordmark">PULSO<span>.</span></span>
         <Link href="/perfil" className="home-avatar" aria-label="Tu perfil">
-          {name ? <span>{initials(name)}</span> : <UserRound size={19} />}
+          {settings.photo ? <span className="home-avatar-photo" style={{ backgroundImage: `url(${settings.photo})` }} /> : name ? <span>{initials(name)}</span> : <UserRound size={19} />}
         </Link>
       </div>
       <div className="home-greeting">

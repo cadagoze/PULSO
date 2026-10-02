@@ -213,6 +213,8 @@ export interface MeasurementEntry {
 
 export interface Settings {
   name: string;
+  /** Foto de perfil opcional: JPEG pequeño (≈256 px) como data URL, guardado en el dispositivo. */
+  photo?: string;
   unit: "kg" | "lb";
   theme: "system" | "light" | "dark";
   weeklyGoal: number;
