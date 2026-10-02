@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 import "@/styles/home.css";
+import "@/styles/onboarding.css";
 import "@/styles/train.css";
 import "@/styles/session.css";
 import "@/styles/library.css";
@@ -12,6 +13,8 @@ import "@/styles/content.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
+// Títulos y números: Archivo con eje de ancho para el tono editorial y deportivo.
+const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo", display: "swap" });
 
 export const metadata: Metadata = {
   title: {
@@ -29,8 +32,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f6f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#090c0a" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f3ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0f0e" },
   ],
 };
 
@@ -43,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${geist.variable} ${geistMono.variable} ${archivo.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

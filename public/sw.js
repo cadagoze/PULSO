@@ -3,12 +3,12 @@
  * - Al instalar guarda las pantallas principales y todo lo que referencian (JS, CSS, fuentes);
  *   después, en segundo plano, programas y fichas de ejercicio.
  * - Páginas: red primero (contenido fresco) y, sin conexión, la copia guardada.
- * - Archivos con hash (/_next/static), imágenes e íconos: caché primero.
+ * - Archivos con hash (/_next/static), imágenes (también las optimizadas, /_next/image) e íconos: caché primero.
  * - Los datos del usuario viven en localStorage; el service worker nunca los toca.
  *
  * Sube VERSION si cambias este archivo de forma incompatible.
  */
-const VERSION = "pulso-v2";
+const VERSION = "pulso-v3";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 
@@ -18,10 +18,6 @@ const ROUTES = [
 ];
 const STATIC_FILES = [
   "/offline.html", "/manifest.webmanifest", "/icon/192", "/icon/512", "/apple-icon",
-  "/images/pulso-strength-at-home.png",
-  "/images/exercises/chair-squat.png", "/images/exercises/incline-pushup.png",
-  "/images/exercises/glute-bridge.png", "/images/exercises/knee-plank.png",
-  "/images/exercises/brisk-march.png",
 ];
 
 const ASSET_PATTERN = /\/_next\/static\/[^"'\\)\s]+/g;
@@ -105,6 +101,7 @@ self.addEventListener("activate", (event) => {
 
 function isAsset(url) {
   return url.pathname.startsWith("/_next/static/")
+    || url.pathname === "/_next/image"
     || url.pathname.startsWith("/images/")
     || url.pathname.startsWith("/icon")
     || url.pathname.startsWith("/apple-icon")

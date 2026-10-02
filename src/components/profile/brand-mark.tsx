@@ -1,5 +1,5 @@
 /** Marca de PULSO para íconos generados (ImageResponse): una "P" lima con punto sobre verde bosque. */
-export const brandColors = { forest: "#20372b", lime: "#b4ee48" } as const;
+export const brandColors = { forest: "#1e3026", lime: "#b7f34a" } as const;
 
 export function BrandMark({ size, rounded }: { size: number; rounded: boolean }) {
   return (

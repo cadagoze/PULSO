@@ -18,7 +18,7 @@ export const exercises: Exercise[] = [
     breathing: "Inhala al bajar y suelta el aire mientras vuelves a ponerte de pie.",
     adaptation: "Usa una silla más alta o apoya suavemente las manos en los muslos.",
     avoid: "Que las rodillas colapsen hacia adentro o dejarte caer sobre la silla.",
-    image: "/images/exercises/chair-squat.png",
+    image: "/images/exercises/chair-squat.webp",
     imageAlt: "Demostración en dos pasos de una sentadilla controlada hacia una silla",
   },
   {
@@ -32,7 +32,7 @@ export const exercises: Exercise[] = [
     breathing: "Inhala al acercar el pecho y exhala al empujar la superficie.",
     adaptation: "Hazla contra una pared: cuanto más vertical estés, menor será la carga.",
     avoid: "Llevar la cabeza primero, hundir la cintura o abrir los codos completamente.",
-    image: "/images/exercises/incline-pushup.png",
+    image: "/images/exercises/incline-pushup.webp",
     imageAlt: "Demostración en dos pasos de una flexión inclinada sobre una superficie firme",
   },
   {
@@ -46,7 +46,7 @@ export const exercises: Exercise[] = [
     breathing: "Suelta el aire al elevar la cadera e inhala al bajar lentamente.",
     adaptation: "Eleva sólo unos centímetros y reduce el recorrido hasta sentir control.",
     avoid: "Empujar con el cuello, separar demasiado los pies o terminar arqueando la espalda.",
-    image: "/images/exercises/glute-bridge.png",
+    image: "/images/exercises/glute-bridge.webp",
     imageAlt: "Demostración lateral en dos pasos de un puente de glúteos",
   },
   {
@@ -60,7 +60,7 @@ export const exercises: Exercise[] = [
     breathing: "Respira con normalidad; no aguantes el aire para sostener la posición.",
     adaptation: "Haz bloques de 10 segundos con una pausa breve entre cada uno.",
     avoid: "Hundir la cintura, encoger los hombros o continuar si molesta la zona lumbar.",
-    image: "/images/exercises/knee-plank.png",
+    image: "/images/exercises/knee-plank.webp",
     imageAlt: "Demostración lateral de preparación y posición de una plancha apoyada en rodillas",
   },
   {
@@ -763,7 +763,7 @@ export const exercises: Exercise[] = [
     breathing: "Respira de forma continua; deberías poder decir una frase corta sin jadear.",
     adaptation: "Marcha más lento, eleva menos las rodillas o sujétate con una mano.",
     avoid: "Golpear el suelo, inclinarte hacia atrás o acelerar hasta perder estabilidad.",
-    image: "/images/exercises/brisk-march.png",
+    image: "/images/exercises/brisk-march.webp",
     imageAlt: "Demostración de una marcha de bajo impacto con rodillas y brazos alternados",
   },
   {

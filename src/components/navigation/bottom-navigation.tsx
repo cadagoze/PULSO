@@ -2,41 +2,47 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartNoAxesCombined, ChevronRight, Dumbbell, House, Library, UserRound, type LucideIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChartNoAxesColumn, Dumbbell, House, LibraryBig, Play, UserRound, type LucideIcon } from "lucide-react";
+import type { CSSProperties } from "react";
 import { clockLabel, completedSets, durationSeconds, totalSets } from "@/lib/training";
 import { useDraft } from "@/lib/store";
+import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; primary?: boolean; match?: string[] };
+type NavItem = { href: string; label: string; icon: LucideIcon; match?: string[] };
 
 const items: NavItem[] = [
-  { href: "/", label: "Hoy", icon: House },
-  { href: "/ejercicios", label: "Ejercicios", icon: Library },
-  { href: "/entrenar", label: "Entrenar", icon: Dumbbell, primary: true },
-  { href: "/progreso", label: "Progreso", icon: ChartNoAxesCombined },
-  { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/guia", "/comidas"] },
+  { href: "/", label: "Inicio", icon: House },
+  { href: "/entrenar", label: "Entrenar", icon: Dumbbell },
+  { href: "/ejercicios", label: "Ejercicios", icon: LibraryBig },
+  { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
+  { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia", "/comidas"] },
 ];
 
 /** Pantallas a pantalla completa, sin navegación. */
 export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos"];
 
+function activeIndex(pathname: string) {
+  return items.findIndex((item) => item.href === "/" ? pathname === "/" : (item.match ?? [item.href]).some((href) => pathname.startsWith(href)));
+}
+
 export function BottomNavigation() {
   const pathname = usePathname();
   if (focusRoutes.some((route) => pathname.startsWith(route))) return null;
+  const active = activeIndex(pathname);
 
   return (
     <>
       <ResumeBanner />
-      <nav className="bottom-nav" aria-label="Navegación principal">
-        <Link href="/" className="nav-brand">PULSO<span>.</span><small>Tu salud en movimiento.</small></Link>
-        <div className="bottom-nav-inner">
-          {items.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : (item.match ?? [item.href]).some((href) => pathname.startsWith(href));
+      <nav className="bottom-nav on-dark" aria-label="Navegación principal">
+        <div className="bottom-nav-inner" style={{ "--index": Math.max(0, active) } as CSSProperties}>
+          <span className={cn("nav-indicator", active < 0 && "is-hidden")} aria-hidden="true" />
+          {items.map((item, index) => {
+            const current = index === active;
             const Icon = item.icon;
             return (
-              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={cn("nav-item", item.primary && "nav-item-primary", active && "nav-item-active")}>
-                <span className="nav-icon"><Icon size={item.primary ? 22 : 20} strokeWidth={item.primary || active ? 2.4 : 1.9} /></span>
+              <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={cn("nav-item", current && "nav-item-active")}>
+                <span className="nav-icon"><Icon size={21} strokeWidth={current ? 2.2 : 1.8} /></span>
                 <span>{item.label}</span>
               </Link>
             );
@@ -47,17 +53,10 @@ export function BottomNavigation() {
   );
 }
 
-/** Acceso permanente al entrenamiento en curso, como los mini reproductores de las apps líderes. */
+/** Acceso permanente al entrenamiento en curso, como un mini reproductor. */
 function ResumeBanner() {
   const [draft] = useDraft();
-  const [now, setNow] = useState(0);
-  useEffect(() => {
-    if (!draft) return;
-    const tick = () => setNow(Date.now());
-    const first = window.setTimeout(tick, 0);
-    const interval = window.setInterval(tick, 1000);
-    return () => { window.clearTimeout(first); window.clearInterval(interval); };
-  }, [draft]);
+  const now = useNow(1000);
   if (!draft) return null;
   const elapsed = now ? durationSeconds(draft, now) : draft.elapsedSeconds;
   return (
@@ -67,7 +66,7 @@ function ResumeBanner() {
         <strong>{draft.name}</strong>
         <small><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{draft.runningSince === null ? " · En pausa" : ""}</small>
       </span>
-      <ChevronRight size={20} />
+      <span className="resume-go" aria-hidden="true"><Play size={16} fill="currentColor" /></span>
     </Link>
   );
 }

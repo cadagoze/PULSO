@@ -1,36 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
-import { ArrowRight, Clock3, Layers, Play, SlidersHorizontal } from "lucide-react";
-import { MuscleMap } from "@/components/ui/muscle-map";
-import { ProgressBar } from "@/components/ui";
+import { Play, SlidersHorizontal } from "lucide-react";
+import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
+import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
 import { estimateMinutes, focusLabels, generateWorkout, goalFromProfile, levelFromActivities, suggestedFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useProfile, useProgram, useWorkouts } from "@/lib/store";
-import { completedSets, exerciseById, totalSets } from "@/lib/training";
+import { completedSets, totalSets } from "@/lib/training";
 import { dayOfYear, profileLimitations } from "./helpers";
-import type { ExerciseRecord, MuscleGroup, ReadinessEntry } from "@/types";
+import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
 const HOUR = 3_600_000;
+const photo = { src: "/images/editorial/home-squat.webp", alt: "Persona haciendo una sentadilla en su sala, con luz natural", position: "66% 38%" };
 
-/** Músculos principales y secundarios trabajados por una lista de ejercicios. */
-function targetedMuscles(records: ExerciseRecord[]) {
-  const primary = new Set<MuscleGroup>();
-  const secondary = new Set<MuscleGroup>();
-  for (const record of records) {
-    const exercise = exerciseById(record.exerciseId);
-    if (!exercise) continue;
-    exercise.primary.forEach((muscle) => primary.add(muscle));
-    exercise.secondary.forEach((muscle) => secondary.add(muscle));
-  }
-  primary.forEach((muscle) => secondary.delete(muscle));
-  return { primary: [...primary], secondary: [...secondary] };
-}
-
+/** La sesión de hoy como portada: fotografía, nombre, datos clave y el botón para empezar. */
 export function TodayHero({ now, readiness }: { now: number; readiness?: ReadinessEntry["recommendation"] }) {
   const [draft] = useDraft();
   const [progress] = useProgram();
@@ -47,6 +34,8 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const activities = profile?.activities;
   const goals = profile?.goals;
   const limitations = profile?.limitations;
+  const place = preference.location === "gym" ? "Gimnasio" : "Casa";
+  const easier = readiness && readiness !== "planned";
 
   const programRecords = useMemo(
     () => (program && next ? programSessionRecords(program, next.week, next.day, workouts) : []),
@@ -74,151 +63,86 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const done = completedSets(draft.records);
     const total = totalSets(draft.records);
     return (
-      <HeroFrame eyebrow="Entrenamiento en curso" title={draft.name} live>
-        <p className="home-hero-lead">
-          Llevas <b className="num">{done}</b> de <b className="num">{total}</b> series. Retoma donde quedaste.
-        </p>
-        <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
-        <div className="home-hero-actions">
-          <Link href="/entrenar/sesion" className="btn btn-primary">
-            <Play size={17} />
-            Continuar entrenamiento
-          </Link>
+      <HeroFrame tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
+        <div className="home-hero-progress">
+          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
+          <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
         </div>
+        <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar entrenamiento</ButtonLink>
       </HeroFrame>
     );
   }
 
   if (program && next) {
     const day = program.days[next.day - 1];
-    const note = program.weekNotes[next.week - 1];
     const name = programSessionName(program, next.week, next.day);
     return (
-      <HeroFrame
-        eyebrow={`Tu programa · Semana ${next.week} de ${program.weeks}`}
-        title={day ? `${day.name} · ${day.focus}` : name}
-        kicker={program.name}
-      >
-        <HeroBody
-          records={programRecords}
-          minutes={program.minutes}
-          notes={[
-            ...(note ? [note] : []),
-            ...(readiness && readiness !== "planned" ? ["Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio."] : []),
-          ]}
+      <HeroFrame tag={`Semana ${next.week} de ${program.weeks}`} meta={program.name} title={day ? `${day.name} · ${day.focus}` : name} note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}>
+        <Details records={programRecords} minutes={program.minutes} place={place} />
+        <Actions
+          disabled={!programRecords.length}
+          onStart={() => start({ name, records: programRecords, source: { type: "program", programId: program.id, week: next.week, day: next.day } })}
+          secondaryLabel="Ver programa"
         />
-        <div className="home-hero-actions">
-          <button
-            className="btn btn-primary"
-            disabled={!programRecords.length}
-            onClick={() => start({ name, records: programRecords, source: { type: "program", programId: program.id, week: next.week, day: next.day } })}
-          >
-            <Play size={17} />
-            Comenzar
-          </button>
-          <Link href="/entrenar" className="btn home-hero-ghost">
-            <SlidersHorizontal size={16} />
-            Ver programa
-          </Link>
-        </div>
       </HeroFrame>
     );
   }
 
   if (!generated) {
     return (
-      <HeroFrame eyebrow="Tu sesión de hoy" title="Preparando tu sesión…">
+      <HeroFrame tag="Tu sesión de hoy" meta="Preparando" title="Armando tu sesión…">
         <div className="home-hero-skeleton" aria-hidden="true" />
       </HeroFrame>
     );
   }
 
   return (
-    <HeroFrame eyebrow={`Sugerido para hoy · ${focusLabels[generated.focus]}`} title={generated.name}>
-      <HeroBody
-        records={generated.records}
-        minutes={generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds)}
-        notes={generated.notes}
+    <HeroFrame tag="Tu sesión de hoy" meta={focusLabels[generated.focus]} title={generated.name} note={easier ? generated.notes[0] : undefined}>
+      <Details records={generated.records} minutes={generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds)} place={place} />
+      <Actions
+        disabled={!generated.records.length}
+        onStart={() => start({ name: generated.name, records: generated.records, restSeconds: generated.restSeconds, source: { type: "generated" } })}
+        secondaryLabel="Personalizar"
       />
-      <div className="home-hero-actions">
-        <button
-          className="btn btn-primary"
-          disabled={!generated.records.length}
-          onClick={() => start({ name: generated.name, records: generated.records, restSeconds: generated.restSeconds, source: { type: "generated" } })}
-        >
-          <Play size={17} />
-          Comenzar
-        </button>
-        <Link href="/entrenar" className="btn home-hero-ghost">
-          <SlidersHorizontal size={16} />
-          Personalizar
-        </Link>
-      </div>
     </HeroFrame>
   );
 }
 
-function HeroFrame({ eyebrow, title, kicker, live = false, children }: { eyebrow: string; title: string; kicker?: string; live?: boolean; children: ReactNode }) {
+function HeroFrame({ tag, meta, title, note, children }: { tag: ReactNode; meta: string; title: string; note?: string; children: ReactNode }) {
   return (
-    <section className="card card-forest home-hero" aria-labelledby="home-hero-title">
-      <div className="home-hero-head">
-        <p className="eyebrow">
-          {live && <span className="home-live-dot" aria-hidden="true" />}
-          {eyebrow}
-        </p>
-        {kicker && <p className="home-hero-kicker">{kicker}</p>}
-        <h2 id="home-hero-title">{title}</h2>
-      </div>
-      {children}
+    <section aria-labelledby="home-hero-title">
+      <PhotoCard photo={photo} priority tag={tag} className="home-hero" sizes="(max-width: 960px) 100vw, 640px">
+        <div className="home-hero-head">
+          <p className="meta home-hero-meta">{meta}</p>
+          <h2 id="home-hero-title" className="home-hero-title">{title}</h2>
+          {note && <p className="home-hero-note">{note}</p>}
+        </div>
+        {children}
+      </PhotoCard>
     </section>
   );
 }
 
-function HeroBody({ records, minutes, notes }: { records: ExerciseRecord[]; minutes: number; notes: string[] }) {
-  const names = records.map((record) => exerciseById(record.exerciseId)?.name).filter((name): name is string => Boolean(name));
-  const muscles = targetedMuscles(records);
-  const sets = records.reduce((sum, record) => sum + record.sets.length, 0);
+function Details({ records, minutes, place }: { records: ExerciseRecord[]; minutes: number; place: string }) {
   return (
-    <div className="home-hero-body">
-      <div className="home-hero-info">
-        <ul className="home-hero-meta">
-          <li>
-            <Clock3 size={15} />
-            <span className="num">~{minutes}</span> min
-          </li>
-          <li>
-            <Layers size={15} />
-            <span className="num">{records.length}</span> ejercicios
-          </li>
-          <li>
-            <span className="num">{sets}</span> series
-          </li>
-        </ul>
-        <ol className="home-hero-list">
-          {names.slice(0, 3).map((name, index) => (
-            <li key={`${name}-${index}`}>
-              <span className="num">{String(index + 1).padStart(2, "0")}</span>
-              {name}
-            </li>
-          ))}
-          {names.length > 3 && (
-            <li className="home-hero-more">
-              <ArrowRight size={14} />
-              +{names.length - 3} más
-            </li>
-          )}
-        </ol>
-        {notes.length > 0 && (
-          <ul className="home-hero-notes">
-            {notes.slice(0, 2).map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="home-hero-map">
-        <MuscleMap primary={muscles.primary} secondary={muscles.secondary} captions={false} label="Músculos que trabajarás hoy" />
-      </div>
+    <MetaLine
+      className="home-hero-details"
+      items={[
+        <><b className="num">{records.length}</b> ejercicios</>,
+        <><b className="num">{minutes}</b> min</>,
+        place,
+      ]}
+    />
+  );
+}
+
+function Actions({ disabled, onStart, secondaryLabel }: { disabled: boolean; onStart: () => void; secondaryLabel: string }) {
+  return (
+    <div className="home-hero-actions">
+      <Button size="l" block disabled={disabled} onClick={onStart}><Play size={18} fill="currentColor" />Iniciar entrenamiento</Button>
+      <ButtonLink href="/entrenar" variant="glass" size="l" className="home-hero-more" aria-label={secondaryLabel} title={secondaryLabel}>
+        <SlidersHorizontal size={19} />
+      </ButtonLink>
     </div>
   );
 }
