@@ -41,7 +41,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `/entrenar/programas/[id]`: detalle de cada programa de varias semanas con descarga.
 - `/entrenar/sesion`: registro en vivo con serie anterior, tipos de serie, RIR, descanso automático, superseries, sustituciones, récords y resumen final.
 - `/entrenar/intervalos`: temporizador de intervalos (Tabata, HIIT, EMOM o personalizado) con sonido y voz.
-- `/ejercicios` y `/ejercicios/[id]`: biblioteca de 73 ejercicios con filtros, mapa muscular, técnica, progreso y alternativas.
+- `/ejercicios` y `/ejercicios/[id]`: biblioteca de 73 ejercicios con foto o ilustración (inicio y final), filtros, mapa muscular, técnica, progreso y alternativas.
 - `/progreso`: resumen semanal, historial, récords, cuerpo (peso y medidas) y logros.
 - `/perfil`: plan, preferencias de entrenamiento, unidades, tema, racha y respaldo de datos.
 - `/guia` y `/comidas`: contenido educativo y registro de comidas por saciedad.
@@ -51,9 +51,13 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `src/app`: rutas.
 - `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `exercises`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
-- `src/data`: datos centralizados (ejercicios, programas, catálogo y contenido).
-- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`).
+- `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido e ilustraciones).
+- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`).
 - `src/types`: contratos.
+
+## Ilustraciones de ejercicios
+
+Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas (inicio → final). Cada una es una pose en `src/data/illustrations`: ángulos por segmento del cuerpo (0° abajo, 90° adelante, 180° arriba) y accesorios como bancos, barras, bandas o máquinas. `src/lib/illustration.ts` la convierte en SVG, apoya la figura en el suelo y destaca en lima los músculos principales. `npm test` falla si un ejercicio sin foto queda sin ilustración o si una figura se sale del cuadro.
 
 ## Cómo decide PULSO
 

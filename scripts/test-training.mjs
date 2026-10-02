@@ -227,3 +227,30 @@ test('conversión de unidades kg/lb', () => {
   assert.equal(utils.fromDisplayWeight(220.5, 'lb'), 100.02);
   assert.equal(utils.toDisplayWeight(22.5, 'kg'), 22.5);
 });
+
+const illustration = load('src/lib/illustration.ts');
+const { exerciseIllustrations } = load('src/data/illustrations/index.ts');
+
+test('ilustraciones: todo ejercicio sin foto tiene una ilustración', () => {
+  const missing = Array.from(exercises.filter((item) => !item.image && !exerciseIllustrations[item.id]), (item) => item.id);
+  assert.deepEqual(missing, [], `sin ilustración: ${missing.join(', ')}`);
+  for (const id of Object.keys(exerciseIllustrations)) assert.ok(exercises.some((item) => item.id === Number(id)), `ilustración huérfana ${id}`);
+});
+
+test('ilustraciones: coordenadas válidas, dentro del cuadro y apoyadas en el suelo', () => {
+  const { PANEL } = illustration;
+  for (const [id, spec] of Object.entries(exerciseIllustrations)) {
+    const panels = illustration.layoutIllustration(spec);
+    panels.forEach((panel, index) => {
+      const pose = index === 0 ? spec.start : spec.end;
+      const points = panel.segments.flatMap((s) => [[s.x1, s.y1, s.width / 2], [s.x2, s.y2, s.width / 2]]);
+      points.push([panel.head.cx, panel.head.cy, panel.head.r]);
+      for (const [x, y, pad] of points) {
+        assert.ok(Number.isFinite(x) && Number.isFinite(y), `${id}: coordenada inválida`);
+        assert.ok(x - pad > -3 && x + pad < PANEL.width + 3 && y - pad > -3 && y + pad < PANEL.height + 3, `${id} (${index ? 'final' : 'inicio'}): la figura se sale del cuadro`);
+      }
+      const lowest = Math.max(...points.map(([, y, pad]) => y + pad), ...panel.props.filter((p) => p.type === 'circle').map((p) => p.cy + p.r));
+      if (!pose.lift) assert.ok(lowest <= PANEL.ground + 0.5, `${id}: algo atraviesa el suelo`);
+    });
+  }
+});

@@ -28,6 +28,17 @@
   --warning-soft: #fbf1da;
   --map-base: #e1e7dc;
   --map-line: #f5f6f2;
+  --ill-ink: #263f30;
+  --ill-ink-far: #a7b6aa;
+  --ill-accent: #7fbd2f;
+  --ill-accent-far: #c4e39a;
+  --ill-metal: #56645b;
+  --ill-hub: #c9d2c6;
+  --ill-prop: #d7dfd2;
+  --ill-pad: #3f5a49;
+  --ill-band: #7657ff;
+  --ill-cable: #8a978e;
+  --ill-ground: #d3dbce;
   --radius-s: 12px;
   --radius: 18px;
   --radius-l: 26px;
@@ -47,6 +58,7 @@
     --forest: #17271e; --forest-2: #213629; --lime: #c7f432; --lime-bright: #d7ff36; --lime-ink: #142008; --lime-soft: rgb(199 244 50 / 12%); --lime-text: #c7f432;
     --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #ff7a73; --danger-soft: rgb(255 122 115 / 13%); --warning: #f6b84a; --warning-soft: rgb(246 184 74 / 13%);
     --map-base: #262e29; --map-line: #121714; --shadow: 0 1px 2px rgb(0 0 0 / 30%); --shadow-float: 0 12px 40px rgb(0 0 0 / 50%);
+    --ill-ink: #e2e9de; --ill-ink-far: #66736a; --ill-accent: #c7f432; --ill-accent-far: #5f7d1c; --ill-metal: #a9b3ac; --ill-hub: #3a443e; --ill-prop: #2b332e; --ill-pad: #4f6857; --ill-band: #9b87ff; --ill-cable: #8d9891; --ill-ground: #2b332e;
     color-scheme: dark;
   }
 }
@@ -56,6 +68,7 @@
   --forest: #17271e; --forest-2: #213629; --lime: #c7f432; --lime-bright: #d7ff36; --lime-ink: #142008; --lime-soft: rgb(199 244 50 / 12%); --lime-text: #c7f432;
   --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #ff7a73; --danger-soft: rgb(255 122 115 / 13%); --warning: #f6b84a; --warning-soft: rgb(246 184 74 / 13%);
   --map-base: #262e29; --map-line: #121714; --shadow: 0 1px 2px rgb(0 0 0 / 30%); --shadow-float: 0 12px 40px rgb(0 0 0 / 50%);
+  --ill-ink: #e2e9de; --ill-ink-far: #66736a; --ill-accent: #c7f432; --ill-accent-far: #5f7d1c; --ill-metal: #a9b3ac; --ill-hub: #3a443e; --ill-prop: #2b332e; --ill-pad: #4f6857; --ill-band: #9b87ff; --ill-cable: #8d9891; --ill-ground: #2b332e;
   color-scheme: dark;
 }
 
@@ -282,7 +295,10 @@ button.list-row:hover, a.list-row:hover { background: var(--surface-2); }
 .exercise-visual-map .muscle-map figure { max-width: none; height: 100%; min-height: 0; justify-content: center; }
 .exercise-visual-map .muscle-map svg { flex: 1; min-height: 0; width: 100%; height: 100%; }
 .exercise-technique { display: flex; flex-direction: column; gap: 16px; }
-.technique-muscles { display: flex; flex-wrap: wrap; gap: 6px; }
+.technique-muscles { display: flex; flex-wrap: wrap; align-content: center; gap: 6px; }
+.technique-muscles .eyebrow { width: 100%; }
+.technique-map { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; padding: 12px; border-radius: 16px; background: var(--surface-2); }
+.technique-map .muscle-map { gap: 2px; }
 .technique-block { display: flex; flex-direction: column; gap: 6px; }
 .technique-block > p:not(.eyebrow) { color: var(--ink-2); font-size: 14px; }
 .technique-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -306,3 +322,31 @@ button.list-row:hover, a.list-row:hover { background: var(--surface-2); }
 /* ─── Sin conexión ────────────────────────────────────────────────────── */
 .offline-pill { position: fixed; z-index: 80; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 8px 14px; border-radius: 999px; background: var(--forest); color: var(--on-forest); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-float); animation: fade-in .2s ease; }
 .offline-pill svg { flex: none; color: var(--lime); }
+
+/* ─── Ilustraciones de ejercicios ─────────────────────────────────────── */
+.exercise-visual-ill { display: grid; place-items: center; padding: 4px 6px; }
+.exercise-visual-thumb.exercise-visual-ill { padding: 2px; }
+.ill { width: 100%; height: 100%; display: block; overflow: visible; }
+.ill-seg { stroke-linecap: round; fill: none; }
+.ill-seg.near { stroke: var(--ill-ink); }
+.ill-seg.far { stroke: var(--ill-ink-far); }
+.ill-seg.near.accent { stroke: var(--ill-accent); }
+.ill-seg.far.accent { stroke: var(--ill-accent-far); }
+.ill-head { fill: var(--ill-ink); }
+.ill-ground { stroke: var(--ill-ground); stroke-width: 1.6; stroke-linecap: round; }
+.ill-divider { stroke: var(--lime); stroke-width: 1.1; }
+.ill-line { fill: none; stroke-linecap: round; }
+.ill-line.tone-metal { stroke: var(--ill-metal); }
+.ill-line.tone-prop { stroke: var(--ill-prop); }
+.ill-line.tone-pad { stroke: var(--ill-pad); }
+.ill-line.tone-band { stroke: var(--ill-band); }
+.ill-line.tone-cable { stroke: var(--ill-cable); }
+.ill-fill.tone-metal { fill: var(--ill-metal); }
+.ill-fill.tone-prop { fill: var(--ill-prop); }
+.ill-fill.tone-pad { fill: var(--ill-pad); }
+.ill-fill.tone-band { fill: var(--ill-band); }
+.ill-fill.tone-cable { fill: var(--ill-cable); }
+.ill-hub { fill: var(--ill-hub); }
+.ill-far { opacity: .55; }
+.ill-arrow line, .ill-arrow path { fill: none; stroke: var(--lime-text); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ill-label { font-family: var(--font-sans); font-size: 6.5px; font-weight: 700; letter-spacing: .12em; fill: var(--ink-3); }

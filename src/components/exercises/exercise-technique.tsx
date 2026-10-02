@@ -1,6 +1,7 @@
 import { CircleAlert, Gauge, MoveDown, Wind } from "lucide-react";
 import { equipmentLabels, muscleLabels } from "@/data/catalog";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
+import { MuscleMap } from "@/components/ui/muscle-map";
 import type { Exercise } from "@/types";
 
 export function equipmentText(exercise: Exercise) {
@@ -18,10 +19,14 @@ export function ExerciseTechnique({ exercise, showVisual = true }: { exercise: E
   return (
     <div className="exercise-technique">
       {showVisual && <ExerciseVisual exercise={exercise} size="hero" />}
-      <div className="technique-muscles">
-        {exercise.primary.map((muscle) => <span key={muscle} className="badge">{muscleLabels[muscle]}</span>)}
-        {exercise.secondary.map((muscle) => <span key={muscle} className="badge badge-muted">{muscleLabels[muscle]}</span>)}
-      </div>
+      <section className="technique-map">
+        <MuscleMap primary={exercise.primary} secondary={exercise.secondary} captions={false} label={`Músculos trabajados: ${exercise.muscle}`} />
+        <div className="technique-muscles">
+          <p className="eyebrow">Músculos que trabajas</p>
+          {exercise.primary.map((muscle) => <span key={muscle} className="badge">{muscleLabels[muscle]}</span>)}
+          {exercise.secondary.map((muscle) => <span key={muscle} className="badge badge-muted">{muscleLabels[muscle]}</span>)}
+        </div>
+      </section>
       <section className="technique-block">
         <p className="eyebrow">Para qué sirve</p>
         <p>{exercise.benefit}</p>
