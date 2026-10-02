@@ -180,9 +180,9 @@ img, svg { display: block; }
 .card-l { padding: 24px; border-radius: var(--radius-xl); }
 .card-flat { background: var(--surface-2); box-shadow: none; }
 .card-carbon { background: var(--carbon); color: var(--on-carbon); box-shadow: none; }
-.card-carbon .muted, .card-carbon p { color: var(--on-carbon-2); }
+.card-carbon .muted, :where(.card-carbon) p { color: var(--on-carbon-2); }
 .card-forest { background: var(--forest); color: var(--on-forest); box-shadow: none; }
-.card-forest .muted, .card-forest p { color: var(--on-forest-2); }
+.card-forest .muted, :where(.card-forest) p { color: var(--on-forest-2); }
 .card-lime { background: var(--lime); color: var(--lime-ink); box-shadow: none; }
 .card-link, .pressable { display: block; width: 100%; text-align: left; transition: transform var(--motion-base) var(--ease-standard), box-shadow var(--motion-base), background-color var(--motion-base); }
 .card-link:active, .pressable:active { transform: scale(.985); }
@@ -347,7 +347,7 @@ button.list-row:active, a.list-row:active { background: var(--surface-2); }
 :root[data-theme="dark"] .toast { background: #2c302d; box-shadow: var(--shadow-float), inset 0 0 0 1px rgb(255 255 255 / 9%); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .toast { background: #2c302d; box-shadow: var(--shadow-float), inset 0 0 0 1px rgb(255 255 255 / 9%); } }
 /* Con una hoja abierta, el aviso sube para no tapar sus botones. */
-body:has(.sheet-backdrop) .toast { bottom: auto; top: calc(var(--safe-t) + 16px); }
+body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(--safe-t) + 16px); }
 .notice { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); color: var(--ink); font-size: 14px; }
 .notice svg { flex: none; color: var(--lime-text); margin-top: 2px; }
 .notice.warn { background: var(--warning-soft); }
