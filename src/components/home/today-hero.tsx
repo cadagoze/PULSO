@@ -6,12 +6,11 @@ import { Play, SlidersHorizontal } from "lucide-react";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, focusLabels, generateWorkout, goalFromProfile, levelFromActivities, suggestedFocus } from "@/lib/generator";
+import { estimateMinutes, focusLabels, generateWorkout, todayGeneratorInput } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useProfile, useProgram, useWorkouts } from "@/lib/store";
 import { completedSets, totalSets } from "@/lib/training";
-import { dayOfYear, profileLimitations } from "./helpers";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
 const HOUR = 3_600_000;
@@ -29,11 +28,6 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const program = progress ? programById(progress.programId) : undefined;
   const next = program && progress ? nextProgramSession(program, progress) : null;
   const hourNow = Math.floor(now / HOUR) * HOUR;
-  const seed = dayOfYear(now);
-  const minutes = profile?.recommendation.sessionMinutes ?? 30;
-  const activities = profile?.activities;
-  const goals = profile?.goals;
-  const limitations = profile?.limitations;
   const place = preference.location === "gym" ? "Gimnasio" : "Casa";
   const easier = readiness && readiness !== "planned";
 
@@ -42,22 +36,12 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     [program, next, workouts],
   );
 
+  // Misma sesión que Entrenar: las entradas del generador vienen de un solo lugar.
   const generated = useMemo(() => {
     if (hourNow === 0) return null;
     const recovery = muscleRecovery(workouts, hourNow);
-    return generateWorkout({
-      preference,
-      minutes,
-      focus: suggestedFocus(recovery, readiness),
-      goal: goalFromProfile(goals),
-      level: levelFromActivities(activities),
-      limitations: profileLimitations(limitations),
-      readiness,
-      recovery,
-      workouts,
-      seed,
-    });
-  }, [activities, goals, hourNow, limitations, minutes, preference, readiness, seed, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, preference, workouts, readiness, recovery, now }));
+  }, [hourNow, now, preference, profile, readiness, workouts]);
 
   if (draft) {
     const done = completedSets(draft.records);

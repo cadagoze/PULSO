@@ -3,10 +3,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Dumbbell, StretchHorizontal, Timer, Utensils } from "lucide-react";
-import { generateWorkout, levelFromActivities } from "@/lib/generator";
+import { generateWorkout, levelFromActivities, profileLimitations } from "@/lib/generator";
 import { useStartWorkout } from "@/lib/session";
 import { usePreference, useProfile } from "@/lib/store";
-import { dayOfYear, profileLimitations } from "./helpers";
+import { localDaySeed } from "@/lib/utils";
 
 function Label({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
@@ -30,7 +30,7 @@ export function QuickActions() {
       focus: "mobility",
       level: levelFromActivities(profile?.activities),
       limitations: profileLimitations(profile?.limitations),
-      seed: dayOfYear(Date.now()),
+      seed: localDaySeed(Date.now()),
     });
     start({ name: "Movilidad 10 min", records: workout.records, restSeconds: workout.restSeconds, source: { type: "generated" } });
   }

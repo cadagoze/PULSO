@@ -2,7 +2,6 @@
 
 import { useNow } from "@/lib/use-now";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
-import { dayOfYear } from "@/components/home/helpers";
 import { HomeDigest } from "@/components/home/home-digest";
 import { HomeHeader } from "@/components/home/home-header";
 import { QuickActions } from "@/components/home/quick-actions";
@@ -11,7 +10,7 @@ import { TodayHero } from "@/components/home/today-hero";
 import { WeekStrip } from "@/components/home/week-strip";
 import { weekStreak } from "@/lib/analytics";
 import { useDraft, useProfile, useReadiness, useSettings, useWorkouts } from "@/lib/store";
-import { localDateKey } from "@/lib/utils";
+import { localDateKey, localDaySeed } from "@/lib/utils";
 import type { ReadinessEntry } from "@/types";
 
 /** Frase bajo el saludo, según lo que toca hoy. */
@@ -49,7 +48,7 @@ export default function Home() {
         <WeekStrip now={now} />
         <ReadinessCard today={today} now={now} />
         <QuickActions />
-        <HomeDigest now={now} seed={dayOfYear(now)} />
+        <HomeDigest now={now} seed={localDaySeed(now)} />
       </div>
     </div>
   );

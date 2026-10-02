@@ -1,6 +1,7 @@
 import { exercises } from "@/data/mock-data";
 import { progressedSets } from "@/lib/progression";
 import { lastRecordFor } from "@/lib/training";
+import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
@@ -216,4 +217,42 @@ export function levelFromActivities(activities: string[] = []): ExerciseLevel {
 export function goalFromProfile(goals: string[] = []): WorkoutGoal {
   const first = goals[0];
   return first === "weight" || first === "energy" || first === "habits" || first === "strength" ? first : "strength";
+}
+
+/** Zonas a cuidar de la evaluación, sin "none" ni respuestas libres. */
+export function profileLimitations(limitations: string[] | undefined): BodyArea[] {
+  return (limitations ?? []).filter((item): item is BodyArea => item === "knees" || item === "back" || item === "shoulders");
+}
+
+/** Lo que el generador necesita de la evaluación inicial. */
+type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: string[]; recommendation?: { sessionMinutes: number } } | null | undefined;
+
+/**
+ * Entradas del generador para la sesión de hoy. Inicio y Entrenar usan las mismas, así «Personalizar»
+ * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
+ * permiten ajustarla desde Entrenar.
+ */
+export function todayGeneratorInput({ profile, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0 }: {
+  profile: ProfileForToday;
+  preference: TrainingPreference;
+  workouts: WorkoutEntry[];
+  readiness?: ReadinessEntry["recommendation"];
+  recovery?: Record<MuscleGroup, number>;
+  now: number;
+  minutes?: number;
+  focus?: WorkoutFocus;
+  variant?: number;
+}): GeneratorInput {
+  return {
+    preference,
+    minutes: minutes ?? profile?.recommendation?.sessionMinutes ?? 30,
+    focus: focus ?? suggestedFocus(recovery, readiness),
+    goal: goalFromProfile(profile?.goals),
+    level: levelFromActivities(profile?.activities),
+    limitations: profileLimitations(profile?.limitations),
+    readiness,
+    recovery,
+    workouts,
+    seed: localDaySeed(now) + variant,
+  };
 }

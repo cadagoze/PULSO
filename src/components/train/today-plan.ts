@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { profileLimitations } from "@/components/home/helpers";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, focusLabels, generateWorkout, goalFromProfile, levelFromActivities, suggestedFocus } from "@/lib/generator";
+import { estimateMinutes, focusLabels, generateWorkout, suggestedFocus, todayGeneratorInput } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { progressedSets } from "@/lib/progression";
 import { usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
-import { localDateKey, localDaySeed } from "@/lib/utils";
+import { localDateKey } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
 
 const HOUR = 3_600_000;
@@ -47,33 +46,21 @@ export function useTodayPlan(now: number) {
 
   const hydrated = now !== 0;
   const hourNow = Math.floor(now / HOUR) * HOUR;
-  const seed = localDaySeed(now);
   const todayKey = hydrated ? localDateKey(new Date(now)) : "";
   const readiness = readinessEntries.find((entry) => entry.date === todayKey);
   const recovery = useMemo(() => (hourNow ? muscleRecovery(workouts, hourNow) : undefined), [hourNow, workouts]);
   const suggested = suggestedFocus(recovery, readiness?.recommendation);
   const focus = focusChoice ?? suggested;
   const minutes = minutesChoice ?? profile?.recommendation.sessionMinutes ?? 30;
-  const limitations = useMemo(() => profileLimitations(profile?.limitations), [profile?.limitations]);
 
+  // Mismas entradas que la portada de Inicio (ver todayGeneratorInput); aquí se pueden ajustar.
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout({
-      preference,
-      minutes,
-      focus,
-      goal: goalFromProfile(profile?.goals),
-      level: levelFromActivities(profile?.activities),
-      limitations,
-      readiness: readiness?.recommendation,
-      recovery,
-      workouts,
-      seed: seed + variant,
-    });
-  }, [hydrated, focus, limitations, minutes, preference, profile?.activities, profile?.goals, readiness?.recommendation, recovery, seed, variant, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant }));
+  }, [hydrated, focus, minutes, now, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [preference.location, preference.equipment.join(","), minutes, focus, variant, readiness?.recommendation ?? "", workouts.length, seed].join("|");
+  const planKey = [preference.location, preference.equipment.join(","), minutes, focus, variant, readiness?.recommendation ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 
