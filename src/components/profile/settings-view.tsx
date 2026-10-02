@@ -9,7 +9,7 @@ import { AboutSection } from "./about-section";
 import { AppearanceSection } from "./appearance-section";
 import { DataSection } from "./data-section";
 import { StreakSection } from "./streak-section";
-import { Toast, useToast } from "./toast";
+import { Toast, useToast } from "@/components/ui/toast";
 import { TrainingSection } from "./training-section";
 
 /** Ajustes: apariencia, entrenamiento, racha, datos y acerca de, en grupos editoriales. */

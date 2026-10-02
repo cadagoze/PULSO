@@ -10,7 +10,7 @@ import { MealForm } from "@/components/content/meal-form";
 import { MealIdea } from "@/components/content/meal-idea";
 import { buildSummary, isLogged, type MealDetail } from "@/components/content/meal-log";
 import { MealRows } from "@/components/content/meal-rows";
-import { Toast, useToast } from "@/components/content/toast";
+import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
 import { useHabits, useMeals } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
@@ -29,7 +29,7 @@ export default function MealsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   // Última fila marcada en esta visita: sólo ella anima su check (las que ya venían hechas no).
   const [fresh, setFresh] = useState<string | null>(null);
-  const [toast, showToast, hideToast] = useToast();
+  const { toast, show: showToast, hide: hideToast } = useToast(2500);
 
   const sheetMeal = sheet ? meals.find((meal) => meal.id === sheet.id) : undefined;
   const logged = meals.filter(isLogged).length;
@@ -64,7 +64,7 @@ export default function MealsPage() {
     setMeals((items) => items.map((item) => (item.id === id ? { ...item, status: "Pendiente", summary: undefined } : item)));
     setSheetOpen(false);
     setFresh(null);
-    showToast("Registro quitado", <Undo2 size={17} />);
+    showToast("Registro quitado", { icon: <Undo2 size={17} /> });
   }
 
   function toggleHabit(id: number) {

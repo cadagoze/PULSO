@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useCallback, useSyncExternalStore } from "react";
 import type { Exercise, ExerciseRecord, Program, TrainingLocation } from "@/types";
 
 export const dayLetters = ["L", "M", "X", "J", "V", "S", "D"] as const;
@@ -65,23 +63,3 @@ export function useMediaQuery(query: string) {
  * Aviso breve que desaparece solo. `raised` lo sube cuando el acceso al entrenamiento
  * en curso ocupa el espacio sobre la barra de navegación.
  */
-export function useToast(raised = false, duration = 2600) {
-  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
-  const timer = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-  }, []);
-  const show = useCallback((text: string) => {
-    setToast((current) => ({ id: (current?.id ?? 0) + 1, text }));
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setToast(null), duration);
-  }, [duration]);
-  // La clave reinicia la animación de entrada si llega un aviso nuevo mientras otro sigue visible.
-  const node = toast ? (
-    <div key={`toast-${toast.id}`} className={cn("toast train-toast", raised && "is-raised")} role="status">
-      <Check size={16} strokeWidth={2.6} />
-      {toast.text}
-    </div>
-  ) : null;
-  return { show, node };
-}

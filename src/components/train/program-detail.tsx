@@ -13,7 +13,8 @@ import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { useProgramActions } from "@/components/train/program-actions";
 import { programPhoto } from "@/components/train/program-covers";
-import { locationLabels, pad2, rangeText, restText, useToast } from "@/components/train/shared";
+import { locationLabels, pad2, rangeText, restText } from "@/components/train/shared";
+import { Toast, useToast } from "@/components/ui/toast";
 import type { Program, ProgramDay } from "@/types";
 
 /** Detalle de un programa: portada editorial, avance y acciones, y la estructura semana a semana. */
@@ -23,7 +24,7 @@ export function ProgramDetail({ programId }: { programId: string }) {
   const program = programById(programId);
   const { progress, begin, abandon, restart, startSession } = useProgramActions();
   const [draft] = useDraft();
-  const toast = useToast(Boolean(draft));
+  const toast = useToast();
   if (!program) return null;
 
   const isActive = ready && progress?.programId === program.id;
@@ -140,7 +141,7 @@ export function ProgramDetail({ programId }: { programId: string }) {
           })}
         </section>
       </div>
-      {toast.node}
+      <Toast toast={toast.toast} className={cn("train-toast", draft && "is-raised")} />
     </div>
   );
 }

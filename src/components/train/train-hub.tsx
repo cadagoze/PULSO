@@ -20,7 +20,8 @@ import { useActiveProgram, useTodayPlan } from "@/components/train/today-plan";
 import type { TodaySource } from "@/components/train/today-plan";
 import { AdjustSheet } from "@/components/train/today-sheets";
 import { ToolsRow } from "@/components/train/tools-row";
-import { useMediaQuery, useToast } from "@/components/train/shared";
+import { useMediaQuery } from "@/components/train/shared";
+import { Toast, useToast } from "@/components/ui/toast";
 
 /** Enlaces antiguos a las pestañas (`?tab=`): ahora llevan a su sección dentro de la misma pantalla. */
 const tabSections: Record<string, string> = { rutinas: "rutinas", programas: "programas", herramientas: "herramientas" };
@@ -42,7 +43,7 @@ export function TrainHub() {
   const today = useTodayPlan(now);
   const active = useActiveProgram();
   const wide = useMediaQuery("(min-width: 1024px)");
-  const toast = useToast(Boolean(draft));
+  const toast = useToast();
 
   const [picked, setPicked] = useState<TodaySource | null>(null);
   const [listOpen, setListOpen] = useState(false);
@@ -133,7 +134,7 @@ export function TrainHub() {
           onSave={saveRoutine}
         />
       )}
-      {toast.node}
+      <Toast toast={toast.toast} className={cn("train-toast", draft && "is-raised")} />
     </div>
   );
 }

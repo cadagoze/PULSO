@@ -208,7 +208,6 @@
 .prog-detail-actions .btn { padding: 0 12px; }
 .prog-detail-actions .prog-delete { grid-column: 1 / -1; color: var(--danger); }
 .prog-toast { max-width: calc(100vw - 32px); }
-.prog-toast-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 /* Récords */
 .prog-records { gap: 32px; }

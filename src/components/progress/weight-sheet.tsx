@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button, Sheet } from "@/components/ui";
+import { Toast, useToast } from "@/components/ui/toast";
 import { weightLabel } from "@/components/progress/format";
 import { useSettings, useWeights } from "@/lib/store";
 import { formatShortDate, fromDisplayWeight, localDateKey, toDisplayWeight } from "@/lib/utils";
@@ -17,8 +18,7 @@ export function WeightLogButton({ variant = "secondary", size = "s", block = fal
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
   const [today, setToday] = useState("");
-  const [toast, setToast] = useState("");
-  const timer = useRef<number | null>(null);
+  const { toast, show } = useToast();
   const format = (kg: number) => weightLabel(kg, unit);
 
   function openSheet() {
@@ -46,12 +46,7 @@ export function WeightLogButton({ variant = "secondary", size = "s", block = fal
     setEntries((current) => [...current.filter((item) => item.date !== date), entry].sort((a, b) => a.date.localeCompare(b.date)));
     setOpen(false);
     // El aviso aparece cuando la hoja ya se cerró (con una hoja abierta, los avisos suben arriba).
-    const message = `Peso registrado · ${format(entry.weight)}`;
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      setToast(message);
-      timer.current = window.setTimeout(() => setToast(""), 2600);
-    }, 260);
+    show(`Peso registrado · ${format(entry.weight)}`, { delay: 260 });
   }
 
   return (
@@ -80,12 +75,7 @@ export function WeightLogButton({ variant = "secondary", size = "s", block = fal
         <p className="subtle prog-sheet-help">Si ya registraste ese día, el valor se reemplaza.</p>
         <Button block onClick={save}>Guardar registro</Button>
       </Sheet>
-      {toast && (
-        <div className="toast" role="status">
-          <Check size={16} aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast toast={toast} />
     </>
   );
 }

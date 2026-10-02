@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, Check, ListPlus, Lock, Play } from "lucide-react";
 import { categoryLabels, levelLabels, patternLabels } from "@/data/catalog";
 import { Button, NumberMetric, SegmentedControl } from "@/components/ui";
+import { Toast, useToast } from "@/components/ui/toast";
 import { ExerciseTechnique, equipmentText } from "@/components/exercises/exercise-technique";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { AddToRoutineSheet } from "@/components/library/add-to-routine-sheet";
@@ -36,8 +37,7 @@ export function ExerciseDetail({ exerciseId }: { exerciseId: number }) {
 function Detail({ exercise }: { exercise: Exercise }) {
   const [tab, setTab] = useState<Tab>("technique");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<number | null>(null);
+  const { toast, show: showToast } = useToast();
   const [workouts] = useWorkouts();
   const [draft] = useDraft();
   const [preference] = usePreference();
@@ -55,12 +55,6 @@ function Detail({ exercise }: { exercise: Exercise }) {
       }],
       source: { type: "free" },
     });
-  };
-
-  const showToast = (message: string) => {
-    setToast(message);
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2600);
   };
 
   const added = (routineName: string) => {
@@ -145,12 +139,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
       <div className="lib-dock on-dark">{actions(true)}</div>
 
       <AddToRoutineSheet exercise={exercise} open={sheetOpen} onClose={() => setSheetOpen(false)} onAdded={added} />
-      {toast && (
-        <div className="toast lib-toast" role="status">
-          <Check size={16} aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast toast={toast} className="lib-toast" />
     </div>
   );
 }

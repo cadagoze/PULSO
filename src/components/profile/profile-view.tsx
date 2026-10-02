@@ -11,7 +11,7 @@ import { ProfileEditor } from "./profile-editor";
 import { latestWeight, weightNumber } from "./profile-format";
 import { ProfileHeader } from "./profile-header";
 import { ProfileLinks } from "./profile-links";
-import { Toast, useToast } from "./toast";
+import { Toast, useToast } from "@/components/ui/toast";
 
 /** Perfil: portada editorial (foto, nombre, objetivo y números), el plan actual y accesos a ajustes. */
 export function ProfileView() {

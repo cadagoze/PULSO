@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Check, Copy, Play, Trash2, TriangleAlert, Trophy } from "lucide-react";
+import { Copy, Play, Trash2, TriangleAlert, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
+import { Toast, useToast } from "@/components/ui/toast";
 import { exerciseName, kindLetters, kindNames, longDayLabel, recordValueLabel, volumeParts, type Unit } from "@/components/progress/format";
 import { workoutVolume } from "@/components/progress/period";
 import { recordKindLabels } from "@/lib/progression";
@@ -23,14 +23,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
   const [, setWorkouts] = useWorkouts();
   const [, setRoutines] = useRoutines();
   const start = useStartWorkout();
-  const [toast, setToast] = useState("");
-  const timer = useRef<number | null>(null);
-
-  function showToast(message: string) {
-    setToast(message);
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setToast(""), 2600);
-  }
+  const { toast, show: showToast } = useToast();
 
   const records = workout?.records ?? [];
   const name = workout?.name ?? "Entrenamiento";
@@ -135,12 +128,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
           </>
         )}
       </Sheet>
-      {toast && (
-        <div className="toast prog-toast" role="status">
-          <Check size={16} aria-hidden="true" />
-          <span className="prog-toast-text">{toast}</span>
-        </div>
-      )}
+      <Toast toast={toast} className="prog-toast" />
     </>
   );
 }
