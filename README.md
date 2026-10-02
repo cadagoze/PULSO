@@ -36,24 +36,35 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ## Rutas
 
-- `/`: Hoy. Chequeo de preparación (0–100), entrenamiento del día (programa activo o generado), semana y racha, recuperación muscular, accesos rápidos y bienestar.
-- `/entrenar`: Para hoy (generador por lugar, equipo, duración y enfoque), Rutinas, Programas y Herramientas (1RM, discos, calentamiento).
+- `/`: Inicio. Portada con la sesión de hoy (en curso, programa activo o generada), semana editorial con racha, chequeo de preparación, atajos y resumen del día.
+- `/entrenar`: Casa o Gimnasio, equipamiento, Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
 - `/entrenar/programas/[id]`: detalle de cada programa de varias semanas con descarga.
 - `/entrenar/sesion`: registro en vivo con serie anterior, tipos de serie, RIR, descanso automático, superseries, sustituciones, récords y resumen final.
 - `/entrenar/intervalos`: temporizador de intervalos (Tabata, HIIT, EMOM o personalizado) con sonido y voz.
 - `/ejercicios` y `/ejercicios/[id]`: biblioteca de 73 ejercicios con foto o ilustración (inicio y final), filtros, mapa muscular, técnica, progreso y alternativas.
-- `/progreso`: resumen semanal, historial, récords, cuerpo (peso y medidas) y logros.
-- `/perfil`: plan, preferencias de entrenamiento, unidades, tema, racha y respaldo de datos.
-- `/guia` y `/comidas`: contenido educativo y registro de comidas por saciedad.
+- `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación.
+- `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
+- `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
+- `/comidas`: comidas por saciedad y hábitos del día. `/guia`: lecturas breves.
 
 ## Estructura
 
 - `src/app`: rutas.
-- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `exercises`, `ui`).
+- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
 - `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido e ilustraciones).
 - `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`).
 - `src/types`: contratos.
+
+## Sistema visual
+
+PULSO combina funcionalidad limpia, fotografía editorial y tipografía con carácter: «Entrenamiento que se adapta a tu vida».
+
+- **Color** (tokens en `src/app/globals.css`): marfil `#F5F3EC`, superficie blanca, carbón `#161816`, verde bosque `#1E3026` y lima `#B7F34A` como identidad; naranja `#FF6633` sólo como acento (rachas y récords). Modo oscuro completo; `.on-dark` aplica la paleta oscura a una zona (sesión activa, fotos, barra de navegación).
+- **Tipografía**: Archivo con eje de ancho para títulos y números protagonistas, Geist para la interfaz y Geist Mono para etiquetas editoriales.
+- **Componentes** (`src/components/ui`): `Button`, `SegmentedControl` (indicador que se desliza), `Sheet` (hoja inferior que se cierra deslizando), `NumberMetric`, `Metric`, `StatCard`, `Card`, `PhotoCard`, `RoutineCard`, `ProgressRing`, `WorkoutTimer`, `ToggleChip` y `Toast`; `ExerciseVisual` y `ExerciseCard` en `src/components/exercises`.
+- **Movimiento**: `--motion-fast` 140 ms, `--motion-base` 220 ms, `--motion-slow` 320 ms y la curva `--ease-standard`; sólo `transform` y `opacity`, y todo se desactiva con «reducir movimiento». Las animaciones de entrada usan `animation-fill-mode: backwards` (nunca `both`): una transformación que persiste rompe los elementos fijos como las hojas.
+- **Textura** (grano, desenfoque, atmósfera) sólo en onboarding, portadas, estados especiales y fondos de foto. Las fotos viven en `public/images` en WebP.
 
 ## Ilustraciones de ejercicios
 
