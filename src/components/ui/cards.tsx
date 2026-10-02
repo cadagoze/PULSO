@@ -41,7 +41,7 @@ export function PhotoCard({ photo, tag, ratio, grain = true, priority = false, s
  * Rutina o programa destacado como portada: fotografía o portada tipográfica (número grande
  * sobre atmósfera oscura con grano). Pensada para carruseles y listas de tarjetas grandes.
  */
-export function RoutineCard({ href, onClick, eyebrow, title, meta, number, numberLabel, photo, tone = "dark", size = "m", action, className, style }: {
+export function RoutineCard({ href, onClick, eyebrow, title, meta, number, numberLabel, photo, tone = "dark", size = "m", progress, action, className, style }: {
   href?: string;
   onClick?: () => void;
   eyebrow?: ReactNode;
@@ -52,6 +52,8 @@ export function RoutineCard({ href, onClick, eyebrow, title, meta, number, numbe
   photo?: Photo;
   tone?: "dark" | "light" | "warm";
   size?: "m" | "l";
+  /** Avance 0–100 (programa en curso): barra fina bajo los datos. */
+  progress?: number;
   action?: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -79,6 +81,11 @@ export function RoutineCard({ href, onClick, eyebrow, title, meta, number, numbe
         {eyebrow && <span className="meta routine-card-eyebrow">{eyebrow}</span>}
         <span className="routine-card-title">{title}</span>
         {visibleMeta.length > 0 && <span className="meta-dots routine-card-meta">{visibleMeta.map((item, index) => <span key={index}>{item}</span>)}</span>}
+        {progress !== undefined && (
+          <span className="progress-track routine-card-progress" role="progressbar" aria-label="Avance" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
+            <span style={{ "--value": Math.max(0, Math.min(100, progress)) / 100 } as CSSProperties} />
+          </span>
+        )}
       </span>
       {action && <span className="routine-card-action photo-content">{action}</span>}
     </>
