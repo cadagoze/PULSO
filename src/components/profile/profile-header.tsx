@@ -1,81 +1,79 @@
 "use client";
 
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { Pencil } from "lucide-react";
-import { Sheet } from "@/components/ui";
+import Link from "next/link";
+import type { CSSProperties } from "react";
+import { Camera, Pencil, Settings as SettingsIcon, UserRound } from "lucide-react";
+import { Button, NumberMetric } from "@/components/ui";
 import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
+import { cn } from "@/lib/utils";
+import type { Settings } from "@/types";
+import { goalsSentence, initialsOf, memberSince, splitFocus } from "./profile-format";
 
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "P";
-  return parts.slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("es-CL") ?? "").join("");
+/** Foto de perfil o, sin foto, las iniciales (o un ícono si aún no hay nombre). */
+export function Avatar({ name, photo }: { name: string; photo?: string }) {
+  // La clave cambia con cada foto nueva, así entra con un fundido.
+  if (photo) return <span key={photo.slice(-32)} className="prof-avatar-photo" style={{ backgroundImage: `url("${photo}")` }} />;
+  const initials = initialsOf(name);
+  return initials ? <span className="prof-avatar-initials">{initials}</span> : <UserRound size={34} strokeWidth={1.6} />;
 }
 
-function memberSince(profile: AssessmentProfile | null) {
-  if (!profile?.createdAt) return "—";
-  const date = new Date(profile.createdAt);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("es-CL", { month: "short", year: "numeric" }).replace(".", "");
-}
+type HeaderProps = {
+  name: string;
+  photo?: string;
+  profile: AssessmentProfile | null;
+  workouts: number;
+  bestStreak: number;
+  /** Peso actual ya formateado («81,5»), o null si no hay registros. */
+  weight: string | null;
+  unit: Settings["unit"];
+  onEdit: () => void;
+};
 
-export function ProfileHeader({ name, profile, totalWorkouts, bestStreak, ready, onRename }: { name: string; profile: AssessmentProfile | null; totalWorkouts: number; bestStreak: number; ready: boolean; onRename: (name: string) => void }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
-  const displayName = name.trim() || "Tu perfil";
-
-  function openEditor() {
-    setDraft(name);
-    setEditing(true);
-  }
-
-  function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onRename(draft.trim().slice(0, 40));
-    setEditing(false);
-  }
+/**
+ * Portada editorial del perfil: foto, nombre en grande, objetivo y tres números.
+ * El fondo es atmósfera con grano; con foto, tu propia foto desenfocada.
+ */
+export function ProfileHeader({ name, photo, profile, workouts, bestStreak, weight, unit, onEdit }: HeaderProps) {
+  const displayName = name.trim();
+  const since = memberSince(profile);
+  const focus = profile ? splitFocus(profile.recommendation.focus).head : "";
+  const goals = profile ? goalsSentence(profile.recommendation.goalLabel) : "";
 
   return (
-    <section className="card card-forest card-l prof-hero" aria-label="Tu perfil">
+    <section className={cn("prof-hero atmosphere grain on-dark rise", photo && "has-photo")} style={{ "--i": 0 } as CSSProperties} aria-labelledby="prof-name">
+      {photo && <span className="prof-hero-blur" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" />}
       <div className="prof-hero-top">
-        <span className="prof-avatar" aria-hidden="true">{initialsOf(name)}</span>
-        <div className="prof-hero-id">
-          <p className="eyebrow">Tu plan</p>
-          <h2>{displayName}</h2>
-          <p className="prof-hero-focus">{profile?.recommendation.focus ?? "Completa tu evaluación para personalizar PULSO"}</p>
-        </div>
-        <button type="button" className="prof-hero-edit" onClick={openEditor} aria-label="Editar nombre">
-          <Pencil size={16} />
-        </button>
+        <p className="meta">Perfil{since ? ` · desde ${since}` : ""}</p>
+        <Link href="/ajustes" className="icon-button glass" aria-label="Ajustes"><SettingsIcon size={19} /></Link>
       </div>
-      <dl className="prof-hero-stats">
-        <div>
-          <dt>Entrenamientos</dt>
-          <dd className="num">{ready ? totalWorkouts : "—"}</dd>
-        </div>
-        <div>
-          <dt>Mejor racha</dt>
-          <dd className="num">
-            {ready ? bestStreak : "—"}
-            <small> sem</small>
-          </dd>
-        </div>
-        <div>
-          <dt>Miembro desde</dt>
-          <dd className="prof-hero-since">{ready ? memberSince(profile) : "—"}</dd>
-        </div>
-      </dl>
 
-      <Sheet open={editing} onClose={() => setEditing(false)} title="¿Cómo te llamamos?" eyebrow="Perfil">
-        <form className="stack" onSubmit={save}>
-          <label className="field">
-            Nombre
-            <input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={40} autoComplete="given-name" placeholder="Tu nombre" />
-          </label>
-          <p className="subtle prof-sheet-note">Sólo se usa para saludarte. Queda guardado en este dispositivo.</p>
-          <button type="submit" className="btn btn-primary btn-block">Guardar</button>
-        </form>
-      </Sheet>
+      <div className="prof-hero-id">
+        <div className="prof-hero-row">
+          <button type="button" className="prof-avatar" onClick={onEdit} aria-label={photo ? "Cambiar foto" : "Añadir foto"}>
+            <Avatar name={name} photo={photo} />
+            <span className="prof-avatar-badge" aria-hidden="true">{photo ? <Pencil size={13} /> : <Camera size={14} />}</span>
+          </button>
+          <Button variant="glass" size="s" onClick={onEdit}>Editar perfil</Button>
+        </div>
+        <h1 id="prof-name" className="prof-name">{displayName || "Tu perfil"}</h1>
+        <p className="prof-goal">
+          {profile ? (
+            <>{focus && <b>{focus}</b>}{focus && goals ? " · " : ""}{goals}</>
+          ) : (
+            "Completa tu evaluación para personalizar PULSO."
+          )}
+        </p>
+      </div>
+
+      <div className="prof-stats">
+        <NumberMetric value={workouts} label={workouts === 1 ? "entrenamiento" : "entrenamientos"} />
+        <NumberMetric value={bestStreak} unit="sem" label="mejor racha" />
+        {weight ? (
+          <NumberMetric value={weight} unit={unit} label="peso actual" />
+        ) : (
+          <NumberMetric value={<span className="nmetric-soft">—</span>} label={<Link href="/progreso?tab=cuerpo" className="prof-stat-link">Registra tu peso</Link>} />
+        )}
+      </div>
     </section>
   );
 }

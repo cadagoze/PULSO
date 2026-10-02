@@ -1,43 +1,30 @@
 "use client";
 
-import { Segmented } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui";
 import type { Settings } from "@/types";
-import { SettingsGroup } from "./settings-group";
+import { SettingRow, SettingsGroup } from "./settings-group";
+
+const themeOptions: Array<{ value: Settings["theme"]; label: string }> = [
+  { value: "system", label: "Sistema" },
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Oscuro" },
+];
 
 const themeHelp: Record<Settings["theme"], string> = {
   system: "Sigue la configuración de tu teléfono o computador.",
-  light: "Fondo marfil, verde bosque y lima.",
+  light: "Fondo marfil, superficies blancas y tinta carbón.",
   dark: "Contraste suave para entrenar de noche.",
 };
 
-export function AppearanceSection({ theme, onChange }: { theme: Settings["theme"]; onChange: (theme: Settings["theme"]) => void }) {
+/** Tema de la app: el indicador se desliza entre Sistema, Claro y Oscuro y el cambio se aplica al instante. */
+export function AppearanceSection({ theme, onChange, order }: { theme: Settings["theme"]; onChange: (theme: Settings["theme"]) => void; order?: number }) {
   return (
-    <SettingsGroup index="04" title="Apariencia" id="prof-appearance">
-      <div className="prof-row prof-theme">
-        <div className="prof-theme-controls">
-          <div className="prof-row-text">
-            <strong>Tema</strong>
-            <small>{themeHelp[theme]}</small>
-          </div>
-          <Segmented<Settings["theme"]>
-            label="Tema"
-            value={theme}
-            onChange={onChange}
-            options={[{ value: "system", label: "Sistema" }, { value: "light", label: "Claro" }, { value: "dark", label: "Oscuro" }]}
-          />
-        </div>
-        <div className="prof-swatch" aria-hidden="true">
-          <span className="prof-swatch-card">
-            <i className="prof-swatch-line" />
-            <i className="prof-swatch-line short" />
-            <i className="prof-swatch-pill" />
-          </span>
-          <span className="prof-swatch-row">
-            <i />
-            <i />
-          </span>
-        </div>
-      </div>
+    <SettingsGroup id="apariencia" index="01" title="Apariencia" order={order}>
+      <SettingRow
+        title="Tema"
+        helper={themeHelp[theme]}
+        below={<SegmentedControl<Settings["theme"]> label="Tema" size="l" value={theme} onChange={onChange} options={themeOptions} />}
+      />
     </SettingsGroup>
   );
 }

@@ -1,34 +1,31 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Grupo de ajustes: título editorial con número y una lista agrupada. */
-export function SettingsGroup({ index, title, description, children, id }: { index: string; title: string; description?: string; children: ReactNode; id?: string }) {
+/** Grupo de ajustes: etiqueta editorial (número y título), una nota opcional y la lista agrupada. */
+export function SettingsGroup({ id, index, title, description, children, order = 0 }: { id: string; index: string; title: string; description?: string; children: ReactNode; order?: number }) {
   return (
-    <section className="prof-group" aria-labelledby={id ? `${id}-title` : undefined}>
+    <section id={id} className="prof-group rise" style={{ "--i": order } as CSSProperties} aria-labelledby={`${id}-title`}>
       <header className="prof-group-head">
-        <span className="prof-group-index num" aria-hidden="true">{index}</span>
-        <div>
-          <h2 id={id ? `${id}-title` : undefined}>{title}</h2>
-          {description && <p>{description}</p>}
-        </div>
+        <h2 id={`${id}-title`} className="meta"><span className="prof-group-index num" aria-hidden="true">{index}</span>{title}</h2>
+        {description && <p>{description}</p>}
       </header>
-      <div className="prof-list">{children}</div>
+      <div className="list prof-list">{children}</div>
     </section>
   );
 }
 
-/** Fila de ajuste con título, ayuda opcional y un control a la derecha o debajo. */
-export function SettingRow({ title, helper, control, below, stacked = false, className }: { title: ReactNode; helper?: ReactNode; control?: ReactNode; below?: ReactNode; stacked?: boolean; className?: string }) {
+/** Fila de ajuste: título y ayuda; el control va a la derecha (`control`) o debajo (`below`). */
+export function SettingRow({ title, helper, control, below, className }: { title: ReactNode; helper?: ReactNode; control?: ReactNode; below?: ReactNode; className?: string }) {
   return (
-    <div className={cn("prof-row", stacked && "prof-row-stacked", className)}>
-      <div className="prof-row-main">
+    <div className={cn("prof-row", className)}>
+      <div className="toggle-row prof-row-main">
         <div className="prof-row-text">
           <strong>{title}</strong>
           {helper && <small>{helper}</small>}
         </div>
         {control && <div className="prof-row-control">{control}</div>}
       </div>
-      {below}
+      {below && <div className="prof-row-below">{below}</div>}
     </div>
   );
 }

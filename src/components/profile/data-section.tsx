@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Download, FileSpreadsheet, HardDriveDownload, ShieldCheck, Trash2, Upload } from "lucide-react";
-import { Sheet } from "@/components/ui";
+import { Button, Sheet, StatusBadge } from "@/components/ui";
 import { STORAGE_KEYS, clearAllData, readAllData, writeAllData } from "@/lib/store";
 import type { WorkoutEntry } from "@/types";
 import { backupVersion, downloadFile, fileStamp, parseBackup, workoutsCsv } from "./data-export";
@@ -25,12 +25,27 @@ function storageSupported() {
   return typeof navigator !== "undefined" && typeof navigator.storage?.persist === "function" && typeof navigator.storage?.persisted === "function";
 }
 
-export function DataSection({ workouts, onToast }: { workouts: WorkoutEntry[]; onToast: (message: string) => void }) {
+function RowText({ icon, title, detail, live = false }: { icon: ReactNode; title: string; detail: string; live?: boolean }) {
+  return (
+    <>
+      <span className="icon-tile" aria-hidden="true">{icon}</span>
+      <span className="grow">
+        <strong>{title}</strong>
+        <small aria-live={live ? "polite" : undefined}>{detail}</small>
+      </span>
+    </>
+  );
+}
+
+/** Respaldo, importación, CSV, almacenamiento persistente y borrado total (con doble confirmación). */
+export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEntry[]; onToast: (message: string) => void; order?: number }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [persist, setPersist] = useState<PersistStatus>("checking");
-  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  // La hoja de borrado guarda su paso al cerrarse, para que no cambie de texto mientras sale.
+  const [deleting, setDeleting] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const loggedWorkouts = workouts.reduce((total, workout) => total + (workout.records?.length ? 1 : 0), 0);
 
   useEffect(() => {
@@ -95,74 +110,59 @@ export function DataSection({ workouts, onToast }: { workouts: WorkoutEntry[]; o
     }
   }
 
+  function startDelete() {
+    setDeleteStep(1);
+    setDeleting(true);
+  }
+
   function eraseEverything() {
     clearAllData();
-    setDeleteStep(0);
+    setDeleting(false);
     router.push("/");
   }
 
   return (
-    <SettingsGroup index="06" title="Tus datos" description="Todo se guarda en este navegador. Respáldalo de vez en cuando." id="prof-data">
-      <button type="button" className="prof-row prof-row-action" onClick={exportBackup}>
-        <span className="icon-tile"><Download size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Exportar respaldo</strong>
-          <small>Un archivo .json con todo lo que has registrado.</small>
-        </span>
-      </button>
-      <button type="button" className="prof-row prof-row-action" onClick={() => fileRef.current?.click()}>
-        <span className="icon-tile"><Upload size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Importar respaldo</strong>
-          <small>Reemplaza los datos de este dispositivo por los del archivo.</small>
-        </span>
-      </button>
-      <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} aria-label="Archivo de respaldo" onChange={importBackup} />
-      <button type="button" className="prof-row prof-row-action" onClick={exportCsv}>
-        <span className="icon-tile"><FileSpreadsheet size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Exportar entrenamientos</strong>
-          <small>Serie por serie en .csv, listo para una planilla.</small>
-        </span>
-      </button>
-      <div className="prof-row prof-row-action prof-persist">
-        <span className="icon-tile">{persist === "persisted" ? <ShieldCheck size={19} /> : <HardDriveDownload size={19} />}</span>
-        <span className="prof-row-text">
-          <strong>Proteger mis datos</strong>
-          <small aria-live="polite">{persistCopy[persist]}</small>
-        </span>
-        {persist === "persisted" ? (
-          <span className="badge">Activo</span>
-        ) : (
-          (persist === "idle" || persist === "denied") && (
-            <button type="button" className="btn btn-secondary btn-small" onClick={requestPersist}>Proteger</button>
-          )
-        )}
-      </div>
-      <button type="button" className="prof-row prof-row-action prof-danger" onClick={() => setDeleteStep(1)}>
-        <span className="icon-tile prof-danger-tile"><Trash2 size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Borrar todos mis datos</strong>
-          <small>Elimina entrenamientos, ajustes y evaluación de este dispositivo.</small>
-        </span>
-      </button>
-      {error && <p className="form-error prof-data-error" role="alert">{error}</p>}
+    <>
+      <SettingsGroup id="datos" index="04" title="Tus datos" description="Todo se guarda en este navegador. Respáldalo de vez en cuando." order={order}>
+        <button type="button" className="list-row" onClick={exportBackup}>
+          <RowText icon={<Download size={19} />} title="Exportar respaldo" detail="Un archivo .json con todo lo que has registrado." />
+        </button>
+        <button type="button" className="list-row" onClick={() => fileRef.current?.click()}>
+          <RowText icon={<Upload size={19} />} title="Importar respaldo" detail="Reemplaza los datos de este dispositivo por los del archivo." />
+        </button>
+        <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} aria-label="Archivo de respaldo" onChange={importBackup} />
+        <button type="button" className="list-row" onClick={exportCsv}>
+          <RowText icon={<FileSpreadsheet size={19} />} title="Exportar entrenamientos" detail="Serie por serie en .csv, listo para una planilla." />
+        </button>
+        <div className="list-row prof-persist">
+          <RowText icon={persist === "persisted" ? <ShieldCheck size={19} /> : <HardDriveDownload size={19} />} title="Proteger mis datos" detail={persistCopy[persist]} live />
+          {persist === "persisted" ? (
+            <StatusBadge>Activo</StatusBadge>
+          ) : (
+            (persist === "idle" || persist === "denied") && <Button variant="secondary" size="s" onClick={requestPersist}>Proteger</Button>
+          )}
+        </div>
+        <button type="button" className="list-row prof-danger" onClick={startDelete}>
+          <RowText icon={<Trash2 size={19} />} title="Borrar todos mis datos" detail="Elimina entrenamientos, ajustes y evaluación de este dispositivo." />
+        </button>
+        {error && <p className="form-error prof-data-error" role="alert">{error}</p>}
+      </SettingsGroup>
 
-      <Sheet open={deleteStep > 0} onClose={() => setDeleteStep(0)} title={deleteStep === 1 ? "¿Borrar todos tus datos?" : "Última confirmación"} eyebrow="Tus datos">
+      <Sheet open={deleting} onClose={() => setDeleting(false)} title={deleteStep === 1 ? "¿Borrar todos tus datos?" : "Última confirmación"} eyebrow="Tus datos">
         {deleteStep === 1 ? (
           <div className="stack">
             <p className="muted">Se eliminarán tus {workouts.length} entrenamientos, rutinas, ajustes y evaluación. Si quieres conservarlos, exporta un respaldo antes.</p>
-            <button type="button" className="btn btn-secondary btn-block" onClick={exportBackup}>Exportar respaldo primero</button>
-            <button type="button" className="btn btn-danger btn-block" onClick={() => setDeleteStep(2)}>Continuar</button>
+            <Button variant="secondary" block onClick={exportBackup}>Exportar respaldo primero</Button>
+            <Button variant="danger" block onClick={() => setDeleteStep(2)}>Continuar</Button>
           </div>
         ) : (
           <div className="stack">
             <p className="muted">Esta acción no se puede deshacer. PULSO volverá a empezar desde cero en este dispositivo.</p>
-            <button type="button" className="btn btn-secondary btn-block" onClick={() => setDeleteStep(0)}>Cancelar</button>
-            <button type="button" className="btn btn-danger btn-block" onClick={eraseEverything}>Sí, borrar todo</button>
+            <Button variant="secondary" block onClick={() => setDeleting(false)}>Cancelar</Button>
+            <Button variant="danger" block onClick={eraseEverything}>Sí, borrar todo</Button>
           </div>
         )}
       </Sheet>
-    </SettingsGroup>
+    </>
   );
 }

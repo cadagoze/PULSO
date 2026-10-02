@@ -1,45 +1,31 @@
-import Link from "next/link";
-import { BookOpen, ChevronRight, ShieldCheck, Utensils } from "lucide-react";
-import { SettingsGroup } from "./settings-group";
+import type { CSSProperties } from "react";
+import { HeartPulse, ShieldCheck } from "lucide-react";
 
 export const appVersion = "2.0";
 
-export function WellbeingSection() {
+/** Colofón: marca, privacidad, aviso de bienestar y versión. */
+export function AboutSection({ order = 0 }: { order?: number }) {
   return (
-    <SettingsGroup index="05" title="Bienestar" id="prof-wellbeing">
-      <Link href="/comidas" className="prof-row prof-row-action">
-        <span className="icon-tile"><Utensils size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Comidas y saciedad</strong>
-          <small>Registra cómo comes sin contar calorías.</small>
-        </span>
-        <ChevronRight size={18} className="prof-chevron" />
-      </Link>
-      <Link href="/guia" className="prof-row prof-row-action">
-        <span className="icon-tile violet"><BookOpen size={19} /></span>
-        <span className="prof-row-text">
-          <strong>Guía y artículos</strong>
-          <small>Lecturas breves sobre fuerza, descanso y alimentación.</small>
-        </span>
-        <ChevronRight size={18} className="prof-chevron" />
-      </Link>
-    </SettingsGroup>
-  );
-}
-
-export function AboutSection() {
-  return (
-    <section className="prof-about" aria-labelledby="prof-about-title">
-      <div className="wordmark prof-about-mark">PULSO<span>.</span></div>
-      <p className="prof-about-tagline" id="prof-about-title">Tu salud en movimiento.</p>
-      <p className="prof-about-privacy">
-        <ShieldCheck size={16} />
-        Tus datos viven sólo en este dispositivo. Sin cuentas, sin servidores, sin anuncios.
-      </p>
-      <p className="prof-about-disclaimer">
-        PULSO entrega orientación general de bienestar y entrenamiento. No reemplaza la evaluación de un profesional de salud. Si sientes dolor, mareos o malestar, detente y consulta.
-      </p>
-      <p className="prof-about-version num">Versión {appVersion}</p>
+    <section id="acerca" className="prof-group prof-about rise" style={{ "--i": order } as CSSProperties} aria-labelledby="acerca-title">
+      <header className="prof-group-head">
+        <h2 id="acerca-title" className="meta"><span className="prof-group-index num" aria-hidden="true">05</span>Acerca de</h2>
+      </header>
+      <div className="prof-about-body">
+        <p className="wordmark prof-about-mark">PULSO<span>.</span></p>
+        <div className="prof-about-lead">
+          <p className="prof-about-tagline">Tu salud en movimiento.</p>
+          <p className="prof-about-idea">Entrenamiento que se adapta a tu vida.</p>
+        </div>
+        <p className="prof-about-line">
+          <ShieldCheck size={16} aria-hidden="true" />
+          <span>Tus datos viven sólo en este dispositivo. Sin cuentas, sin servidores, sin anuncios.</span>
+        </p>
+        <p className="prof-about-line">
+          <HeartPulse size={16} aria-hidden="true" />
+          <span>PULSO entrega orientación general de bienestar y entrenamiento. No reemplaza la evaluación de un profesional de salud. Si sientes dolor, mareos o malestar, detente y consulta.</span>
+        </p>
+        <p className="meta prof-about-version">Versión <span className="num">{appVersion}</span></p>
+      </div>
     </section>
   );
 }

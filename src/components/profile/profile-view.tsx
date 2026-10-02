@@ -1,84 +1,93 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
+import { bestWeekStreak, weekStreak } from "@/lib/analytics";
+import { useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
-import { useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
-import { PageHeader } from "@/components/ui";
-import { bestWeekStreak, weekRange, weekStreak } from "@/lib/analytics";
-import { usePreference, useProfile, useSettings, useWorkouts } from "@/lib/store";
-import { AboutSection, WellbeingSection } from "./about-section";
-import { AppearanceSection } from "./appearance-section";
-import { DataSection } from "./data-section";
 import { PlanSection } from "./plan-section";
+import { profilePhoto } from "./photo";
+import { ProfileEditor } from "./profile-editor";
+import { latestWeight, weightNumber } from "./profile-format";
 import { ProfileHeader } from "./profile-header";
-import { StreakSection } from "./streak-section";
-import { TrainingSection } from "./training-section";
+import { ProfileLinks } from "./profile-links";
+import { Toast, useToast } from "./toast";
 
+/** Perfil: portada editorial (foto, nombre, objetivo y números), el plan actual y accesos a ajustes. */
 export function ProfileView() {
   const [profile, setProfile] = useProfile();
   const [workouts] = useWorkouts();
-  const [preference, setPreference] = usePreference();
+  const [weights] = useWeights();
   const [settings, update] = useSettings();
   const now = useNow();
-  const ready = now !== 0;
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<number | null>(null);
+  const { toast, show } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+  const [assessing, setAssessing] = useState(false);
 
-  const streak = useMemo(() => {
-    if (!ready) return { streak: 0, currentCount: 0, currentPaused: false, best: 0 };
+  const bestStreak = useMemo(() => {
+    if (!now) return 0;
     const current = weekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks, new Date(now));
-    return { ...current, best: bestWeekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks) };
-  }, [now, ready, settings.pausedWeeks, settings.weeklyGoal, workouts]);
+    return Math.max(current.streak, bestWeekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks));
+  }, [now, settings.pausedWeeks, settings.weeklyGoal, workouts]);
 
-  function showToast(message: string) {
-    setToast(message);
-    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2800);
+  // Hasta hidratar no conocemos los datos guardados: evitamos mostrar un perfil vacío por error.
+  if (!now) return <ProfileSkeleton />;
+
+  const photo = profilePhoto(settings.photo);
+  const latest = latestWeight(weights);
+
+  function openEditor() {
+    setEditorKey((key) => key + 1);
+    setEditing(true);
   }
 
-  function togglePause(paused: boolean) {
-    const start = weekRange(new Date()).start;
-    const rest = settings.pausedWeeks.filter((week) => week !== start);
-    update({ pausedWeeks: paused ? [...rest, start] : rest });
-    showToast(paused ? "Racha en pausa esta semana" : "Racha reactivada");
+  function saveProfile(draft: { name: string; photo?: string }) {
+    const saved = update({ name: draft.name, photo: draft.photo });
+    if (saved) show(draft.photo !== photo ? (draft.photo ? "Foto actualizada" : "Foto quitada") : "Perfil actualizado");
+    return saved;
   }
 
   return (
     <div className="page prof-page">
-      <PageHeader eyebrow="Perfil y ajustes" title="Perfil" subtitle="Tu plan, tus preferencias y tus datos, en un solo lugar." />
-      <div className="prof-layout">
-        <div className="prof-aside">
-          <ProfileHeader
-            name={settings.name}
-            profile={profile}
-            totalWorkouts={workouts.length}
-            bestStreak={Math.max(streak.best, streak.streak)}
-            ready={ready}
-            onRename={(name) => update({ name })}
-          />
-          <StreakSection
-            ready={ready}
-            streak={streak.streak}
-            currentCount={streak.currentCount}
-            weeklyGoal={settings.weeklyGoal}
-            paused={streak.currentPaused}
-            onTogglePause={togglePause}
-          />
-        </div>
-        <div className="prof-main">
-          <PlanSection profile={profile} weeklyGoal={settings.weeklyGoal} onGoalChange={(weeklyGoal) => update({ weeklyGoal })} onProfileChange={setProfile} />
-          <TrainingSection settings={settings} update={update} preference={preference} setPreference={setPreference} />
-          <AppearanceSection theme={settings.theme} onChange={(theme) => update({ theme })} />
-          <WellbeingSection />
-          <DataSection workouts={workouts} onToast={showToast} />
-        </div>
+      <ProfileHeader
+        name={settings.name}
+        photo={photo}
+        profile={profile}
+        workouts={workouts.length}
+        bestStreak={bestStreak}
+        weight={latest ? weightNumber(latest.weight, settings.unit) : null}
+        unit={settings.unit}
+        onEdit={openEditor}
+      />
+      <div className="prof-side">
+        <PlanSection onAssess={() => setAssessing(true)} onToast={show} />
+        <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} />
       </div>
-      <AboutSection />
-      {toast && (
-        <div className="toast" role="status">
-          <Check size={17} /> {toast}
-        </div>
+
+      <ProfileEditor key={editorKey} open={editing} onClose={() => setEditing(false)} name={settings.name} photo={photo} onSave={saveProfile} />
+      {assessing && (
+        <WellnessAssessment
+          onComplete={(next) => {
+            setProfile(next);
+            setAssessing(false);
+            show("Plan actualizado");
+          }}
+          onCancel={() => setAssessing(false)}
+        />
       )}
+      <Toast toast={toast} />
+    </div>
+  );
+}
+
+function ProfileSkeleton() {
+  return (
+    <div className="page prof-page" aria-busy="true">
+      <div className="prof-skeleton prof-skeleton-hero" />
+      <div className="prof-side">
+        <div className="prof-skeleton prof-skeleton-card" />
+      </div>
     </div>
   );
 }
