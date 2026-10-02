@@ -62,8 +62,15 @@ export function ReadinessCard({ today, now }: { today: string; now: number }) {
   const [entries, setEntries] = useReadiness();
   const [workouts] = useWorkouts();
   const [open, setOpen] = useState(false);
+  // Cada apertura empieza el formulario de cero; el contenido sigue visible mientras la hoja se cierra.
+  const [round, setRound] = useState(0);
   const saved = entries.find((entry) => entry.date === today);
   const load = trainingLoad(workouts, now);
+
+  function openCheck() {
+    setRound((value) => value + 1);
+    setOpen(true);
+  }
 
   function save(values: Answers) {
     const { score, recommendation } = readinessScore(values, trainingLoad(workouts, Date.now()).ratio);
@@ -74,8 +81,8 @@ export function ReadinessCard({ today, now }: { today: string; now: number }) {
 
   return (
     <>
-      {saved ? <ReadinessResult entry={saved} loadStatus={load.status} onAdjust={() => setOpen(true)} /> : (
-        <button type="button" className="home-ready home-ready-prompt" onClick={() => setOpen(true)}>
+      {saved ? <ReadinessResult entry={saved} loadStatus={load.status} onAdjust={openCheck} /> : (
+        <button type="button" className="home-ready home-ready-prompt" onClick={openCheck}>
           <span className="home-ready-icon" aria-hidden="true"><Zap size={18} /></span>
           <span className="grow">
             <strong>¿Cómo llegas hoy?</strong>
@@ -85,7 +92,7 @@ export function ReadinessCard({ today, now }: { today: string; now: number }) {
         </button>
       )}
       <Sheet open={open} onClose={() => setOpen(false)} eyebrow="Chequeo de 20 segundos" title="¿Cómo llegas hoy?">
-        {open && <ReadinessCheckIn initial={saved} onSave={save} />}
+        <ReadinessCheckIn key={round} initial={saved} onSave={save} />
       </Sheet>
     </>
   );

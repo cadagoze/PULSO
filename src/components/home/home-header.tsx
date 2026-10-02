@@ -18,13 +18,15 @@ function initials(name: string) {
 export function HomeHeader({ now, line }: { now: number; line: string }) {
   const [settings] = useSettings();
   const name = settings.name.trim();
+  // Sólo imágenes incrustadas: un respaldo importado no puede apuntar a otra cosa.
+  const photo = settings.photo?.startsWith("data:image/") ? settings.photo : undefined;
   const date = now ? formatLongDate(new Date(now)) : "";
   return (
     <header className="home-header">
       <div className="home-header-bar">
         <span className="wordmark">PULSO<span>.</span></span>
         <Link href="/perfil" className="home-avatar" aria-label="Tu perfil">
-          {settings.photo ? <span className="home-avatar-photo" style={{ backgroundImage: `url(${settings.photo})` }} /> : name ? <span>{initials(name)}</span> : <UserRound size={19} />}
+          {photo ? <span className="home-avatar-photo" style={{ backgroundImage: `url("${photo}")` }} /> : name ? <span>{initials(name)}</span> : <UserRound size={19} />}
         </Link>
       </div>
       <div className="home-greeting">
