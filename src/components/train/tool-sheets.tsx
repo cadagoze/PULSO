@@ -50,7 +50,7 @@ export function OneRepMaxSheet({ open, onClose }: { open: boolean; onClose: () =
           <Stepper label="repeticiones" value={reps} min={1} max={15} onChange={setReps} />
         </div>
       </div>
-      <div className="train-result" aria-live="polite">
+      <div className="train-result on-dark" aria-live="polite">
         <span className="eyebrow">1RM estimado</span>
         <strong className="num">{oneRepMax ? show(oneRepMax) : "—"}<small>{unit}</small></strong>
         <p className="muted">Fórmula de Epley. Es una estimación: úsala para planificar, no como máximo a probar.</p>

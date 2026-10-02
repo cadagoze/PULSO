@@ -6,7 +6,10 @@ import { useStartWorkout } from "@/lib/session";
 import { useProgram, useWorkouts } from "@/lib/store";
 import type { Program } from "@/types";
 
-/** Acciones comunes de programas: comenzar, abandonar, reiniciar y entrenar una sesión. */
+/**
+ * Acciones comunes de programas: comenzar, abandonar, reiniciar y entrenar una sesión.
+ * Las que piden confirmación devuelven `true` si se llevaron a cabo.
+ */
 export function useProgramActions() {
   const [progress, setProgress] = useProgram();
   const [workouts] = useWorkouts();
@@ -21,13 +24,15 @@ export function useProgramActions() {
   }, [progress, setProgress]);
 
   const abandon = useCallback((program: Program) => {
-    if (!window.confirm(`¿Abandonar "${program.name}"? Se borrará tu avance en el programa; tus entrenamientos quedan guardados.`)) return;
+    if (!window.confirm(`¿Abandonar "${program.name}"? Se borrará tu avance en el programa; tus entrenamientos quedan guardados.`)) return false;
     setProgress(null);
+    return true;
   }, [setProgress]);
 
   const restart = useCallback((program: Program) => {
-    if (!window.confirm(`¿Reiniciar "${program.name}" desde la semana 1?`)) return;
+    if (!window.confirm(`¿Reiniciar "${program.name}" desde la semana 1?`)) return false;
     setProgress({ programId: program.id, startedAt: new Date().toISOString(), completed: [] });
+    return true;
   }, [setProgress]);
 
   /** Entrena una sesión. Si el programa no está activo, primero lo activa (con confirmación) para que cuente el avance. */
