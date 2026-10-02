@@ -1,22 +1,28 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { ProgressRing } from "@/components/ui";
+import { WorkoutTimer } from "@/components/ui/workout-timer";
 import { beep, vibrate } from "@/lib/feedback";
 import { clockLabel } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
+import { cn } from "@/lib/utils";
 import { useCountdownCues } from "./use-countdown-cues";
 
 const AFTERGLOW_MS = 4000;
 
-/** Barra flotante del descanso. Se calcula desde `restUntil`, así que sobrevive a recargas. */
-export function RestTimer({ restUntil, restTotal, sound, vibration, onAdjust, onSkip }: {
+/**
+ * Descanso sobre la imagen del ejercicio: anillo que se vacía, cuenta regresiva y pulso en los
+ * últimos segundos. Se calcula desde `restUntil`, así que sobrevive a recargas. Al terminar queda
+ * unos segundos un aviso de «descanso terminado».
+ */
+export function RestOverlay({ restUntil, restTotal, sound, vibration, size, upcoming }: {
   restUntil: number | null;
   restTotal: number;
   sound: boolean;
   vibration: boolean;
-  onAdjust: (deltaSeconds: number) => void;
-  onSkip: () => void;
+  size: number;
+  /** Lo que viene después: «Serie 3 de 4» o el siguiente ejercicio. */
+  upcoming?: string;
 }) {
   const now = useNow(250);
   const remainingMs = restUntil === null ? 0 : restUntil - now;
@@ -34,39 +40,33 @@ export function RestTimer({ restUntil, restTotal, sound, vibration, onAdjust, on
     },
   });
 
-  if (restUntil === null || now === 0 || remainingMs <= -AFTERGLOW_MS) return null;
-
-  if (remainingMs <= 0) {
-    return (
-      <div className="ses-rest ses-rest-done" role="status">
-        <span className="ses-rest-icon"><Check size={22} /></span>
-        <div className="ses-rest-text">
-          <small>Descanso terminado</small>
-          <strong>A la siguiente serie</strong>
-        </div>
-        <button type="button" className="btn btn-dark btn-small" onClick={onSkip}>Cerrar</button>
-      </div>
-    );
-  }
-
-  const seconds = Math.ceil(remainingMs / 1000);
+  const visible = restUntil !== null && now !== 0 && remainingMs > -AFTERGLOW_MS;
+  const finished = remainingMs <= 0;
+  const seconds = Math.ceil(Math.max(0, remainingMs) / 1000);
   const total = Math.max(restTotal, seconds, 1);
-  const progress = (1 - remainingMs / (total * 1000)) * 100;
+  // Cambia sólo en momentos clave, para que el lector de pantalla no lea cada segundo.
+  const announcement = !visible ? "" : finished ? `Descanso terminado.${upcoming ? ` Sigue: ${upcoming}.` : ""}` : seconds <= 10 ? "Quedan 10 segundos de descanso." : `Descanso de ${clockLabel(total)}.`;
 
   return (
-    <div className="ses-rest" role="timer" aria-label={`Descanso: quedan ${seconds} segundos`}>
-      <ProgressRing value={progress} size={50} stroke={11} color="var(--lime)">
-        <span className="ses-rest-ring-dot" />
-      </ProgressRing>
-      <div className="ses-rest-text">
-        <small>Descanso</small>
-        <strong className="num">{clockLabel(seconds)}</strong>
-      </div>
-      <div className="ses-rest-actions">
-        <button type="button" className="ses-rest-adjust" onClick={() => onAdjust(-15)} aria-label="Restar 15 segundos">−15</button>
-        <button type="button" className="ses-rest-adjust" onClick={() => onAdjust(15)} aria-label="Sumar 15 segundos">+15</button>
-        <button type="button" className="btn btn-primary btn-small ses-rest-skip" onClick={onSkip}>Saltar</button>
-      </div>
-    </div>
+    <>
+      {/* El velo queda montado para oscurecer y aclarar la foto con un fundido. */}
+      <span className={cn("ses-rest-scrim", visible && "is-on")} aria-hidden="true" />
+      {visible && (
+        <div className={cn("ses-rest", finished && "is-finished")}>
+          {finished ? (
+            <div className="ses-rest-done">
+              <span className="ses-rest-mark" aria-hidden="true"><Check size={30} strokeWidth={2.6} /></span>
+              <p className="meta">Descanso terminado</p>
+              <p className="ses-rest-done-title">{upcoming ?? "A la siguiente serie"}</p>
+            </div>
+          ) : (
+            <WorkoutTimer seconds={seconds} total={total} label="Descanso" size={size} className="ses-rest-timer">
+              {upcoming && size >= 170 && <span className="ses-rest-upcoming">Sigue · {upcoming}</span>}
+            </WorkoutTimer>
+          )}
+        </div>
+      )}
+      <p className="sr-only" aria-live="polite">{announcement}</p>
+    </>
   );
 }

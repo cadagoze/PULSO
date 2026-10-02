@@ -45,11 +45,11 @@ export function FinishSheet({ open, onClose, duration, done, total, volume, onSa
 
   return (
     <Sheet open={open} onClose={onClose} title="Terminar entrenamiento" eyebrow="Antes de guardar" className="ses-finish">
-      <div className="ses-finish-stats">
-        <div><b className="num">{duration}</b><span>duración</span></div>
-        <div><b className="num">{done}<small>/{total}</small></b><span>series</span></div>
-        <div><b className="num">{volume}</b><span>volumen</span></div>
-      </div>
+      <dl className="ses-finish-stats">
+        <div><dt className="meta">Duración</dt><dd className="num">{duration}</dd></div>
+        <div><dt className="meta">Series</dt><dd className="num">{done}<small>/{total}</small></dd></div>
+        <div><dt className="meta">Volumen</dt><dd className="num">{volume}</dd></div>
+      </dl>
 
       {pending > 0 && done > 0 && (
         <p className="notice warn">
@@ -75,7 +75,7 @@ export function FinishSheet({ open, onClose, duration, done, total, volume, onSa
       </div>
 
       <div className="stack-s">
-        <button type="button" className="btn btn-primary btn-block ses-save" disabled={done === 0} onClick={() => onSave(effort, pain)}>
+        <button type="button" className="btn btn-primary btn-large btn-block" disabled={done === 0} onClick={() => onSave(effort, pain)}>
           Guardar entrenamiento
         </button>
         <button type="button" className="btn btn-ghost btn-block" onClick={onClose}>Seguir entrenando</button>

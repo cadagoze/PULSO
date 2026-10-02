@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Plus, Trash2 } from "lucide-react";
+import { Link2, StickyNote } from "lucide-react";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
+import { MetaLine } from "@/components/ui";
 import { beep, primeAudio, useWakeLock, vibrate } from "@/lib/feedback";
 import { exerciseBests, progressedSets, warmupSets } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
@@ -10,24 +11,37 @@ import { markProgramSession } from "@/lib/programs";
 import { useDraft, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { clockLabel, completedSets, durationSeconds, exerciseById, isWorkingSet, lastRecordFor, recordsVolume, totalSets } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
+import { cn } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft, WorkoutEntry } from "@/types";
-import { ExerciseCard } from "./exercise-card";
-import type { GroupPosition } from "./exercise-card";
 import { ExerciseMenu } from "./exercise-menu";
+import type { MenuTarget, MenuView } from "./exercise-menu";
+import { ExerciseSets } from "./exercise-sets";
 import { FinishSheet } from "./finish-sheet";
 import { NoSession, SessionSkeleton } from "./no-session";
-import { RestTimer } from "./rest-timer";
+import { RestOverlay } from "./rest-timer";
 import { RirSheet } from "./rir-sheet";
-import { SessionHeader } from "./session-header";
+import { SessionDock } from "./session-dock";
+import type { DockMode } from "./session-dock";
+import { SessionTopBar } from "./session-header";
+import { SessionHero } from "./session-hero";
+import { prefersReducedMotion, SessionScreen } from "./session-screen";
+import { SessionSheet } from "./session-sheet";
 import { SessionSummary } from "./session-summary";
-import { buildWorkoutEntry, normalizeGroups, setBadge, sourceLabel, supersetLetters, toggleSuperset, useHydrated, validateSet, volumeLabel } from "./session-utils";
+import { SetBlock } from "./set-block";
+import type { SetMode } from "./set-block";
+import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, normalizeGroups, primaryMuscles, setBadge, setHeading, sourceLabel, supersetLetters, toggleSuperset, useHydrated, validateSet, volumeLabel } from "./session-utils";
 import type { Effort } from "./session-utils";
 import { useCountdownCues } from "./use-countdown-cues";
 
 type SetCountdown = { recordIndex: number; setIndex: number; until: number };
 type Picker = { mode: "add" } | { mode: "replace"; index: number };
+type SetRef = { recordIndex: number; setIndex: number };
+type MenuState = { index: number | null; open: boolean; session: boolean; view?: MenuView };
 
-/** Pantalla de registro: decide entre resumen, estado vacío y sesión activa. */
+/** Tiempo (ms) que la serie recién completada queda en lima con su check antes de pasar a la siguiente. */
+const HOLD_MS = 650;
+
+/** Pantalla de registro: decide entre resumen, estado vacío y sesión activa, siempre en modo inmersivo oscuro. */
 export function SessionLogger() {
   const hydrated = useHydrated();
   const [draft, setDraft] = useDraft();
@@ -35,10 +49,12 @@ export function SessionLogger() {
   const [settings] = useSettings();
   const [saved, setSaved] = useState<WorkoutEntry | null>(null);
 
-  if (!hydrated) return <SessionSkeleton />;
-  if (saved) return <SessionSummary entry={saved} workouts={workouts} settings={settings} />;
-  if (!draft) return <NoSession />;
-  return <ActiveSession draft={draft} setDraft={setDraft} settings={settings} onSaved={setSaved} />;
+  let content;
+  if (!hydrated) content = <SessionSkeleton />;
+  else if (saved) content = <SessionSummary entry={saved} workouts={workouts} settings={settings} />;
+  else if (!draft) content = <NoSession />;
+  else content = <ActiveSession draft={draft} setDraft={setDraft} settings={settings} onSaved={setSaved} />;
+  return <SessionScreen>{content}</SessionScreen>;
 }
 
 /** Avisos del temporizador por serie (ejercicios por tiempo). No pinta nada. */
@@ -59,14 +75,8 @@ function CountdownWatcher({ countdown, sound, vibration }: { countdown: SetCount
   return null;
 }
 
-function groupPosition(records: ExerciseRecord[], index: number): GroupPosition {
-  const group = records[index].group;
-  if (!group) return null;
-  const before = records[index - 1]?.group === group;
-  const after = records[index + 1]?.group === group;
-  if (before && after) return "middle";
-  if (after) return "first";
-  return before ? "last" : null;
+function scrollToTop() {
+  if (window.scrollY > 4) window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 }
 
 interface ActiveSessionProps {
@@ -79,11 +89,18 @@ interface ActiveSessionProps {
 function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProps) {
   const [workouts, setWorkouts] = useWorkouts();
   const [, setProgram] = useProgram();
-  const [menuIndex, setMenuIndex] = useState<number | null>(null);
+  // Ejercicio en pantalla: al volver a la sesión se retoma donde quedaron series pendientes.
+  const [current, setCurrent] = useState(() => firstPendingRecord(draft.records));
+  const [direction, setDirection] = useState<1 | -1>(1);
+  // Serie elegida a mano en la lista; si no, la primera pendiente del ejercicio.
+  const [focus, setFocus] = useState<SetRef | null>(null);
+  const [justDone, setJustDone] = useState<(SetRef & { next: number }) | null>(null);
+  const [menu, setMenu] = useState<MenuState>({ index: null, open: false, session: false });
+  const [sessionOpen, setSessionOpen] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
-  const [rirTarget, setRirTarget] = useState<{ recordIndex: number; setIndex: number } | null>(null);
+  const [rirTarget, setRirTarget] = useState<SetRef | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
-  const [error, setError] = useState<{ recordIndex: number; message: string } | null>(null);
+  const [error, setError] = useState<(SetRef & { message: string }) | null>(null);
   const [countdown, setCountdown] = useState<SetCountdown | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
@@ -91,6 +108,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const settingsRef = useRef(settings);
   const finishNow = useNow(finishOpen ? 1000 : 60_000);
   const unit = settings.unit;
+  const count = draft.records.length;
+  const index = count ? Math.min(current, count - 1) : 0;
 
   useEffect(() => {
     draftRef.current = draft;
@@ -101,6 +120,20 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   }, []);
 
   useWakeLock(settings.keepAwake && draft.runningSince !== null);
+
+  // Tras el check, la serie hecha queda un instante en lima y luego da paso a la siguiente (o al siguiente ejercicio).
+  useEffect(() => {
+    if (!justDone) return;
+    const timer = window.setTimeout(() => {
+      setJustDone(null);
+      if (justDone.next !== justDone.recordIndex) {
+        setDirection(justDone.next > justDone.recordIndex ? 1 : -1);
+        setCurrent(justDone.next);
+        scrollToTop();
+      }
+    }, HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [justDone]);
 
   const patch = useCallback((update: (current: TrainingDraft) => TrainingDraft) => {
     setDraft((current) => (current ? update(current) : current));
@@ -120,8 +153,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const onSet = useCallback((recordIndex: number, setIndex: number, setPatch: Partial<SetRecord>, options?: { carryFrom?: number }) => {
     updateRecord(recordIndex, (record) => {
       const edited = record.sets[setIndex];
-      // Como en Hevy: al terminar de escribir una carga, se copia a las series siguientes pendientes
-      // que todavía tenían la carga anterior (comparada con el valor al enfocar el campo).
+      // Como en Hevy: al terminar de cambiar una carga, se copia a las series siguientes pendientes
+      // que todavía tenían la carga anterior (comparada con el valor previo al cambio).
       const carryFrom = options?.carryFrom;
       const carry = carryFrom !== undefined && setPatch.load !== undefined && edited !== undefined && isWorkingSet(edited);
       return {
@@ -144,7 +177,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     if (!set.done) {
       const problem = validateSet(set, record.unit);
       if (problem) {
-        setError({ recordIndex, message: `Revisa la serie ${setBadge(record.sets, setIndex)}: ${problem}` });
+        setError({ recordIndex, setIndex, message: `Revisa la serie ${setBadge(record.sets, setIndex)}: ${problem}` });
+        setFocus({ recordIndex, setIndex });
         return;
       }
     }
@@ -152,20 +186,27 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setError(null);
     setCountdown((value) => (value?.recordIndex === recordIndex && value.setIndex === setIndex ? null : value));
     const completing = !set.done;
+    const toggled = (records: ExerciseRecord[]) => records.map((item, index) => (index !== recordIndex ? item : {
+      ...item,
+      sets: item.sets.map((row, position) => (position === setIndex ? { ...row, done: completing } : row)),
+    }));
+    const records = toggled(current.records);
     const partner = current.records[recordIndex + 1];
     const nextInSuperset = Boolean(record.group) && partner?.group === record.group && partner.sets.some((row) => !row.done);
     const rest = record.restSeconds ?? current.restSeconds;
-    const startRest = completing && settingsRef.current.autoRest && !nextInSuperset && rest > 0 && current.runningSince !== null;
+    // Tras la última serie de la sesión no hace falta descanso: toca terminar.
+    const startRest = completing && settingsRef.current.autoRest && !nextInSuperset && records.some(hasPending) && rest > 0 && current.runningSince !== null;
     const now = Date.now();
     patch((draftNow) => ({
       ...draftNow,
       ...(startRest ? { restUntil: now + rest * 1000, restTotal: rest } : {}),
-      records: draftNow.records.map((item, index) => (index !== recordIndex ? item : {
-        ...item,
-        sets: item.sets.map((row, position) => (position === setIndex ? { ...row, done: completing } : row)),
-      })),
+      records: toggled(draftNow.records),
     }));
-    if (completing && settingsRef.current.vibration) vibrate(30);
+    if (!completing) return;
+    if (settingsRef.current.vibration) vibrate(30);
+    if (settingsRef.current.sound) beep({ frequency: 1180, duration: 0.05 });
+    setFocus(null);
+    setJustDone({ recordIndex, setIndex, next: nextExerciseAfter(records, recordIndex) });
   }, [patch]);
 
   const onAddSet = useCallback((recordIndex: number) => {
@@ -196,7 +237,6 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   }, []);
 
   const onCountdownDismiss = useCallback(() => setCountdown(null), []);
-  const onMenu = useCallback((recordIndex: number) => setMenuIndex(recordIndex), []);
 
   // ─── Sesión ───────────────────────────────────────────────────────────
   function togglePause() {
@@ -215,6 +255,27 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     });
   }
 
+  function skipRest() {
+    patch((current) => ({ ...current, restUntil: null }));
+  }
+
+  /** Cambia de ejercicio (flechas, deslizar, lista o «Ver sesión»). */
+  function goTo(target: number) {
+    if (target < 0 || target >= draft.records.length) return;
+    setJustDone(null);
+    setFocus(null);
+    if (target === index) return;
+    setDirection(target > index ? 1 : -1);
+    setCurrent(target);
+    scrollToTop();
+  }
+
+  function focusSet(setIndex: number) {
+    setJustDone(null);
+    setFocus({ recordIndex: index, setIndex });
+    scrollToTop();
+  }
+
   function lastFor(exercise: Exercise) {
     return lastRecordFor(workouts, exercise.id, draft.id);
   }
@@ -229,8 +290,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     if (records.length) showToast(records.length === 1 ? "Ejercicio agregado" : `${records.length} ejercicios agregados`);
   }
 
-  function replaceExercise(index: number, exercise: Exercise) {
-    updateRecord(index, (record) => {
+  function replaceExercise(position: number, exercise: Exercise) {
+    updateRecord(position, (record) => {
       const replaced: ExerciseRecord = {
         exerciseId: exercise.id,
         unit: exercise.unit,
@@ -241,16 +302,17 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
       return replaced;
     });
     setCountdown(null);
+    setFocus(null);
     showToast(`Sustituido por ${exercise.name}`);
   }
 
-  function addWarmups(index: number) {
-    const record = draft.records[index];
+  function addWarmups(position: number) {
+    const record = draft.records[position];
     const exercise = record ? exerciseById(record.exerciseId) : undefined;
     if (!record || !exercise) return;
     const heaviest = Math.max(0, ...record.sets.filter(isWorkingSet).map((set) => set.load));
     const sets = warmupSets(heaviest, Boolean(exercise.barbell), settings.barWeight);
-    setMenuIndex(null);
+    closeMenu();
     if (!sets.length) {
       showToast(heaviest > 0 ? "Con esta carga no hacen falta series de aproximación" : "Anota primero tu carga de trabajo");
       return;
@@ -262,33 +324,41 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
       return;
     }
     // Calentamientos hechos primero, luego los que faltan (de menor a mayor carga) y después las series de trabajo.
-    updateRecord(index, (current) => ({
-      ...current,
-      sets: [...doneWarmups, ...missing, ...current.sets.filter((set) => set.kind !== "warmup")],
+    updateRecord(position, (currentRecord) => ({
+      ...currentRecord,
+      sets: [...doneWarmups, ...missing, ...currentRecord.sets.filter((set) => set.kind !== "warmup")],
     }));
     setCountdown(null);
+    setFocus(null);
     showToast(`${missing.length} ${missing.length === 1 ? "serie" : "series"} de calentamiento agregadas`);
   }
 
-  function moveExercise(index: number, direction: -1 | 1) {
-    const target = index + direction;
+  function moveExercise(position: number, step: -1 | 1) {
+    const target = position + step;
+    closeMenu();
+    if (target < 0 || target >= draft.records.length) return;
     patch((current) => {
-      if (target < 0 || target >= current.records.length) return current;
+      if (target >= current.records.length) return current;
       const records = [...current.records];
-      [records[index], records[target]] = [records[target], records[index]];
+      [records[position], records[target]] = [records[target], records[position]];
       return { ...current, records: normalizeGroups(records) };
     });
+    // La pantalla sigue mostrando el mismo ejercicio en su nueva posición.
+    setCurrent((value) => (value === position ? target : value === target ? position : value));
     setCountdown(null);
-    setMenuIndex(null);
+    setFocus(null);
   }
 
-  function deleteExercise(index: number) {
-    const exercise = exerciseById(draft.records[index]?.exerciseId ?? -1);
+  function deleteExercise(position: number) {
+    const exercise = exerciseById(draft.records[position]?.exerciseId ?? -1);
     if (!window.confirm(`¿Eliminar ${exercise?.name ?? "este ejercicio"} de la sesión?`)) return;
-    patch((current) => ({ ...current, records: normalizeGroups(current.records.filter((_, position) => position !== index)) }));
+    patch((current) => ({ ...current, records: normalizeGroups(current.records.filter((_, item) => item !== position)) }));
+    setCurrent((value) => (value > position ? value - 1 : value));
     setCountdown(null);
     setError(null);
-    setMenuIndex(null);
+    setFocus(null);
+    setJustDone(null);
+    closeMenu();
   }
 
   function discard() {
@@ -300,8 +370,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     const current = draftRef.current;
     if (!completedSets(current.records)) return;
     const entry = buildWorkoutEntry(current, workouts, { effort, feltPain }, Date.now());
-    const saved = setWorkouts((items) => [entry, ...items.filter((item) => item.id !== entry.id)]);
-    if (!saved) {
+    const stored = setWorkouts((items) => [entry, ...items.filter((item) => item.id !== entry.id)]);
+    if (!stored) {
       // Sin espacio en el dispositivo: se conserva el borrador para no perder el entrenamiento.
       showToast("No se pudo guardar: el almacenamiento del dispositivo está lleno. Exporta un respaldo y libera espacio.");
       return;
@@ -311,6 +381,14 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setFinishOpen(false);
     onSaved(entry);
     setDraft(null);
+  }
+
+  function openMenu(position: number | null, options: { session?: boolean; view?: MenuView } = {}) {
+    setMenu({ index: position, open: true, session: Boolean(options.session), view: options.view });
+  }
+
+  function closeMenu() {
+    setMenu((value) => ({ ...value, open: false }));
   }
 
   // ─── Datos derivados ─────────────────────────────────────────────────
@@ -327,169 +405,242 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     return map;
   }, [draft.id, exerciseIds, workouts]);
 
-  const menuRecord = menuIndex !== null ? draft.records[menuIndex] : undefined;
-  const menuExercise = menuRecord ? exerciseById(menuRecord.exerciseId) : undefined;
-  const rirSet = rirTarget ? draft.records[rirTarget.recordIndex]?.sets[rirTarget.setIndex] : undefined;
-  const replacing = picker?.mode === "replace" ? exerciseById(draft.records[picker.index]?.exerciseId ?? -1) : undefined;
+  const record = draft.records[index];
+  const exercise = record ? exerciseById(record.exerciseId) : undefined;
+  const info = record ? history.get(record.exerciseId) : undefined;
+  const holdSet = justDone && justDone.recordIndex === index ? justDone.setIndex : null;
+  const manualSet = focus && record && focus.recordIndex === index && focus.setIndex < record.sets.length ? focus.setIndex : null;
+  const setIndex = holdSet ?? manualSet ?? (record ? record.sets.findIndex((set) => !set.done) : -1);
+  const setMode: SetMode = holdSet !== null ? "hold" : setIndex >= 0 ? (record?.sets[setIndex]?.done ? "review" : "set") : total > 0 && done === total ? "all-done" : "exercise-done";
+  const dockMode: DockMode = record && exercise ? setMode : "empty";
   const paused = draft.runningSince === null;
 
+  const neighbour = (position: number) => {
+    const item = draft.records[position];
+    const found = item ? exerciseById(item.exerciseId) : undefined;
+    return item && found ? { index: position, exercise: found, record: item } : null;
+  };
+  const previousItem = neighbour(index - 1);
+  const nextItem = neighbour(index + 1);
+
+  // Lo que viene tras el descanso, para el anillo: la serie siguiente o el siguiente ejercicio.
+  const upcomingIndex = justDone ? justDone.next : index;
+  const upcomingRecord = draft.records[upcomingIndex];
+  const upcomingSet = upcomingRecord ? upcomingRecord.sets.findIndex((set) => !set.done) : -1;
+  const upcoming = !upcomingRecord || upcomingSet < 0 ? undefined
+    : upcomingIndex !== index ? exerciseById(upcomingRecord.exerciseId)?.name : setHeading(upcomingRecord.sets, upcomingSet);
+
+  const menuRecord = menu.index !== null ? draft.records[menu.index] : undefined;
+  const menuExercise = menuRecord ? exerciseById(menuRecord.exerciseId) : undefined;
+  const menuTarget: MenuTarget | null = menu.index !== null && menuRecord && menuExercise
+    ? { record: menuRecord, exercise: menuExercise, index: menu.index, count, linkedWithNext: Boolean(menuRecord.group) && draft.records[menu.index + 1]?.group === menuRecord.group }
+    : null;
+  const rirSet = rirTarget ? draft.records[rirTarget.recordIndex]?.sets[rirTarget.setIndex] : undefined;
+  const replacing = picker?.mode === "replace" ? exerciseById(draft.records[picker.index]?.exerciseId ?? -1) : undefined;
+
   return (
-    <div className="ses-page">
-      <SessionHeader
-        draft={draft}
-        done={done}
-        total={total}
-        volume={volume}
-        onTogglePause={togglePause}
-        onFinish={() => setFinishOpen(true)}
-      />
-
-      <div className="ses-intro">
-        <p className="eyebrow">{sourceLabel(draft.source)}</p>
-        <input
-          className="ses-name"
-          value={draft.name}
-          maxLength={60}
-          aria-label="Nombre del entrenamiento"
-          onChange={(event) => {
-            const name = event.target.value;
-            patch((current) => ({ ...current, name }));
-          }}
-          onBlur={() => {
-            if (!draftRef.current.name.trim()) patch((current) => ({ ...current, name: "Entrenamiento" }));
-          }}
-        />
-        <p className="subtle ses-autosave">Se guarda solo en este dispositivo mientras entrenas.</p>
-      </div>
-
-      {paused && (
-        <button type="button" className="ses-paused" onClick={togglePause}>
-          <Pause size={18} />
-          <span><b>En pausa.</b> El reloj está detenido. Toca para reanudar.</span>
-        </button>
-      )}
-
-      {draft.records.length === 0 ? (
-        <div className="ses-first">
-          <h2>Agrega tu primer ejercicio</h2>
-          <p className="muted">Busca por nombre o músculo. Prellenamos las series con tu última vez.</p>
-          <button type="button" className="btn btn-primary" onClick={() => setPicker({ mode: "add" })}>
-            <Plus size={18} /> Agregar ejercicios
-          </button>
-        </div>
-      ) : (
-        <div className="ses-list">
-          {draft.records.map((record, index) => {
-            const exercise = exerciseById(record.exerciseId);
-            if (!exercise) return null;
-            const info = history.get(record.exerciseId);
-            return (
-              <ExerciseCard
-                key={`${record.exerciseId}-${index}`}
-                index={index}
-                record={record}
-                exercise={exercise}
-                last={info?.last}
-                bests={info?.bests ?? exerciseBests([], record.exerciseId)}
-                loadUnit={unit}
-                groupLetter={record.group ? letters.get(record.group) : undefined}
-                groupPosition={groupPosition(draft.records, index)}
-                countdown={countdown?.recordIndex === index ? { setIndex: countdown.setIndex, until: countdown.until } : null}
-                error={error?.recordIndex === index ? error.message : null}
-                onSet={onSet}
-                onToggle={onToggle}
-                onRir={onRir}
-                onCountdown={onCountdown}
-                onCountdownDismiss={onCountdownDismiss}
-                onAddSet={onAddSet}
-                onRemoveSet={onRemoveSet}
-                onMenu={onMenu}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      <section className="ses-bottom">
-        {draft.records.length > 0 && (
-          <button type="button" className="btn btn-secondary btn-block ses-add" onClick={() => setPicker({ mode: "add" })}>
-            <Plus size={18} /> Agregar ejercicios
-          </button>
-        )}
-        <label className="field">
-          Notas de la sesión
-          <textarea
-            value={draft.notes}
-            maxLength={1000}
-            placeholder="Cómo te sentiste, ajustes de técnica, energía…"
-            onChange={(event) => {
-              const notes = event.target.value;
-              patch((current) => ({ ...current, notes }));
-            }}
+    <div className="ses-active">
+      <SessionHero
+        exercise={exercise}
+        mediaKey={`${index}-${record?.exerciseId ?? "vacía"}`}
+        direction={direction}
+        prev={previousItem?.exercise.name}
+        next={nextItem?.exercise.name}
+        onPrev={() => previousItem && goTo(previousItem.index)}
+        onNext={() => nextItem && goTo(nextItem.index)}
+        topBar={(
+          <SessionTopBar
+            draft={draft}
+            current={index}
+            onTogglePause={togglePause}
+            onOpenSession={() => setSessionOpen(true)}
+            onOpenMenu={() => openMenu(record && exercise ? index : null, { session: true })}
           />
-        </label>
-        <button type="button" className="btn btn-dark btn-block" onClick={() => setFinishOpen(true)}>Terminar entrenamiento</button>
-        <button type="button" className="ses-discard" onClick={discard}>
-          <Trash2 size={16} /> Descartar entrenamiento
-        </button>
-      </section>
-
-      <RestTimer
-        restUntil={draft.restUntil}
-        restTotal={draft.restTotal ?? draft.restSeconds}
-        sound={settings.sound}
-        vibration={settings.vibration}
-        onAdjust={adjustRest}
-        onSkip={() => patch((current) => ({ ...current, restUntil: null }))}
+        )}
+        overlay={record ? (ringSize) => (
+          <RestOverlay
+            restUntil={draft.restUntil}
+            restTotal={draft.restTotal ?? draft.restSeconds}
+            sound={settings.sound}
+            vibration={settings.vibration}
+            size={ringSize}
+            upcoming={upcoming}
+          />
+        ) : undefined}
       />
+
+      <div className="ses-panel">
+        {record && exercise ? (
+          <header key={`head-${index}-${record.exerciseId}`} className={cn("ses-head", direction < 0 && "from-prev")}>
+            {record.group && (
+              <span className="photo-tag glass ses-head-tag"><Link2 size={13} aria-hidden="true" />Superserie {letters.get(record.group)} · alterna sin descanso</span>
+            )}
+            <h1 className="ses-name">{exercise.name}</h1>
+            <MetaLine className="ses-muscles" items={primaryMuscles(exercise)} />
+            {record.note && <p className="ses-head-note"><StickyNote size={14} aria-hidden="true" /><span>{record.note}</span></p>}
+          </header>
+        ) : (
+          <header className="ses-head">
+            <p className="meta">{sourceLabel(draft.source)}</p>
+            <h1 className="ses-name">Agrega tu primer ejercicio</h1>
+            <p className="ses-head-text">Busca por nombre o músculo. Prellenamos las series con tu última vez.</p>
+          </header>
+        )}
+
+        {record && exercise && (
+          <SetBlock
+            mode={setMode}
+            recordIndex={index}
+            record={record}
+            exercise={exercise}
+            setIndex={setIndex}
+            last={info?.last}
+            bests={info?.bests ?? exerciseBests([], record.exerciseId)}
+            loadUnit={unit}
+            error={error?.recordIndex === index ? error.message : null}
+            countdown={countdown?.recordIndex === index ? { setIndex: countdown.setIndex, until: countdown.until } : null}
+            paused={paused}
+            vibration={settings.vibration}
+            sessionDone={done}
+            sessionTotal={total}
+            onSet={onSet}
+            onToggle={onToggle}
+            onRir={onRir}
+            onCountdown={onCountdown}
+            onCountdownDismiss={onCountdownDismiss}
+            onTogglePause={togglePause}
+            onAddSet={onAddSet}
+          />
+        )}
+
+        <SessionDock
+          mode={dockMode}
+          restUntil={draft.restUntil}
+          onComplete={() => { if (setIndex >= 0) onToggle(index, setIndex); }}
+          onResume={() => setFocus(null)}
+          onNextExercise={() => goTo(nextExerciseAfter(draft.records, index))}
+          onFinish={() => setFinishOpen(true)}
+          onAdd={() => setPicker({ mode: "add" })}
+          onAdjustRest={adjustRest}
+          onSkipRest={skipRest}
+        />
+
+        {record && exercise && (
+          <ExerciseSets
+            key={`sets-${index}-${record.exerciseId}`}
+            recordIndex={index}
+            record={record}
+            exercise={exercise}
+            last={info?.last}
+            bests={info?.bests ?? exerciseBests([], record.exerciseId)}
+            loadUnit={unit}
+            focusedSet={setIndex}
+            previousExercise={previousItem}
+            nextExercise={nextItem}
+            onFocus={focusSet}
+            onToggle={onToggle}
+            onSet={onSet}
+            onAddSet={onAddSet}
+            onRemoveSet={onRemoveSet}
+            onGo={goTo}
+            onOpenSession={() => setSessionOpen(true)}
+          />
+        )}
+      </div>
 
       {countdown && <CountdownWatcher countdown={countdown} sound={settings.sound} vibration={settings.vibration} />}
 
-      {menuRecord && menuExercise && menuIndex !== null && (
-        <ExerciseMenu
-          key={menuIndex}
-          record={menuRecord}
-          exercise={menuExercise}
-          index={menuIndex}
-          count={draft.records.length}
-          linkedWithNext={Boolean(menuRecord.group) && draft.records[menuIndex + 1]?.group === menuRecord.group}
-          defaultRest={draft.restSeconds}
-          loadUnit={unit}
-          barWeight={settings.barWeight}
-          plates={settings.plates}
-          onClose={() => setMenuIndex(null)}
-          onReplace={() => {
-            setMenuIndex(null);
-            setPicker({ mode: "replace", index: menuIndex });
-          }}
-          onWarmup={() => addWarmups(menuIndex)}
-          onRest={(seconds) => {
-            updateRecord(menuIndex, (record) => {
-              const next = { ...record };
-              if (seconds === undefined) delete next.restSeconds;
-              else next.restSeconds = seconds;
-              return next;
-            });
-            setMenuIndex(null);
-            showToast(seconds === undefined ? "Usará el descanso general" : `Descanso de ${seconds} s`);
-          }}
-          onNote={(note) => {
-            updateRecord(menuIndex, (record) => {
-              const next = { ...record };
-              if (note) next.note = note;
-              else delete next.note;
-              return next;
-            });
-            setMenuIndex(null);
-          }}
-          onMove={(direction) => moveExercise(menuIndex, direction)}
-          onSuperset={() => {
-            patch((current) => ({ ...current, records: toggleSuperset(current.records, menuIndex) }));
-            setMenuIndex(null);
-          }}
-          onDelete={() => deleteExercise(menuIndex)}
-        />
-      )}
+      <SessionSheet
+        open={sessionOpen}
+        onClose={() => setSessionOpen(false)}
+        draft={draft}
+        current={index}
+        done={done}
+        total={total}
+        volume={volume}
+        onRename={(name) => patch((currentDraft) => ({ ...currentDraft, name }))}
+        onRenameBlur={() => {
+          if (!draftRef.current.name.trim()) patch((currentDraft) => ({ ...currentDraft, name: "Entrenamiento" }));
+        }}
+        onNotes={(notes) => patch((currentDraft) => ({ ...currentDraft, notes }))}
+        onJump={(position) => {
+          setSessionOpen(false);
+          goTo(position);
+        }}
+        onMenu={(position) => openMenu(position)}
+        onAdd={() => setPicker({ mode: "add" })}
+        onFinish={() => {
+          setSessionOpen(false);
+          setFinishOpen(true);
+        }}
+        onDiscard={discard}
+      />
+
+      <ExerciseMenu
+        open={menu.open}
+        target={menuTarget}
+        initialView={menu.view}
+        defaultRest={draft.restSeconds}
+        loadUnit={unit}
+        barWeight={settings.barWeight}
+        plates={settings.plates}
+        session={menu.session ? {
+          sessionRest: draft.restSeconds,
+          onSessionRest: (seconds) => patch((currentDraft) => ({ ...currentDraft, restSeconds: seconds })),
+          onOpenSession: () => {
+            closeMenu();
+            setSessionOpen(true);
+          },
+          onAdd: () => {
+            closeMenu();
+            setPicker({ mode: "add" });
+          },
+          onFinish: () => {
+            closeMenu();
+            setFinishOpen(true);
+          },
+          onDiscard: () => {
+            closeMenu();
+            discard();
+          },
+        } : undefined}
+        onClose={closeMenu}
+        onReplace={() => {
+          if (menu.index === null) return;
+          closeMenu();
+          setPicker({ mode: "replace", index: menu.index });
+        }}
+        onWarmup={() => { if (menu.index !== null) addWarmups(menu.index); }}
+        onRest={(seconds) => {
+          if (menu.index === null) return;
+          updateRecord(menu.index, (item) => {
+            const next = { ...item };
+            if (seconds === undefined) delete next.restSeconds;
+            else next.restSeconds = seconds;
+            return next;
+          });
+          closeMenu();
+          showToast(seconds === undefined ? "Usará el descanso general" : `Descanso de ${seconds} s`);
+        }}
+        onNote={(note) => {
+          if (menu.index === null) return;
+          updateRecord(menu.index, (item) => {
+            const next = { ...item };
+            if (note) next.note = note;
+            else delete next.note;
+            return next;
+          });
+          closeMenu();
+        }}
+        onMove={(step) => { if (menu.index !== null) moveExercise(menu.index, step); }}
+        onSuperset={() => {
+          if (menu.index === null) return;
+          const position = menu.index;
+          patch((currentDraft) => ({ ...currentDraft, records: toggleSuperset(currentDraft.records, position) }));
+          closeMenu();
+        }}
+        onDelete={() => { if (menu.index !== null) deleteExercise(menu.index); }}
+      />
 
       <ExercisePicker
         open={picker !== null}
@@ -497,7 +648,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         multiple={picker?.mode === "add"}
         title={picker?.mode === "replace" ? "Sustituir ejercicio" : "Agregar ejercicios"}
         replacing={replacing}
-        exclude={draft.records.map((record) => record.exerciseId)}
+        exclude={draft.records.map((item) => item.exerciseId)}
         onSelect={(items) => {
           if (picker?.mode === "replace") {
             if (items[0]) replaceExercise(picker.index, items[0]);
@@ -515,10 +666,10 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         onClose={() => setRirTarget(null)}
         onSelect={(value) => {
           if (rirTarget) {
-            updateRecord(rirTarget.recordIndex, (record) => ({
-              ...record,
-              sets: record.sets.map((set, index) => {
-                if (index !== rirTarget.setIndex) return set;
+            updateRecord(rirTarget.recordIndex, (item) => ({
+              ...item,
+              sets: item.sets.map((set, position) => {
+                if (position !== rirTarget.setIndex) return set;
                 const next = { ...set };
                 if (value === undefined) delete next.rir;
                 else next.rir = value;

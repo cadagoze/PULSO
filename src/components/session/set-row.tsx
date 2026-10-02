@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Play, Trophy } from "lucide-react";
-import { useNow } from "@/lib/use-now";
+import { Check, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SetRecord } from "@/types";
 import { kindNames, parseDecimal } from "./session-utils";
 
-function plain(value: number) {
+export function plain(value: number) {
   return String(Math.round(value * 100) / 100).replace(".", ",");
 }
 
-/** Campo numérico grande: selecciona todo al enfocar y acepta coma decimal. */
-export function NumberField({ value, onCommit, onSettle, label, decimal = false, invalid = false, placeholder, className }: {
+/**
+ * Campo numérico: selecciona todo al enfocar y acepta coma decimal (teclado numérico en el móvil).
+ * Con `autoWidth` el ancho sigue exactamente a las cifras (una copia invisible del texto da la medida),
+ * para los números grandes de la serie actual.
+ */
+export function NumberField({ value, onCommit, onSettle, label, decimal = false, invalid = false, placeholder, className, autoWidth = false }: {
   value: number;
   onCommit: (value: number) => void;
   /** Al salir del campo, si el valor cambió: (valor final, valor al enfocar). */
@@ -22,17 +25,19 @@ export function NumberField({ value, onCommit, onSettle, label, decimal = false,
   invalid?: boolean;
   placeholder?: string;
   className?: string;
+  autoWidth?: boolean;
 }) {
   const [text, setText] = useState<string | null>(null);
   const [initial, setInitial] = useState(value);
   const shown = text ?? (value > 0 ? plain(value) : "");
-  return (
+  const input = (
     <input
-      className={cn("ses-input num", className)}
+      className={cn("ses-input num", !autoWidth && className)}
       type="text"
       inputMode={decimal ? "decimal" : "numeric"}
       enterKeyHint="done"
       autoComplete="off"
+      size={1}
       aria-label={label}
       aria-invalid={invalid || undefined}
       placeholder={placeholder}
@@ -56,120 +61,54 @@ export function NumberField({ value, onCommit, onSettle, label, decimal = false,
       }}
     />
   );
-}
-
-function CountdownButton({ until, onPress, label }: { until: number | null; onPress: () => void; label: string }) {
-  const now = useNow(250);
-  const remaining = until === null || now === 0 ? null : Math.ceil((until - now) / 1000);
-  const running = remaining !== null && remaining > 0;
-  const finished = remaining !== null && remaining <= 0;
+  if (!autoWidth) return input;
   return (
-    <button
-      type="button"
-      className={cn("ses-mini", running && "is-running", finished && "is-finished")}
-      onClick={onPress}
-      aria-label={running ? `Detener temporizador de ${label} (quedan ${remaining} s)` : `Iniciar temporizador de ${label}`}
-    >
-      {running ? <span className="num">{remaining}</span> : finished ? <Check size={16} /> : <Play size={15} />}
-    </button>
+    <span className={cn("ses-autosize", className)}>
+      <span className="ses-autosize-mirror" aria-hidden="true">{shown || placeholder || "0"}</span>
+      {input}
+    </span>
   );
 }
 
-export interface SetRowProps {
+/**
+ * Fila compacta de la lista de series: tipo (toca para cambiarlo), rendimiento (toca para editarla
+ * arriba) y check. Al completarse pasa a fondo lima suave y el check se dibuja.
+ */
+export function SetListRow({ set, badge, label, performance, previous, isRecord, focused, onFocus, onToggle, onCycleKind }: {
   set: SetRecord;
   badge: string;
   label: string;
-  unit: "reps" | "seconds";
-  loadUnit: "kg" | "lb";
-  displayLoad: number;
-  bodyweight: boolean;
+  performance: string;
   previous?: string;
-  invalidValue: boolean;
-  invalidLoad: boolean;
   isRecord: boolean;
-  countdownUntil: number | null;
-  onValue: (value: number) => void;
-  onLoad: (displayValue: number) => void;
-  onLoadSettle: (displayValue: number, initialDisplay: number) => void;
+  focused: boolean;
+  onFocus: () => void;
   onToggle: () => void;
   onCycleKind: () => void;
-  onCopyPrevious: () => void;
-  onRir: () => void;
-  onCountdown: () => void;
-}
-
-export function SetRow(props: SetRowProps) {
-  const { set, badge, label, unit, loadUnit, displayLoad, bodyweight, previous, isRecord } = props;
+}) {
   const kind = set.kind ?? "normal";
+  // El check sólo se anima cuando la serie pasa a hecha, no al abrir un ejercicio ya completado.
+  const [wasDone, setWasDone] = useState(set.done);
+  const [fresh, setFresh] = useState(false);
+  if (set.done !== wasDone) {
+    setWasDone(set.done);
+    setFresh(set.done);
+  }
+  const rir = set.rir === undefined ? null : set.rir >= 4 ? "4+" : String(set.rir);
+  const detail = [previous ? `Anterior ${previous}` : null, rir !== null ? `RIR ${rir}` : null].filter(Boolean).join(" · ");
   return (
-    <div className={cn("ses-set", set.done && "is-done", `kind-${kind}`)}>
-      <button
-        type="button"
-        className="ses-set-badge num"
-        onClick={props.onCycleKind}
-        aria-label={`${label}: ${kindNames[kind]}. Cambiar tipo de serie`}
-      >
-        {badge}
+    <li className={cn("ses-row", set.done && "is-done", fresh && "is-fresh", focused && "is-focused", `kind-${kind}`)}>
+      <button type="button" className="ses-row-badge" onClick={onCycleKind} aria-label={`${label}: ${kindNames[kind]}. Cambiar tipo de serie`}>
+        <span className="num">{badge}</span>
       </button>
-
-      <button
-        type="button"
-        className="ses-set-prev num"
-        onClick={props.onCopyPrevious}
-        disabled={!previous}
-        aria-label={previous ? `Copiar anterior: ${previous}` : "Sin registro anterior"}
-      >
-        {previous ?? "—"}
+      <button type="button" className="ses-row-main" onClick={onFocus} aria-current={focused || undefined} aria-label={`Editar ${label}: ${performance}${detail ? `. ${detail}` : ""}`}>
+        <strong className="num">{performance}</strong>
+        {detail && <small className="num">{detail}</small>}
       </button>
-
-      <NumberField
-        value={displayLoad}
-        onCommit={props.onLoad}
-        onSettle={props.onLoadSettle}
-        decimal
-        label={`${label}, carga ${bodyweight ? "extra " : ""}en ${loadUnit}`}
-        invalid={props.invalidLoad}
-        placeholder={bodyweight ? "—" : "0"}
-        className={cn(bodyweight && "is-quiet")}
-      />
-
-      <NumberField
-        value={set.value}
-        onCommit={props.onValue}
-        label={`${label}, ${unit === "reps" ? "repeticiones" : "segundos"}`}
-        invalid={props.invalidValue}
-        placeholder="0"
-      />
-
-      {unit === "seconds" ? (
-        <CountdownButton until={props.countdownUntil} onPress={props.onCountdown} label={label} />
-      ) : (
-        <button
-          type="button"
-          className={cn("ses-mini ses-rir", set.rir !== undefined && "has-value")}
-          onClick={props.onRir}
-          aria-label={set.rir === undefined ? `${label}: registrar repeticiones en reserva` : `${label}: ${set.rir >= 4 ? "4 o más" : set.rir} repeticiones en reserva`}
-        >
-          {set.rir === undefined ? "RIR" : set.rir >= 4 ? "4+" : set.rir}
-        </button>
-      )}
-
-      <button
-        type="button"
-        className="ses-check"
-        onClick={props.onToggle}
-        aria-pressed={set.done}
-        aria-label={`${set.done ? "Desmarcar" : "Completar"} ${label}`}
-      >
-        <Check size={22} strokeWidth={2.6} />
+      {isRecord && <span className="ses-row-pr"><Trophy size={13} aria-hidden="true" />Récord</span>}
+      <button type="button" className="ses-row-check" onClick={onToggle} aria-pressed={set.done} aria-label={`${set.done ? "Desmarcar" : "Completar"} ${label}`}>
+        <Check size={18} strokeWidth={2.8} aria-hidden="true" />
       </button>
-
-      {isRecord && (
-        <span className="ses-pr" role="status">
-          <Trophy size={12} />
-          Récord
-        </span>
-      )}
-    </div>
+    </li>
   );
 }
