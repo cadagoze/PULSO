@@ -6,6 +6,7 @@ import { BottomNavigation, focusRoutes } from "@/components/navigation/bottom-na
 import { OfflineSupport } from "@/components/layout/offline-support";
 import { useSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { CloudBoot } from "@/components/cloud/cloud-boot";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,6 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <BottomNavigation />
       <OfflineSupport />
+      <CloudBoot />
     </div>
   );
 }

@@ -29,7 +29,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `npm run dev`: servidor de desarrollo.
 - `npm run lint`: validación de código.
 - `npm run typecheck`: validación de tipos sin generar archivos.
-- `npm test`: pruebas de la lógica de entrenamiento (progresión, récords, recuperación, rachas, generador y programas) y de alimentación (calorías, macros, mínimos y base de alimentos).
+- `npm test`: pruebas de la lógica de entrenamiento (progresión, récords, recuperación, rachas, generador y programas), de alimentación (calorías, macros, mínimos, agua y base de alimentos) y de la sincronización (diferencias, unión y conflictos).
 - `npm run build`: compilación de producción.
 - `npm run verify`: ejecuta lint, tipos, pruebas y build como control completo.
 - `npm run start`: servidor de producción.
@@ -51,10 +51,10 @@ La aplicación estará disponible en `http://localhost:3000`.
 ## Estructura
 
 - `src/app`: rutas.
-- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `ui`).
+- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `cloud`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
 - `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido, ilustraciones y alimentos).
-- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`, `energy`).
+- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`, `energy`) y `cloud` (cuenta y sincronización con Firebase).
 - `src/types`: contratos.
 
 ## Sistema visual
@@ -87,10 +87,22 @@ Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas 
 
 ## Datos
 
-Todo se guarda en el almacenamiento local del navegador; no hay backend ni cuentas. Desde Perfil puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos) y funciona sin conexión: el service worker (`public/sw.js`) guarda las pantallas principales, los programas y las fichas de ejercicio (lista en `/precache.json`). Sólo se activa en producción; si cambias su lógica, sube `VERSION` en `public/sw.js`.
+Todo se guarda primero en el almacenamiento local del navegador: PULSO funciona sin conexión y sin cuenta. Desde Ajustes puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos) y funciona sin conexión: el service worker (`public/sw.js`) guarda las pantallas principales, los programas y las fichas de ejercicio (lista en `/precache.json`). Sólo se activa en producción; si cambias su lógica, sube `VERSION` en `public/sw.js`.
+
+### Cuenta y sincronización (Firebase)
+
+Con una cuenta (Google o correo y contraseña, desde Perfil o desde la bienvenida) los datos se guardan también en Firebase y se sincronizan entre equipos:
+
+- **Proyecto:** `pulso-ac82a` (Firestore en `southamerica-west1`, Santiago). La configuración pública está en `src/lib/cloud/config.ts`; no es secreta.
+- **Reglas:** `firestore.rules`. Cada persona sólo lee y escribe `users/{uid}/…`. Si cambian, hay que publicarlas en Firebase → Firestore → Reglas.
+- **Modelo:** los historiales (entrenamientos, alimentos, peso, agua, chequeos, medidas) van como un documento por registro, para que dos equipos sumen en vez de pisarse. El resto (evaluación, ajustes, plan, rutinas…) va como un documento por clave. El entrenamiento en curso no se sincroniza.
+- **Cómo sincroniza** (`src/lib/cloud`): la primera vez une lo local con la nube (gana la nube en un mismo registro). Después sube sólo lo que cambió (huellas por registro) y escucha los cambios de otros equipos desde el último visto. Un cambio local sin subir no se pisa.
+- **Carga diferida:** Firebase (~170 KB comprimido) sólo se descarga al iniciar sesión o si ya hay una sesión abierta en ese equipo.
+- **Dominios autorizados** (Firebase → Authentication → Configuración): `localhost` y `pulso.c-gonzalezzepeda.workers.dev`.
+- Borrar los datos del equipo (Ajustes) cierra antes la sesión, para no borrar la nube. Eliminar la cuenta (Perfil) borra todo lo de la nube. Política en `/privacidad`.
 
 El build para Cloudflare (`npm run build:vinext`) requiere Node 22 (`nvm use`, ver `.nvmrc`).
 
 ## Limitaciones
 
-Sin sincronización entre dispositivos, autenticación, notificaciones push ni integraciones con relojes o sensores. La orientación es general y no reemplaza evaluación médica.
+Sin notificaciones push ni integraciones con relojes o sensores. Entrar con Google usa una ventana emergente: en algunos modos de app instalada en iPhone puede no abrirse; ahí se entra con correo y contraseña. La orientación es general y no reemplaza evaluación médica.

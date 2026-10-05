@@ -17,7 +17,7 @@ function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; deta
   );
 }
 
-/** Accesos ligeros bajo el plan: ajustes, comidas, guía, evaluación y respaldo. */
+/** Accesos ligeros bajo el plan: ajustes, nutrición, guía, evaluación y respaldo. */
 export function ProfileLinks({ hasProfile, onAssess }: { hasProfile: boolean; onAssess: () => void }) {
   return (
     <section className="prof-links rise" style={{ "--i": 2 } as CSSProperties} aria-labelledby="prof-links-title">
@@ -27,7 +27,7 @@ export function ProfileLinks({ hasProfile, onAssess }: { hasProfile: boolean; on
           <RowBody icon={<Settings size={19} />} title="Ajustes" detail="Tema, unidades, descanso, sonido y racha." />
         </Link>
         <Link href="/comidas" className="list-row">
-          <RowBody icon={<Utensils size={19} />} title="Comidas y hábitos" detail="Registra cómo comes sin contar calorías." />
+          <RowBody icon={<Utensils size={19} />} title="Nutrición" detail="Calorías, agua, comidas y hábitos del día." />
         </Link>
         <Link href="/guia" className="list-row">
           <RowBody icon={<BookOpen size={19} />} title="Guía" detail="Lecturas breves sobre fuerza, descanso y alimentación." />

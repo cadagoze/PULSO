@@ -22,6 +22,38 @@ export function removePersistentKey(key: string) {
   window.dispatchEvent(new CustomEvent(storageEvent, { detail: key }));
 }
 
+/** Clave que cambió en esta pestaña (lo escucha la sincronización con la nube). */
+export const PERSISTENT_CHANGE_EVENT = storageEvent;
+
+/**
+ * Escribe un valor desde fuera de React (p. ej. lo que llega de la nube) y avisa a los componentes.
+ * Devuelve `false` si no hubo espacio en el dispositivo.
+ */
+export function writePersistentValue(key: string, value: unknown) {
+  let persisted = true;
+  const snapshot = JSON.stringify(value);
+  try {
+    window.localStorage.setItem(key, snapshot);
+    memorySnapshots.delete(key);
+  } catch {
+    memorySnapshots.set(key, snapshot);
+    persisted = false;
+  }
+  window.dispatchEvent(new CustomEvent(storageEvent, { detail: key }));
+  return persisted;
+}
+
+/** Valor actual de una clave (incluida la copia en memoria si no cupo en el dispositivo). */
+export function readPersistentRaw(key: string) {
+  const pending = memorySnapshots.get(key);
+  if (pending !== undefined) return pending;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 export function usePersistentState<T>(key: string, initialValue: T) {
   const initialSnapshot = useMemo(() => JSON.stringify(initialValue), [initialValue]);
 

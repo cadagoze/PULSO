@@ -5,6 +5,7 @@ import { WellnessAssessment } from "@/components/onboarding/wellness-assessment"
 import { bestWeekStreak, weekStreak } from "@/lib/analytics";
 import { useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
+import { CloudAccount } from "@/components/cloud/cloud-account";
 import { PlanSection } from "./plan-section";
 import { profilePhoto } from "./photo";
 import { ProfileEditor } from "./profile-editor";
@@ -61,6 +62,7 @@ export function ProfileView() {
         onEdit={openEditor}
       />
       <div className="prof-side">
+        <CloudAccount onToast={show} />
         <PlanSection onAssess={() => setAssessing(true)} onToast={show} />
         <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} />
       </div>

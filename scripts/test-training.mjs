@@ -383,3 +383,58 @@ test('agua: meta para beber según el peso, comida según la hora e historial ac
   const targets = nutrition.nutritionTargets({ sex: 'male', birthYear: 1986, heightCm: 178, activity: 'moderate', goal: 'lose', adjustment: -15, special: 'none', mode: 'count', updatedAt: '' }, 81.5, new Date(2026, 9, 5));
   assert.equal(targets.waterLiters, 2.25);
 });
+
+const sync = load('src/lib/cloud/sync-plan.ts');
+const { STORAGE_KEYS } = load('src/lib/storage-keys.ts');
+
+test('nube: qué se sincroniza (todo menos el entrenamiento en curso)', () => {
+  const synced = new Set(sync.cloudSpecs.map((spec) => spec.key));
+  for (const [name, key] of Object.entries(STORAGE_KEYS)) {
+    if (name === 'draft') assert.ok(!synced.has(key), 'el entrenamiento en curso no se sube');
+    else assert.ok(synced.has(key), `falta sincronizar ${name}`);
+  }
+  assert.equal(sync.cloudId('a/b'), 'a_b');
+  assert.equal(sync.cloudId(''), '_');
+  assert.equal(sync.hashValue({ a: 1 }), sync.hashValue({ a: 1 }));
+  assert.notEqual(sync.hashValue({ a: 1 }), sync.hashValue({ a: 2 }));
+});
+
+test('nube: diferencias por registro y unión al conectar un equipo', () => {
+  const spec = sync.collectionSpecs.find((item) => item.name === 'workouts');
+  const a = { id: 'a', date: '2026-10-01', completedAt: '2026-10-01T10:00:00Z' };
+  const b = { id: 'b', date: '2026-10-03', completedAt: '2026-10-03T10:00:00Z' };
+  const first = sync.diffCollection([a, b], spec, {});
+  assert.deepEqual(Array.from(first.upserts, (item) => item.id), ['a', 'b']);
+  const shadow = Object.fromEntries(first.upserts.map((item) => [item.id, item.hash]));
+  const edited = sync.diffCollection([{ ...a, notes: 'nuevo' }], spec, shadow);
+  assert.deepEqual(Array.from(edited.upserts, (item) => item.id), ['a']);
+  assert.deepEqual(Array.from(edited.removals), ['b']);
+
+  const c = { id: 'c', date: '2026-10-02', completedAt: '2026-10-02T10:00:00Z' };
+  const remote = new Map([
+    ['a', { json: JSON.stringify({ ...a, notes: 'nube' }), deleted: false }],
+    ['c', { json: JSON.stringify(c), deleted: false }],
+    ['b', { json: '', deleted: true }],
+  ]);
+  const merged = sync.mergeCollection([a, b, { id: 'd', date: '2026-10-04' }], remote, spec);
+  assert.deepEqual(Array.from(merged.items, (item) => item.id), ['a', 'c', 'd']);
+  assert.equal(merged.items[0].notes, 'nube');
+  assert.deepEqual(Object.keys(merged.shadow).sort(), ['a', 'c']);
+});
+
+test('nube: un cambio remoto no pisa un cambio local sin subir', () => {
+  const spec = sync.collectionSpecs.find((item) => item.name === 'water');
+  const today = { date: '2026-10-05', glasses: 3 };
+  const shadow = { '2026-10-05': sync.hashValue(today) };
+  const incoming = { json: JSON.stringify({ date: '2026-10-05', glasses: 5 }), deleted: false };
+  const applied = sync.applyRemoteRecord([today], '2026-10-05', incoming, spec, { ...shadow });
+  assert.equal(applied.changed, true);
+  assert.equal(applied.items[0].glasses, 5);
+  const localEdit = sync.applyRemoteRecord([{ date: '2026-10-05', glasses: 4 }], '2026-10-05', incoming, spec, { ...shadow });
+  assert.equal(localEdit.changed, false);
+  assert.equal(localEdit.items[0].glasses, 4);
+  const removed = sync.applyRemoteRecord([today], '2026-10-05', { json: '', deleted: true }, spec, { ...shadow });
+  assert.deepEqual(Array.from(removed.items), []);
+  const added = sync.applyRemoteRecord([], '2026-10-06', { json: JSON.stringify({ date: '2026-10-06', glasses: 1 }), deleted: false }, spec, {});
+  assert.equal(added.items.length, 1);
+});

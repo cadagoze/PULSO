@@ -7,7 +7,7 @@
 - Mantener diseño mobile-first.
 - Mantener la paleta establecida.
 - No utilizar plantillas genéricas.
-- No integrar backend durante esta fase.
+- Backend sólo para cuenta y sincronización: Firebase (Authentication + Firestore en Santiago). La app debe seguir funcionando sin conexión y sin cuenta, y Firebase se carga sólo al iniciar sesión.
 - Centralizar datos simulados.
 - No utilizar any.
 - Evitar sobreingeniería.

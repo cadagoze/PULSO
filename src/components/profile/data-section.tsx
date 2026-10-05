@@ -10,6 +10,8 @@ import type { WorkoutEntry } from "@/types";
 import { backupVersion, downloadFile, fileStamp, parseBackup, workoutsCsv } from "./data-export";
 import type { BackupEnvelope } from "./data-export";
 import { SettingsGroup } from "./settings-group";
+import { hasCloudSession } from "@/lib/cloud/status";
+import { cloudActions } from "@/lib/cloud/use-cloud";
 
 type PersistStatus = "checking" | "unsupported" | "persisted" | "idle" | "denied";
 
@@ -115,7 +117,9 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
     setDeleting(true);
   }
 
-  function eraseEverything() {
+  async function eraseEverything() {
+    // Con sesión abierta, primero se cierra: así borrar este equipo no borra también la nube.
+    if (hasCloudSession()) await cloudActions.signOut().catch(() => undefined);
     clearAllData();
     setDeleting(false);
     router.push("/");
@@ -123,7 +127,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
 
   return (
     <>
-      <SettingsGroup id="datos" index="04" title="Tus datos" description="Todo se guarda en este navegador. Respáldalo de vez en cuando." order={order}>
+      <SettingsGroup id="datos" index="04" title="Tus datos" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
         <button type="button" className="list-row" onClick={exportBackup}>
           <RowText icon={<Download size={19} />} title="Exportar respaldo" detail="Un archivo .json con todo lo que has registrado." />
         </button>
@@ -157,9 +161,9 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
           </div>
         ) : (
           <div className="stack">
-            <p className="muted">Esta acción no se puede deshacer. PULSO volverá a empezar desde cero en este dispositivo.</p>
+            <p className="muted">Esta acción no se puede deshacer. PULSO volverá a empezar desde cero en este dispositivo.{hasCloudSession() ? " También se cerrará tu sesión; lo guardado en la nube se conserva." : ""}</p>
             <Button variant="secondary" block onClick={() => setDeleting(false)}>Cancelar</Button>
-            <Button variant="danger" block onClick={eraseEverything}>Sí, borrar todo</Button>
+            <Button variant="danger" block onClick={() => void eraseEverything()}>Sí, borrar todo</Button>
           </div>
         )}
       </Sheet>

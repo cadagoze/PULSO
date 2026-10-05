@@ -9,28 +9,10 @@ import { useNow } from "@/lib/use-now";
 import { removePersistentKey, removePersistentMemory, usePersistentState } from "@/lib/use-persistent-state";
 import { localDateKey } from "@/lib/utils";
 import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, ProgramProgress, ReadinessEntry, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WaterEntry, WeightEntry, WorkoutEntry } from "@/types";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
-export const STORAGE_KEYS = {
-  profile: "pulso:assessment",
-  workouts: "pulso:workouts",
-  draft: "pulso:active-workout",
-  routine: "pulso:routine",
-  routines: "pulso:routines",
-  preference: "pulso:training-preference",
-  readiness: "pulso:readiness",
-  weights: "pulso:weights",
-  measurements: "pulso:measurements",
-  habits: "pulso:habits",
-  meals: "pulso:meals",
-  settings: "pulso:settings",
-  program: "pulso:program",
-  favorites: "pulso:favorites",
-  nutrition: "pulso:nutrition",
-  foodLog: "pulso:food-log",
-  customFoods: "pulso:custom-foods",
-  water: "pulso:water",
-} as const;
+export { STORAGE_KEYS };
 
 export const defaultSettings: Settings = {
   name: "",
