@@ -113,3 +113,10 @@
 .home-fuel-simple p { flex: 1; min-width: 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 .home-fuel-simple b { color: var(--ink); font-weight: 600; }
 .home-fuel-water { padding-top: 16px; box-shadow: inset 0 1px 0 var(--line); }
+.home-fuel-review { display: flex; align-items: center; gap: 12px; margin: -4px -6px 0; padding: 10px 6px; border-radius: var(--radius); transition: background-color var(--motion-fast); }
+@media (hover: hover) { .home-fuel-review:hover { background: var(--surface-2); } }
+.home-fuel-review:active { background: var(--surface-2); }
+.home-fuel-review .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.home-fuel-review strong { font-size: 14.5px; font-weight: 600; }
+.home-fuel-review small { font-size: 12.5px; color: var(--ink-2); }
+.home-fuel-review .icon-tile { width: 38px; height: 38px; border-radius: 12px; }

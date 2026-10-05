@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, ChevronRight, Plus } from "lucide-react";
+import { Calculator, ChevronRight, Plus, Scale } from "lucide-react";
 import { ButtonLink, ProgressRing } from "@/components/ui";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { isLogged } from "@/components/content/meal-log";
 import { formatKcal } from "@/lib/nutrition";
 import { useMeals } from "@/lib/store";
-import { useNutritionDay, useWaterToday } from "@/lib/use-nutrition";
+import { useNutritionDay, useWaterToday, useWeeklyReview } from "@/lib/use-nutrition";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,6 +18,7 @@ export function DayFuel({ now }: { now: number }) {
   const { profile, targets, totals, counting } = useNutritionDay(now);
   const water = useWaterToday(now);
   const [meals] = useMeals();
+  const review = useWeeklyReview(now);
 
   return (
     <section className="section home-fuel" aria-labelledby="home-fuel-title">
@@ -36,6 +37,13 @@ export function DayFuel({ now }: { now: number }) {
             <p><b>¿Cuánto deberías comer?</b> Calcula tus calorías y macros en un minuto.</p>
             <ButtonLink href="/comidas?calcular=1" variant="secondary" size="s"><Calculator size={16} />Calcular</ButtonLink>
           </div>
+        )}
+        {review.status === "ready" && review.due && (
+          <Link href="/comidas#revision" className="home-fuel-review">
+            <span className="icon-tile lime" aria-hidden="true"><Scale size={17} /></span>
+            <span className="grow"><strong>Tu revisión semanal está lista</strong><small>Ajusta tus calorías según tu peso real</small></span>
+            <ChevronRight size={18} className="subtle" aria-hidden="true" />
+          </Link>
         )}
         <WaterTracker className="home-fuel-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />
       </div>

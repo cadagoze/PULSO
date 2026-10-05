@@ -135,3 +135,28 @@ legend.nut-label { margin-bottom: 10px; }
 .water-glasses small { flex: none; margin-left: 4px; font-size: 12px; font-weight: 600; color: var(--lime-text); }
 .water.is-met .water-glasses span.is-full { background: var(--lime-text); }
 .nut-water { padding: 18px 18px 18px 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+
+/* ─── Revisión semanal ─────────────────────────────────────────────────── */
+.nut-review-wrap { scroll-margin-top: 24px; }
+.nut-review { display: flex; flex-direction: column; gap: 18px; padding: 22px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.nut-review-head { display: flex; flex-direction: column; gap: 8px; }
+.nut-review-head p { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.nut-review-chart { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.nut-review-chart svg { width: 100%; height: auto; overflow: visible; }
+.nut-review-trend { stroke: var(--lime-text); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 6; }
+.nut-review-point { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
+.nut-review-scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); }
+.nut-review-proposal { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }
+.nut-review.is-lower .nut-review-proposal, .nut-review.is-raise .nut-review-proposal { background: var(--lime-soft); }
+.nut-review-proposal b { color: var(--ink); font-weight: 600; }
+.nut-review-intake { font-size: 12.5px; line-height: 1.45; }
+.nut-review-actions { display: flex; flex-direction: column; gap: 8px; }
+.nut-review-collect { flex-direction: row; align-items: flex-start; gap: 14px; padding: 18px 18px 18px 20px; }
+.nut-review-collect .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.nut-review-collect h3 { font-size: 16px; font-weight: 600; letter-spacing: -.015em; }
+.nut-review-collect p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.nut-review-collect p b { color: var(--ink); font-weight: 600; }
+.nut-review-dots { display: flex; gap: 6px; }
+.nut-review-dots span { width: 28px; height: 6px; border-radius: var(--radius-pill); background: var(--surface-3); }
+.nut-review-dots span.is-done { background: var(--lime); }
+.nut-review-tip { font-size: 12.5px; }

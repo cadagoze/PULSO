@@ -19,6 +19,7 @@ import { NutritionPlan } from "@/components/nutrition/nutrition-plan";
 import { NutritionSetup } from "@/components/nutrition/nutrition-setup";
 import { SetupPrompt } from "@/components/nutrition/setup-prompt";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
+import { WeeklyReviewCard } from "@/components/nutrition/weekly-review";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
@@ -26,7 +27,8 @@ import { activityLevels, entryFromFood, entryTotals, formatKcal, mealSlotAt, mea
 import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
-import { useLatestWeight, useWaterToday } from "@/lib/use-nutrition";
+import { useLatestWeight, useWaterToday, useWeeklyReview } from "@/lib/use-nutrition";
+import { checkInPatch } from "@/lib/weekly-review";
 import { formatLongDate, formatShortDate, localDateKey } from "@/lib/utils";
 import type { FoodEntry, FoodItem, MealSlot, NutritionProfile } from "@/types";
 
@@ -46,6 +48,7 @@ export default function NutritionPage() {
   const [, setWeights] = useWeights();
   const latestWeight = useLatestWeight();
   const water = useWaterToday(now);
+  const review = useWeeklyReview(now);
   const [settings] = useSettings();
   const [assessment] = useProfile();
   const [workouts] = useWorkouts();
@@ -137,6 +140,13 @@ export default function NutritionPage() {
     setProfile({ ...profile, ...patch, updatedAt: new Date().toISOString() });
   }
 
+  /** Respuesta a la revisión semanal: aplicar la propuesta o mantener el objetivo. */
+  function answerReview(apply: boolean) {
+    if (!profile || review.status !== "ready") return;
+    updateProfile(checkInPatch(profile, review, apply, today));
+    showToast(apply && review.change !== 0 ? `Objetivo actualizado · ${formatKcal(review.suggestedKcal)} kcal al día` : `Revisión guardada · seguimos con ${formatKcal(review.currentKcal)} kcal`);
+  }
+
   // ─── Registro de alimentos ────────────────────────────────────────────
   function openPicker(meal: MealSlot) {
     setPicker({ meal, token: Date.now() });
@@ -190,6 +200,8 @@ export default function NutritionPage() {
 
   // Accesos desde Inicio: «?registrar» abre el registro de la comida de esta hora y «?calcular», el cálculo.
   const openFromLink = useEffectEvent(() => {
+    // Las secciones se montan tras hidratar: el salto a «#revision» o «#habitos» se hace aquí.
+    if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: "start" });
     const params = new URLSearchParams(window.location.search);
     if (!params.has("registrar") && !params.has("calcular")) return;
     window.history.replaceState(null, "", window.location.pathname);
@@ -225,6 +237,7 @@ export default function NutritionPage() {
       </div>
 
       <div className="cnt-main">
+        {counting && review.status === "ready" && review.due && <WeeklyReviewCard review={review} onAnswer={answerReview} />}
         {counting ? (
           <section className="cnt-section" aria-labelledby="nut-meals-title">
             <div className="cnt-head">
@@ -251,6 +264,8 @@ export default function NutritionPage() {
           <HabitRows checked={checked} fresh={fresh} onToggle={toggleHabit} />
         </section>
 
+        {counting && review.status === "collecting" && <WeeklyReviewCard review={review} onAnswer={answerReview} />}
+
         {!counting && <MealIdea next={meals.find((meal) => !isLogged(meal))} />}
         {counting && profile && latestWeight && (
           <TrainingEnergy
@@ -268,6 +283,7 @@ export default function NutritionPage() {
           <NutritionPlan
             profile={profile}
             targets={targets}
+            today={today}
             onEdit={openSetup}
             onAdjust={() => setAdjust((current) => ({ open: true, token: current.token + 1 }))}
             onModeChange={(mode) => updateProfile({ mode })}

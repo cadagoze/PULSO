@@ -296,9 +296,21 @@ export interface NutritionProfile {
   special: NutritionSpecialCase;
   /** "count": registro de alimentos con calorías y macros. "simple": por saciedad, sin contar. */
   mode: "count" | "simple";
-  /** Calorías fijadas a mano (reemplazan el cálculo, respetando el mínimo seguro). */
+  /** Calorías fijadas a mano o por la revisión semanal (reemplazan el cálculo, respetando el mínimo seguro). */
   customKcal?: number;
+  /** Revisiones semanales (las últimas 12): qué se propuso según la tendencia del peso y si se aplicó. */
+  checkIns?: NutritionCheckIn[];
   updatedAt: string;
+}
+
+export interface NutritionCheckIn {
+  date: string;
+  fromKcal: number;
+  toKcal: number;
+  /** Cambio de peso observado y planeado, en kg por semana. */
+  observedKgWeek: number;
+  plannedKgWeek: number;
+  applied: boolean;
 }
 
 export type FoodCategory = "panes" | "proteinas" | "lacteos" | "frutas" | "verduras" | "legumbres" | "grasas" | "bebidas" | "snacks" | "platos" | "propios";

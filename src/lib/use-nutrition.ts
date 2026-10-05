@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { entryTotals, nutritionTargets, pruneHistory, waterGoal } from "@/lib/nutrition";
 import { useFoodLog, useNutritionProfile, useWater, useWeights } from "@/lib/store";
 import { localDateKey } from "@/lib/utils";
+import { weeklyReview, type WeeklyReview } from "@/lib/weekly-review";
 
 /** Último peso registrado (kg) o null. */
 export function useLatestWeight() {
@@ -37,4 +39,13 @@ export function useWaterToday(now: number) {
   }
 
   return { glasses, goal, change };
+}
+
+/** Revisión semanal de calorías según la tendencia del peso (ver weekly-review.ts). */
+export function useWeeklyReview(now: number): WeeklyReview {
+  const [profile] = useNutritionProfile();
+  const [weights] = useWeights();
+  const [log] = useFoodLog();
+  const today = now ? localDateKey(new Date(now)) : "";
+  return useMemo(() => (profile && today ? weeklyReview({ profile, weights, foodLog: log, today }) : { status: "unavailable" }), [log, profile, today, weights]);
 }

@@ -438,3 +438,65 @@ test('nube: un cambio remoto no pisa un cambio local sin subir', () => {
   const added = sync.applyRemoteRecord([], '2026-10-06', { json: JSON.stringify({ date: '2026-10-06', glasses: 1 }), deleted: false }, spec, {});
   assert.equal(added.items.length, 1);
 });
+
+const review = load('src/lib/weekly-review.ts');
+
+test('revisión semanal: tendencia del peso por mínimos cuadrados', () => {
+  const entries = [['2026-09-20', 82], ['2026-09-24', 81.8], ['2026-09-27', 81.7], ['2026-10-01', 81.4], ['2026-10-04', 81.3]].map(([date, weight]) => ({ date, label: date, weight }));
+  const trend = review.weightTrend(entries, '2026-10-05');
+  assert.equal(trend.points.length, 5);
+  assert.equal(trend.spanDays, 14);
+  assert.ok(trend.kgPerWeek < -0.3 && trend.kgPerWeek > -0.4, `pendiente ${trend.kgPerWeek}`);
+  assert.equal(review.weightTrend(entries.slice(0, 1), '2026-10-05'), null);
+  assert.equal(review.weightTrend(entries, '2026-12-30'), null, 'fuera de la ventana de 3 semanas');
+});
+
+test('revisión semanal: decisiones y límites', () => {
+  const profile = { sex: 'male', birthYear: 1986, heightCm: 178, activity: 'moderate', goal: 'lose', adjustment: -15, special: 'none', mode: 'count', updatedAt: '' };
+  const series = (perWeek) => Array.from({ length: 5 }, (_, index) => ({ date: utils.localDateKey(new Date(2026, 8, 21 + index * 3.5)), label: '', weight: Math.round((82 + (perWeek / 7) * index * 3.5) * 100) / 100 }));
+  const today = '2026-10-06';
+  const run = (perWeek, extra = {}, foodLog = []) => review.weeklyReview({ profile: { ...profile, ...extra }, weights: series(perWeek), foodLog, today });
+
+  const onTrack = run(-0.37);
+  assert.equal(onTrack.status, 'ready');
+  assert.equal(onTrack.verdict, 'on-track');
+  assert.equal(onTrack.change, 0);
+  assert.ok(Math.abs(onTrack.plannedKgWeek + 0.37) < 0.05);
+
+  const slow = run(-0.1);
+  assert.equal(slow.verdict, 'lower');
+  assert.equal(slow.change, -150);
+  assert.equal(slow.suggestedKcal, slow.currentKcal - 150);
+
+  const fast = run(-1.2);
+  assert.equal(fast.verdict, 'raise');
+  assert.equal(fast.change, 200, 'máximo 200 kcal por semana');
+
+  const atFloor = run(-0.05, { customKcal: 1600 });
+  assert.equal(atFloor.verdict, 'floor');
+  assert.equal(atFloor.suggestedKcal, atFloor.currentKcal);
+
+  const food = (date, kcal) => ({ id: date, date, meal: 'almuerzo', foodId: 'x', name: 'x', portion: '1', portions: 1, kcal, protein: 0, carbs: 0, fat: 0 });
+  const overeating = Array.from({ length: 7 }, (_, index) => food(utils.localDateKey(new Date(2026, 8, 25 + index)), 2600));
+  const adherence = run(-0.05, {}, overeating);
+  assert.equal(adherence.verdict, 'adherence');
+  assert.equal(adherence.intakeAvg, 2600);
+  assert.equal(adherence.change, 0);
+
+  // El ritmo planeado no cambia por haber ajustado ya las calorías.
+  const adjusted = run(-0.05, { customKcal: 2130 });
+  assert.ok(Math.abs(adjusted.plannedKgWeek - onTrack.plannedKgWeek) < 0.01);
+
+  assert.equal(review.weeklyReview({ profile, weights: series(-0.3).slice(0, 2), foodLog: [], today }).status, 'collecting');
+  assert.equal(run(-0.3, { special: 'pregnancy' }).status, 'unavailable');
+  assert.equal(run(-0.3, { mode: 'simple' }).status, 'unavailable');
+
+  const patch = review.checkInPatch(profile, slow, true, today);
+  assert.equal(patch.customKcal, slow.suggestedKcal);
+  assert.equal(patch.checkIns.at(-1).applied, true);
+  const done = run(-0.05, patch);
+  assert.equal(done.due, false, 'ya revisado esta semana');
+  assert.equal(review.activeCheckIn({ ...profile, ...patch }).toKcal, slow.suggestedKcal);
+  const many = { ...profile, checkIns: Array.from({ length: 12 }, (_, index) => ({ date: `2026-01-${String(index + 1).padStart(2, '0')}`, fromKcal: 1, toKcal: 1, observedKgWeek: 0, plannedKgWeek: 0, applied: false })) };
+  assert.equal(review.checkInPatch(many, onTrack, false, today).checkIns.length, 12);
+});
