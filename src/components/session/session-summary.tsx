@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Check, ClipboardCopy, Flame, Trophy } from "lucide-react";
+import { Activity, Check, ClipboardCopy, Flame, Trophy } from "lucide-react";
 import { MuscleMap } from "@/components/ui/muscle-map";
 import { weekStreak, workoutMuscleSets } from "@/lib/analytics";
+import { sessionCalories } from "@/lib/energy";
+import { formatKcal } from "@/lib/nutrition";
 import { recordKindLabels } from "@/lib/progression";
 import { exerciseById, isWorkingSet } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
+import { useLatestWeight } from "@/lib/use-nutrition";
 import { cn, formatLongDate, formatNumber, toDisplayWeight } from "@/lib/utils";
 import type { MuscleGroup, Settings, WorkoutEntry } from "@/types";
 import { minutesLabel, recordValueLabel, volumeLabel } from "./session-utils";
@@ -56,6 +59,8 @@ export function SessionSummary({ entry, workouts, settings }: { entry: WorkoutEn
   const prs = entry.prs ?? [];
   const [duration, durationUnit] = durationParts(entry.durationMinutes);
   const [volume, volumeUnit] = splitUnit(volumeLabel(entry.volume ?? 0, unit));
+  const weightKg = useLatestWeight();
+  const kcal = weightKg ? sessionCalories(entry, weightKg) : 0;
 
   const heat = useMemo(() => {
     const { sets } = workoutMuscleSets(entry);
@@ -71,7 +76,7 @@ export function SessionSummary({ entry, workouts, settings }: { entry: WorkoutEn
     const lines = [
       `PULSO · ${entry.name ?? "Entrenamiento"}`,
       formatLongDate(new Date(entry.completedAt)),
-      `${minutesLabel(entry.durationMinutes)} · ${entry.sets} series · ${volumeLabel(entry.volume ?? 0, unit)}`,
+      `${minutesLabel(entry.durationMinutes)} · ${entry.sets} series · ${volumeLabel(entry.volume ?? 0, unit)}${kcal > 0 ? ` · ≈ ${formatKcal(kcal)} kcal` : ""}`,
       ...bestSetLine(entry, unit),
       ...(prs.length ? ["Récords:", ...prs.map((hit) => `★ ${exerciseById(hit.exerciseId)?.name ?? "Ejercicio"}: ${recordKindLabels[hit.kind]} ${recordValueLabel(hit.kind, hit.value, unit)}`)] : []),
       "Tu salud en movimiento.",
@@ -103,15 +108,23 @@ export function SessionSummary({ entry, workouts, settings }: { entry: WorkoutEn
           <Figure index={3} label={prs.length === 1 ? "Récord" : "Récords"} value={prs.length} tone={prs.length ? "orange" : undefined} />
         </dl>
 
-        {week && (
-          <p className={cn("ses-summary-week", week.streak > 0 && "is-streak")}>
-            <Flame size={18} aria-hidden="true" />
-            <span>
-              <b className="num">{week.currentCount}</b> de <b className="num">{settings.weeklyGoal}</b> sesiones esta semana
-              {week.streak > 0 && <> · racha de <b className="num">{week.streak}</b> {week.streak === 1 ? "semana" : "semanas"}</>}
-            </span>
-          </p>
-        )}
+        <div className="ses-summary-lines">
+          {kcal > 0 && (
+            <p className="ses-summary-week">
+              <Activity size={18} aria-hidden="true" />
+              <span>≈ <b className="num">{formatKcal(kcal)}</b> kcal gastadas · según tu peso, duración y esfuerzo</span>
+            </p>
+          )}
+          {week && (
+            <p className={cn("ses-summary-week", week.streak > 0 && "is-streak")}>
+              <Flame size={18} aria-hidden="true" />
+              <span>
+                <b className="num">{week.currentCount}</b> de <b className="num">{settings.weeklyGoal}</b> sesiones esta semana
+                {week.streak > 0 && <> · racha de <b className="num">{week.streak}</b> {week.streak === 1 ? "semana" : "semanas"}</>}
+              </span>
+            </p>
+          )}
+        </div>
 
         {prs.length > 0 && (
           <section className="ses-summary-block" aria-labelledby="ses-prs-title">

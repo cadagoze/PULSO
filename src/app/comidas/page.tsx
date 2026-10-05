@@ -18,10 +18,11 @@ import { MealDiary } from "@/components/nutrition/meal-diary";
 import { NutritionPlan } from "@/components/nutrition/nutrition-plan";
 import { NutritionSetup } from "@/components/nutrition/nutrition-setup";
 import { SetupPrompt } from "@/components/nutrition/setup-prompt";
+import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
-import { entryFromFood, entryTotals, formatKcal, mealSlots, nutritionTargets, pruneFoodLog, recentFoods, suggestedNutritionProfile } from "@/lib/nutrition";
-import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights } from "@/lib/store";
+import { activityLevels, entryFromFood, entryTotals, formatKcal, mealSlots, nutritionTargets, pruneFoodLog, recentFoods, suggestedNutritionProfile } from "@/lib/nutrition";
+import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { formatLongDate, formatShortDate, localDateKey } from "@/lib/utils";
@@ -43,6 +44,7 @@ export default function NutritionPage() {
   const [weights, setWeights] = useWeights();
   const [settings] = useSettings();
   const [assessment] = useProfile();
+  const [workouts] = useWorkouts();
   const { toast, show: showToast, hide: hideToast } = useToast(2500);
 
   // Hojas: el estado se conserva al cerrar para que el contenido no se vacíe mientras baja.
@@ -227,6 +229,18 @@ export default function NutritionPage() {
         </section>
 
         {!counting && <MealIdea next={meals.find((meal) => !isLogged(meal))} />}
+        {counting && profile && latestWeight && (
+          <TrainingEnergy
+            profile={profile}
+            workouts={workouts}
+            weightKg={latestWeight}
+            now={now}
+            onUseActivity={(activity) => {
+              updateProfile({ activity });
+              showToast(`Actividad «${activityLevels.find((level) => level.value === activity)?.label}» · ${formatKcal(nutritionTargets({ ...profile, activity }, latestWeight, new Date(now)).kcal)} kcal al día`);
+            }}
+          />
+        )}
         {profile && targets && (
           <NutritionPlan
             profile={profile}

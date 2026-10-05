@@ -6,7 +6,7 @@ import { estimateMinutes, focusLabels, generateWorkout, suggestedFocus, todayGen
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { progressedSets } from "@/lib/progression";
-import { usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
+import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
@@ -33,6 +33,7 @@ export function recordForExercise(exercise: Exercise, workouts: WorkoutEntry[], 
  */
 export function useTodayPlan(now: number) {
   const [profile] = useProfile();
+  const [nutrition] = useNutritionProfile();
   const [workouts] = useWorkouts();
   const [readinessEntries] = useReadiness();
   const [preference] = usePreference();
@@ -56,11 +57,11 @@ export function useTodayPlan(now: number) {
   // Mismas entradas que la portada de Inicio (ver todayGeneratorInput); aquí se pueden ajustar.
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant }));
-  }, [hydrated, focus, minutes, now, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant }));
+  }, [hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [preference.location, preference.equipment.join(","), minutes, focus, variant, readiness?.recommendation ?? "", workouts.length, todayKey].join("|");
+  const planKey = [preference.location, preference.equipment.join(","), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 

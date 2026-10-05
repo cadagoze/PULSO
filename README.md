@@ -37,7 +37,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 ## Rutas
 
 - `/`: Inicio. Portada con la sesión de hoy (en curso, programa activo o generada), semana editorial con racha, chequeo de preparación, atajos y resumen del día.
-- `/entrenar`: Casa o Gimnasio, equipamiento, Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
+- `/entrenar`: Casa o Gimnasio, equipamiento, Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), Tu semana según tu objetivo (días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar), biblioteca, rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
 - `/entrenar/programas/[id]`: detalle de cada programa de varias semanas con descarga.
 - `/entrenar/sesion`: registro en vivo con serie anterior, tipos de serie, RIR, descanso automático, superseries, sustituciones, récords y resumen final.
 - `/entrenar/intervalos`: temporizador de intervalos (Tabata, HIIT, EMOM o personalizado) con sonido y voz.
@@ -54,7 +54,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
 - `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido, ilustraciones y alimentos).
-- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`).
+- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`, `energy`).
 - `src/types`: contratos.
 
 ## Sistema visual
@@ -81,6 +81,8 @@ Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas 
 - **Racha:** semanas seguidas cumpliendo el objetivo; se puede pausar una semana.
 - **Calorías:** metabolismo basal con Mifflin-St Jeor × factor de actividad (1,2 a 1,9). Bajar grasa resta 10, 15 (recomendado) o 20 %; ganar músculo suma 5 (recomendado) o 10 %. Nunca baja de 1.200 kcal (mujeres) o 1.500 kcal (hombres) ni del metabolismo basal. Sin déficit para menores de 18, embarazo o lactancia, o antecedentes de trastorno alimentario (que además activa el modo sin contar).
 - **Macros:** proteína 2,0 g/kg al bajar, 1,6 al mantener y 1,8 al ganar (con IMC sobre 30 se usa el peso de IMC 25); grasa al menos 27 % de las calorías y 0,6 g/kg; el resto, carbohidratos. Fibra 14 g por cada 1.000 kcal y agua 35 ml/kg.
+- **Objetivo y entrenamiento:** el objetivo de Alimentación ajusta la rutina diaria (bajar grasa: descansos más cortos; ganar músculo: más series) y la guía semanal: bajar grasa, fuerza 3 días + 1–2 sesiones de intervalos + 8.000–10.000 pasos; ganar músculo, fuerza 3–4 días y 10–20 series por grupo muscular; mantener, fuerza 2–3 días + 150 min de actividad moderada.
+- **Gasto por sesión:** MET × kg × horas (Compendio de Actividad Física 2024): fuerza 3,5, 5 o 6 según el esfuerzo marcado, intervalos 6 a 8 y movilidad 2,5. Es informativo: ya está incluido en el nivel de actividad del cálculo, que PULSO sugiere subir si entrenas más de lo que supone.
 
 ## Datos
 

@@ -321,3 +321,50 @@ test('alimentos: ids únicos y calorías coherentes con los macros', () => {
   }
   assert.ok(foods.length >= 120);
 });
+
+const energy = load('src/lib/energy.ts');
+
+test('energía: calorías por sesión según MET, peso, duración y esfuerzo', () => {
+  assert.equal(energy.sessionCalories({ durationMinutes: 60, kind: 'strength', effort: 3 }, 80), 400);
+  assert.equal(energy.sessionCalories({ durationMinutes: 60, kind: 'strength', effort: 5 }, 80), 480);
+  assert.equal(energy.sessionCalories({ durationMinutes: 60, kind: 'strength', effort: 1 }, 80), 280);
+  assert.equal(energy.sessionCalories({ durationMinutes: 20, kind: 'interval' }, 80), 185);
+  const mobility = exercises.find((exercise) => exercise.category === 'mobility');
+  assert.equal(energy.sessionCalories({ durationMinutes: 10, records: [{ exerciseId: mobility.id, unit: 'seconds', sets: [] }] }, 80), 35);
+  assert.equal(energy.plannedCalories(30, 70), 175);
+});
+
+test('energía: semana de entrenamiento y nivel de actividad sugerido', () => {
+  const wednesday = new Date(2026, 9, 7, 12);
+  const chest = exercises.find((exercise) => exercise.primary.length === 1 && exercise.primary[0] === 'chest' && exercise.category !== 'mobility');
+  const entry = (date, extra = {}) => ({ id: `${date}-${Math.random()}`, date, completedAt: `${date}T10:00:00.000Z`, durationMinutes: 30, exerciseCount: 1, sets: 3, mode: 'full', ...extra });
+  const week = energy.weekTraining([
+    entry('2026-10-05', { records: [{ exerciseId: chest.id, unit: 'reps', sets: Array.from({ length: 10 }, () => set(10, 20)) }] }),
+    entry('2026-10-05'),
+    entry('2026-10-06', { kind: 'interval', durationMinutes: 16 }),
+    entry('2026-10-04'),
+  ], wednesday);
+  assert.equal(week.strengthDays, 1);
+  assert.equal(week.intervals, 1);
+  assert.equal(week.minutes, 76);
+  assert.equal(week.musclesOnTarget, 1);
+  assert.equal(week.sessions.length, 3);
+
+  const days = Array.from({ length: 12 }, (_, index) => utils.localDateKey(new Date(wednesday.getTime() - index * 2 * DAY)));
+  assert.equal(energy.trainedActivity(days.map((date) => entry(date)), wednesday), 'moderate');
+  assert.equal(energy.trainedActivity(days.slice(0, 3).map((date) => entry(date)), wednesday), null);
+  assert.ok(energy.activityRank('moderate') > energy.activityRank('light'));
+});
+
+test('el objetivo de alimentación ajusta la rutina y la guía semanal', () => {
+  assert.equal(generator.trainingGoal(['habits'], 'lose'), 'weight');
+  assert.equal(generator.trainingGoal(['habits'], 'gain'), 'strength');
+  assert.equal(generator.trainingGoal(['energy'], 'maintain'), 'energy');
+  assert.equal(generator.trainingGoal(['energy']), 'energy');
+  assert.equal(nutrition.goalFromAssessment(['weight']), 'lose');
+  assert.equal(nutrition.goalFromAssessment(['strength']), 'maintain');
+  assert.deepEqual({ ...energy.goalGuides.lose.intervals }, { min: 1, max: 2 });
+  assert.equal(energy.goalGuides.lose.strength.min, 3);
+  assert.equal(energy.goalGuides.maintain.activityMinutes, 150);
+  assert.deepEqual({ ...energy.goalGuides.gain.setsPerMuscle }, { min: 10, max: 20 });
+});

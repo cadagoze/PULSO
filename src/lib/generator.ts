@@ -2,7 +2,7 @@ import { exercises } from "@/data/mock-data";
 import { progressedSets } from "@/lib/progression";
 import { lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
-import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
+import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
@@ -219,6 +219,13 @@ export function goalFromProfile(goals: string[] = []): WorkoutGoal {
   return first === "weight" || first === "energy" || first === "habits" || first === "strength" ? first : "strength";
 }
 
+/** El objetivo de Alimentación manda sobre la evaluación: bajar grasa → descansos cortos; ganar músculo → más series. */
+export function trainingGoal(goals: string[] = [], nutritionGoal?: NutritionGoal): WorkoutGoal {
+  if (nutritionGoal === "lose") return "weight";
+  if (nutritionGoal === "gain") return "strength";
+  return goalFromProfile(goals);
+}
+
 /** Zonas a cuidar de la evaluación, sin "none" ni respuestas libres. */
 export function profileLimitations(limitations: string[] | undefined): BodyArea[] {
   return (limitations ?? []).filter((item): item is BodyArea => item === "knees" || item === "back" || item === "shoulders");
@@ -232,8 +239,9 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0 }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0 }: {
   profile: ProfileForToday;
+  nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
   workouts: WorkoutEntry[];
   readiness?: ReadinessEntry["recommendation"];
@@ -247,7 +255,7 @@ export function todayGeneratorInput({ profile, preference, workouts, readiness, 
     preference,
     minutes: minutes ?? profile?.recommendation?.sessionMinutes ?? 30,
     focus: focus ?? suggestedFocus(recovery, readiness),
-    goal: goalFromProfile(profile?.goals),
+    goal: trainingGoal(profile?.goals, nutritionGoal),
     level: levelFromActivities(profile?.activities),
     limitations: profileLimitations(profile?.limitations),
     readiness,

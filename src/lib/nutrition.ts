@@ -110,9 +110,14 @@ export function nutritionTargets(profile: NutritionProfile, weightKg: number, no
 }
 
 /** Valores iniciales razonables a partir de la evaluación (actividad y objetivo). */
+/** Objetivo a partir de la evaluación inicial, mientras no hay un plan de alimentación. */
+export function goalFromAssessment(goals: string[] = []): NutritionGoal {
+  return goals[0] === "weight" ? "lose" : "maintain";
+}
+
 export function suggestedNutritionProfile({ activities = [], goals = [] }: { activities?: string[]; goals?: string[] }, now = new Date()): NutritionProfile {
   const activity: ActivityLevel = activities.includes("regular") ? "moderate" : activities.includes("some") || activities.includes("walking") ? "light" : "sedentary";
-  const goal: NutritionGoal = goals[0] === "weight" ? "lose" : "maintain";
+  const goal = goalFromAssessment(goals);
   return { sex: "female", birthYear: now.getFullYear() - 35, heightCm: 165, activity, goal, adjustment: defaultAdjustment(goal), special: "none", mode: "count", updatedAt: now.toISOString() };
 }
 

@@ -317,6 +317,8 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-summary-figure:nth-child(n + 3) .num-display { font-size: clamp(52px, 15vw, 76px); }
 .ses-summary-figure small { font-size: 17px; font-weight: 600; color: var(--ink-2); letter-spacing: -.01em; }
 .ses-summary-figure.is-orange .num-display { color: var(--orange); }
+.ses-summary-lines { display: flex; flex-direction: column; gap: 12px; }
+.ses-summary-lines:empty { display: none; }
 .ses-summary-week { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--ink-2); }
 .ses-summary-week b { color: var(--ink); font-weight: 600; }
 .ses-summary-week svg { flex: none; color: var(--ink-3); }

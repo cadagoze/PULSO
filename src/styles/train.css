@@ -342,7 +342,9 @@
   .train-place { grid-area: place; }
   .train-extra { grid-area: extra; gap: 18px; }
   .train-hint { order: -1; }
-  .train-page > .train-hero-slot { grid-area: hero; position: sticky; top: 24px; }
+  /* El hueco ocupa toda su área y la tarjeta se fija dentro: así no tapa lo que viene debajo (Tu semana, biblioteca, rutinas). */
+  .train-page > .train-hero-slot { grid-area: hero; align-self: stretch; }
+  .train-hero-slot > * { position: sticky; top: 24px; }
   .train-hero { min-height: min(720px, calc(100dvh - var(--nav-h) - var(--nav-gap) - 96px)); padding: 26px 26px 16px; }
   .train-hero-main { margin-top: auto; }
   .train-hero-number .num-display { font-size: clamp(124px, 11vw, 168px); }
@@ -364,3 +366,24 @@
 .train-library small { font-size: 13px; color: var(--ink-2); }
 .train-library > svg { flex: none; color: var(--ink-3); }
 .train-library-count { font-size: 46px; flex: none; }
+
+/* ─── Tu semana según el objetivo ──────────────────────────────────────── */
+.goal-week { scroll-margin-top: 24px; }
+.goal-week-met { animation: pop var(--motion-base) var(--ease-spring) backwards; }
+.goal-week-count { flex: none; display: inline-flex; align-items: baseline; font-size: 13px; color: var(--ink-3); }
+.goal-week-count b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 24px; font-weight: 600; letter-spacing: -.03em; color: var(--ink); }
+.goal-week-focus { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; padding: 18px 20px; border-radius: var(--radius-l); background: var(--surface-2); font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.goal-week-focus b { color: var(--ink); font-weight: 600; }
+.goal-week-note { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-weight: 500; }
+.goal-week-note svg { flex: none; margin-top: 3px; color: var(--lime-text); }
+.goal-week-foot { display: flex; align-items: center; gap: 12px; margin-top: 10px; min-height: 52px; padding: 0 6px 0 4px; font-size: 14px; color: var(--ink-2); }
+.goal-week-foot .grow { flex: 1; min-width: 0; }
+.goal-week-foot b { color: var(--ink); font-weight: 600; }
+.goal-week-foot-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); }
+@media (min-width: 1024px) {
+  .goal-week { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; column-gap: 24px; row-gap: 12px; align-items: start; }
+  .goal-week > .section-head, .goal-week > .train-section-line { grid-column: 1 / -1; }
+  .goal-week > .list { grid-column: 1; grid-row: 3 / 5; }
+  .goal-week-focus { grid-column: 2; grid-row: 3; margin-top: 0; }
+  .goal-week-foot { grid-column: 2; grid-row: 4; margin-top: 0; }
+}

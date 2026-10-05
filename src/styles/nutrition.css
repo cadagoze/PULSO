@@ -109,3 +109,10 @@ legend.nut-label { margin-bottom: 10px; }
   .nut-trio .field:last-child { grid-column: 1 / -1; }
   .nut-macros { gap: 10px; }
 }
+
+/* ─── Entrenamiento y energía ──────────────────────────────────────────── */
+.nut-energy { display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.nut-energy-empty { font-size: 16px; font-weight: 600; letter-spacing: -.015em; }
+.nut-energy-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ink); }
+.nut-energy-hint { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 2px; padding: 14px 16px; border-radius: var(--radius); background: var(--lime-soft); }
+.nut-energy-hint b { font-weight: 600; }

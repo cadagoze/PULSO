@@ -19,6 +19,7 @@ import { TodayExercises } from "@/components/train/today-exercises";
 import { useActiveProgram, useTodayPlan } from "@/components/train/today-plan";
 import type { TodaySource } from "@/components/train/today-plan";
 import { AdjustSheet } from "@/components/train/today-sheets";
+import { GoalWeek } from "@/components/train/goal-week";
 import { LibraryLink } from "@/components/train/library-link";
 import { ToolsRow } from "@/components/train/tools-row";
 import { useMediaQuery } from "@/components/train/shared";
@@ -119,6 +120,7 @@ export function TrainHub() {
         )}
       </div>
       <div className="train-more">
+        <GoalWeek now={now} />
         <LibraryLink />
         <SuggestedRoutines onCreate={createRoutine} />
         <RoutinesSection onCreate={createRoutine} onEdit={(routine) => openEditor(routine, false)} notify={toast.show} />

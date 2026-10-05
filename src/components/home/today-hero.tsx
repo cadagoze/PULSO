@@ -9,7 +9,7 @@ import { muscleRecovery } from "@/lib/analytics";
 import { estimateMinutes, focusLabels, generateWorkout, todayGeneratorInput } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
-import { useDraft, usePreference, useProfile, useProgram, useWorkouts } from "@/lib/store";
+import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, useWorkouts } from "@/lib/store";
 import { completedSets, totalSets } from "@/lib/training";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
@@ -22,6 +22,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const [progress] = useProgram();
   const [workouts] = useWorkouts();
   const [profile] = useProfile();
+  const [nutrition] = useNutritionProfile();
   const [preference] = usePreference();
   const start = useStartWorkout();
 
@@ -40,8 +41,8 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const generated = useMemo(() => {
     if (hourNow === 0) return null;
     const recovery = muscleRecovery(workouts, hourNow);
-    return generateWorkout(todayGeneratorInput({ profile, preference, workouts, readiness, recovery, now }));
-  }, [hourNow, now, preference, profile, readiness, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness, recovery, now }));
+  }, [hourNow, now, nutrition?.goal, preference, profile, readiness, workouts]);
 
   if (draft) {
     const done = completedSets(draft.records);
