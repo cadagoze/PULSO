@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button, NumberMetric, SegmentedControl } from "@/components/ui";
-import { activityLevels, defaultAdjustment, formatKcal, goalLabels, nutritionTargets, paceOptions } from "@/lib/nutrition";
+import { activityLevels, defaultAdjustment, formatKcal, goalShortLabels, nutritionTargets, paceOptions } from "@/lib/nutrition";
 import { cn, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
 import type { ActivityLevel, NutritionGoal, NutritionProfile, NutritionSpecialCase, Sex } from "@/types";
 import { LimitNote } from "./limit-note";
@@ -18,7 +18,7 @@ const parse = (value: string) => Number(value.trim().replace(",", "."));
 
 /**
  * Datos para calcular calorías y macros, con el resultado en vivo. El peso se guarda en el registro
- * de peso (fuente única para Progreso y Alimentación).
+ * de peso (fuente única para Progreso y Nutrición).
  */
 export function NutritionSetup({ initial, weightKg, unit, onSave }: { initial: NutritionProfile; weightKg: number | null; unit: "kg" | "lb"; onSave: (profile: NutritionProfile, weightKg: number) => void }) {
   const now = new Date();
@@ -101,7 +101,7 @@ export function NutritionSetup({ initial, weightKg, unit, onSave }: { initial: N
 
       <div className="nut-field">
         <span className="nut-label">Objetivo</span>
-        <SegmentedControl label="Objetivo" options={(["lose", "maintain", "gain"] as const).map((value) => ({ value, label: goalLabels[value] }))} value={goal} onChange={changeGoal} />
+        <SegmentedControl label="Objetivo" options={(["lose", "maintain", "gain"] as const).map((value) => ({ value, label: goalShortLabels[value] }))} value={goal} onChange={changeGoal} />
       </div>
 
       {goal !== "maintain" && (

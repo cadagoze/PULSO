@@ -10,6 +10,8 @@ export const activityLevels: Array<{ value: ActivityLevel; label: string; detail
 ];
 
 export const goalLabels: Record<NutritionGoal, string> = { lose: "Bajar grasa", maintain: "Mantener", gain: "Ganar músculo" };
+/** Versión corta para el selector de tres opciones («Ganar músculo» no cabe en un tercio de pantalla). */
+export const goalShortLabels: Record<NutritionGoal, string> = { ...goalLabels, gain: "Ganar masa" };
 
 /** Ritmos por objetivo, como % sobre el gasto diario. El primero recomendado va marcado. */
 export const paceOptions: Record<NutritionGoal, Array<{ value: number; label: string; recommended?: boolean }>> = {
@@ -102,7 +104,7 @@ export function nutritionTargets(profile: NutritionProfile, weightKg: number, no
     fat,
     carbs,
     fiber: Math.round((kcal / 1000) * 14),
-    waterLiters: Math.max(1.5, Math.round(weightKg * 0.035 * 10) / 10),
+    waterLiters: waterGoal(weightKg).liters,
     weeklyChangeKg: Math.round((((kcal - tdee) * 7) / KCAL_PER_KG) * 100) / 100,
     limited,
     custom,
@@ -131,6 +133,16 @@ export const mealSlots: Array<{ value: MealSlot; label: string }> = [
   { value: "colacion", label: "Colaciones" },
 ];
 
+/** Comida que corresponde a la hora: desayuno hasta las 11, almuerzo hasta las 16, once hasta las 19:30 y cena hasta las 23. */
+export function mealSlotAt(date: Date): MealSlot {
+  const hour = date.getHours() + date.getMinutes() / 60;
+  if (hour < 5 || hour >= 23) return "colacion";
+  if (hour < 11) return "desayuno";
+  if (hour < 16) return "almuerzo";
+  if (hour < 19.5) return "once";
+  return "cena";
+}
+
 export interface Totals { kcal: number; protein: number; carbs: number; fat: number }
 
 /** Suma de calorías y macros (cada registro guarda valores por porción y cuántas porciones). */
@@ -150,11 +162,29 @@ export function entryFromFood(food: FoodItem, { id, date, meal, portions }: { id
 /** Días de registro que se conservan (suficiente para tendencias sin llenar el almacenamiento). */
 export const FOOD_LOG_DAYS = 120;
 
-export function pruneFoodLog(entries: FoodEntry[], today: string) {
+/** Conserva los últimos FOOD_LOG_DAYS días de un historial (alimentos, agua). */
+export function pruneHistory<T extends { date: string }>(entries: T[], today: string) {
   const limit = new Date(`${today}T12:00:00`);
   limit.setDate(limit.getDate() - FOOD_LOG_DAYS);
   const cutoff = limit.toISOString().slice(0, 10);
   return entries.filter((entry) => entry.date >= cutoff);
+}
+
+// ─── Agua ──────────────────────────────────────────────────────────────────
+
+export const GLASS_ML = 250;
+
+/**
+ * Meta de agua para beber: 35 ml/kg es el agua total del día y cerca del 20 % llega con la comida, así que
+ * se beben unos 28 ml/kg, en vasos de 250 ml (entre 6 y 14). Sin peso registrado, 8 vasos (2 L).
+ */
+export function waterGoal(weightKg: number | null) {
+  const glasses = weightKg ? Math.min(14, Math.max(6, Math.round((weightKg * 28) / GLASS_ML))) : 8;
+  return { glasses, liters: (glasses * GLASS_ML) / 1000 };
+}
+
+export function formatLiters(glasses: number) {
+  return ((glasses * GLASS_ML) / 1000).toLocaleString("es-CL", { maximumFractionDigits: 2 });
 }
 
 /** Alimentos usados más recientemente (sin repetir), para registrar con un toque. */

@@ -92,3 +92,24 @@
   .home-skeleton-hero { grid-area: hero; }
 }
 .home-ready p.meta { font-size: 10px; margin-bottom: 2px; }
+
+/* ─── Nutrición de hoy: calorías, proteína y agua ──────────────────────── */
+.home-fuel { gap: 12px; }
+.home-fuel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.home-fuel-link { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.home-fuel-card { display: flex; flex-direction: column; gap: 18px; padding: 20px 18px 18px 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.home-fuel-kcal { display: flex; align-items: flex-start; gap: 16px; }
+.home-fuel-kcal .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.home-fuel-number { display: flex; flex-direction: column; gap: 2px; }
+.home-fuel-number .num-display { font-size: clamp(52px, 15vw, 64px); line-height: .9; transition: color var(--motion-base); }
+.home-fuel-number > span:last-child { font-size: 13.5px; color: var(--ink-2); }
+.home-fuel-number.is-over .num-display { color: var(--orange-text); }
+.home-fuel-line { display: flex; flex-direction: column; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.home-fuel-line b { color: var(--ink); font-weight: 600; }
+.home-fuel-add { align-self: flex-start; margin-top: 6px; }
+.home-fuel-percent { font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+.home-fuel-percent small { font-size: 11px; font-weight: 600; color: var(--ink-2); }
+.home-fuel-simple { display: flex; align-items: center; gap: 14px; }
+.home-fuel-simple p { flex: 1; min-width: 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.home-fuel-simple b { color: var(--ink); font-weight: 600; }
+.home-fuel-water { padding-top: 16px; box-shadow: inset 0 1px 0 var(--line); }

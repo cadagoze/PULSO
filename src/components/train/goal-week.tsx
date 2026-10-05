@@ -20,7 +20,7 @@ function range({ min, max }: { min: number; max: number }) {
 }
 
 /**
- * Qué entrenar esta semana según tu objetivo (el de Alimentación o, si aún no lo calculas, el de tu
+ * Qué entrenar esta semana según tu objetivo (el de Nutrición o, si aún no lo calculas, el de tu
  * evaluación): días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar.
  */
 export function GoalWeek({ now }: { now: number }) {
@@ -67,7 +67,7 @@ export function GoalWeek({ now }: { now: number }) {
             ? <>≈ <b className="num">{formatKcal(kcal)}</b> kcal en tus entrenamientos</>
             : nutrition ? "Tus calorías y macros de hoy" : "Calcula cuánto comer para tu objetivo"}
         </span>
-        <span className="goal-week-foot-link">{nutrition ? "Alimentación" : "Calcular"}<ArrowRight size={16} aria-hidden="true" /></span>
+        <span className="goal-week-foot-link">{nutrition ? "Nutrición" : "Calcular"}<ArrowRight size={16} aria-hidden="true" /></span>
       </Link>
     </section>
   );

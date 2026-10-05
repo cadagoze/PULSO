@@ -1,4 +1,4 @@
-/* PULSO — Alimentación: calorías del día, diario de comidas, buscador de alimentos y plan. */
+/* PULSO — Nutrición: calorías del día, agua, diario de comidas, buscador de alimentos y plan. */
 
 .nut-skeleton { height: 420px; border-radius: var(--radius-xl); background: var(--surface-2); animation: home-shimmer 1.4s ease-in-out infinite; }
 .nut-label { font-size: 14px; font-weight: 600; color: var(--ink); }
@@ -116,3 +116,22 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-energy-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ink); }
 .nut-energy-hint { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 2px; padding: 14px 16px; border-radius: var(--radius); background: var(--lime-soft); }
 .nut-energy-hint b { font-weight: 600; }
+
+/* ─── Agua ─────────────────────────────────────────────────────────────── */
+.water { display: flex; flex-direction: column; gap: 14px; }
+.water-head { display: flex; align-items: center; gap: 12px; }
+.water-head .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.water-head strong { font-size: 15.5px; font-weight: 600; line-height: 1.25; letter-spacing: -.01em; }
+.water-head strong b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 19px; font-weight: 600; letter-spacing: -.03em; }
+.water-head small { font-size: 12.5px; color: var(--ink-2); }
+.water-btn { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast), opacity var(--motion-fast); }
+.water-btn:active { transform: scale(.9); }
+.water-btn:disabled { opacity: .4; pointer-events: none; }
+.water-add { width: 48px; height: 48px; background: var(--lime); color: var(--lime-ink); }
+@media (hover: hover) { .water-add:hover { background: var(--lime-bright); } }
+.water-glasses { display: flex; align-items: center; gap: 4px; }
+.water-glasses span { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--surface-3); transform-origin: center bottom; transition: background-color var(--motion-base) var(--ease-standard), transform var(--motion-base) var(--ease-spring); }
+.water-glasses span.is-full { background: var(--lime); }
+.water-glasses small { flex: none; margin-left: 4px; font-size: 12px; font-weight: 600; color: var(--lime-text); }
+.water.is-met .water-glasses span.is-full { background: var(--lime-text); }
+.nut-water { padding: 18px 18px 18px 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }

@@ -369,8 +369,6 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .nav-item:active .nav-icon { transform: scale(.9); }
 .nav-icon { display: grid; place-items: center; transition: transform var(--motion-fast) var(--ease-standard); }
 .nav-item-active { color: #142019; }
-/* Etiquetas largas (Alimentación) un poco más compactas para caber en su espacio. */
-.nav-item-long { font-size: 9.5px; letter-spacing: -.015em; }
 @media (hover: hover) { .nav-item:not(.nav-item-active):hover { color: #f2f1ec; } }
 .nav-brand { display: none; }
 :root[data-theme="dark"] .bottom-nav { background: rgb(38 42 39 / 88%); }

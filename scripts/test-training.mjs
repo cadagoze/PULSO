@@ -306,7 +306,7 @@ test('alimentación: totales del día y alimentos recientes', () => {
   assert.equal(totals.protein, 25);
   const recent = nutrition.recentFoods([entry('a', 'arroz', 1, 200), entry('b', 'pollo', 1, 198), entry('c', 'arroz', 1, 200)]);
   assert.deepEqual(Array.from(recent, (item) => item.foodId), ['arroz', 'pollo']);
-  const pruned = nutrition.pruneFoodLog([{ ...entry('x', 'a', 1, 1), date: '2026-01-01' }, entry('y', 'b', 1, 1)], '2026-10-05');
+  const pruned = nutrition.pruneHistory([{ ...entry('x', 'a', 1, 1), date: '2026-01-01' }, entry('y', 'b', 1, 1)], '2026-10-05');
   assert.deepEqual(Array.from(pruned, (item) => item.id), ['y']);
 });
 
@@ -367,4 +367,19 @@ test('el objetivo de alimentación ajusta la rutina y la guía semanal', () => {
   assert.equal(energy.goalGuides.lose.strength.min, 3);
   assert.equal(energy.goalGuides.maintain.activityMinutes, 150);
   assert.deepEqual({ ...energy.goalGuides.gain.setsPerMuscle }, { min: 10, max: 20 });
+});
+
+test('agua: meta para beber según el peso, comida según la hora e historial acotado', () => {
+  assert.deepEqual({ ...nutrition.waterGoal(81.5) }, { glasses: 9, liters: 2.25 });
+  assert.deepEqual({ ...nutrition.waterGoal(60) }, { glasses: 7, liters: 1.75 });
+  assert.equal(nutrition.waterGoal(null).glasses, 8);
+  assert.equal(nutrition.waterGoal(40).glasses, 6);
+  assert.equal(nutrition.waterGoal(200).glasses, 14);
+  assert.equal(nutrition.formatLiters(9), '2,25');
+  const at = (hour, minute = 0) => nutrition.mealSlotAt(new Date(2026, 9, 5, hour, minute));
+  assert.deepEqual([at(7), at(13), at(18), at(19, 45), at(23, 30), at(3)], ['desayuno', 'almuerzo', 'once', 'cena', 'colacion', 'colacion']);
+  const kept = nutrition.pruneHistory([{ date: '2026-01-01', glasses: 3 }, { date: '2026-10-04', glasses: 8 }], '2026-10-05');
+  assert.deepEqual(Array.from(kept, (entry) => entry.date), ['2026-10-04']);
+  const targets = nutrition.nutritionTargets({ sex: 'male', birthYear: 1986, heightCm: 178, activity: 'moderate', goal: 'lose', adjustment: -15, special: 'none', mode: 'count', updatedAt: '' }, 81.5, new Date(2026, 9, 5));
+  assert.equal(targets.waterLiters, 2.25);
 });

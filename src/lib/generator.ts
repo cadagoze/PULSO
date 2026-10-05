@@ -219,7 +219,7 @@ export function goalFromProfile(goals: string[] = []): WorkoutGoal {
   return first === "weight" || first === "energy" || first === "habits" || first === "strength" ? first : "strength";
 }
 
-/** El objetivo de Alimentación manda sobre la evaluación: bajar grasa → descansos cortos; ganar músculo → más series. */
+/** El objetivo de Nutrición manda sobre la evaluación: bajar grasa → descansos cortos; ganar músculo → más series. */
 export function trainingGoal(goals: string[] = [], nutritionGoal?: NutritionGoal): WorkoutGoal {
   if (nutritionGoal === "lose") return "weight";
   if (nutritionGoal === "gain") return "strength";

@@ -32,7 +32,6 @@ export { exercises } from "./exercises";
 export const habits: Habit[] = [
   { id: 1, title: "Caminar diez minutos", detail: "Después del almuerzo" },
   { id: 2, title: "Agregar verduras", detail: "En al menos una comida" },
-  { id: 3, title: "Tomar agua", detail: "Durante la tarde" },
 ];
 
 export const meals: Meal[] = [

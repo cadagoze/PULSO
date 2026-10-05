@@ -14,7 +14,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; match?: string[]
 const items: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
   { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios"] },
-  { href: "/comidas", label: "Alimentación", icon: Salad },
+  { href: "/comidas", label: "Nutrición", icon: Salad },
   { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
   { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia"] },
 ];
@@ -41,7 +41,7 @@ export function BottomNavigation() {
             const current = index === active;
             const Icon = item.icon;
             return (
-              <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={cn("nav-item", current && "nav-item-active", item.label.length > 9 && "nav-item-long")}>
+              <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={cn("nav-item", current && "nav-item-active")}>
                 <span className="nav-icon"><Icon size={21} strokeWidth={current ? 2.2 : 1.8} /></span>
                 <span>{item.label}</span>
               </Link>

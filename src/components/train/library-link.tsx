@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { exercises } from "@/data/exercises";
 
-/** Acceso a la biblioteca de ejercicios (vive dentro de Entrenar desde que Alimentación entró a la barra). */
+/** Acceso a la biblioteca de ejercicios (vive dentro de Entrenar desde que Nutrición entró a la barra). */
 export function LibraryLink() {
   return (
     <Link href="/ejercicios" className="train-library pressable">

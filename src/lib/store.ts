@@ -8,7 +8,7 @@ import { defaultRoutine, defaultTrainingPreference, routineWithId } from "@/lib/
 import { useNow } from "@/lib/use-now";
 import { removePersistentKey, removePersistentMemory, usePersistentState } from "@/lib/use-persistent-state";
 import { localDateKey } from "@/lib/utils";
-import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, ProgramProgress, ReadinessEntry, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WeightEntry, WorkoutEntry } from "@/types";
+import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, ProgramProgress, ReadinessEntry, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WaterEntry, WeightEntry, WorkoutEntry } from "@/types";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
 export const STORAGE_KEYS = {
@@ -29,6 +29,7 @@ export const STORAGE_KEYS = {
   nutrition: "pulso:nutrition",
   foodLog: "pulso:food-log",
   customFoods: "pulso:custom-foods",
+  water: "pulso:water",
 } as const;
 
 export const defaultSettings: Settings = {
@@ -55,6 +56,7 @@ const emptySettings: Partial<Settings> = {};
 const emptyIds: number[] = [];
 const emptyFoodLog: FoodEntry[] = [];
 const emptyFoods: FoodItem[] = [];
+const emptyWater: WaterEntry[] = [];
 /** Plantilla diaria de comidas: todas pendientes. */
 const mealTemplate: Meal[] = initialMeals.map((meal) => ({ id: meal.id, name: meal.name, time: meal.time, status: "Pendiente" as const }));
 
@@ -148,6 +150,11 @@ export function useCustomFoods() {
   return usePersistentState<FoodItem[]>(STORAGE_KEYS.customFoods, emptyFoods);
 }
 
+/** Vasos de agua por día (historial de 120 días). */
+export function useWater() {
+  return usePersistentState<WaterEntry[]>(STORAGE_KEYS.water, emptyWater);
+}
+
 /** Ajustes con valores por defecto para campos añadidos después de guardarse. */
 export function useSettings() {
   const [stored, setStored] = usePersistentState<Partial<Settings>>(STORAGE_KEYS.settings, emptySettings);
@@ -210,6 +217,7 @@ const keyShapes: Record<string, Shape> = {
   [STORAGE_KEYS.nutrition]: "object-or-null",
   [STORAGE_KEYS.foodLog]: "array",
   [STORAGE_KEYS.customFoods]: "array",
+  [STORAGE_KEYS.water]: "array",
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);

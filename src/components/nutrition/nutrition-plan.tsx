@@ -1,6 +1,6 @@
 import { SlidersHorizontal, UserRoundPen } from "lucide-react";
 import { Button, NumberMetric, SegmentedControl } from "@/components/ui";
-import { activityLevels, formatKcal, goalLabels, paceOptions, type NutritionTargets } from "@/lib/nutrition";
+import { activityLevels, formatKcal, GLASS_ML, goalLabels, paceOptions, type NutritionTargets } from "@/lib/nutrition";
 import type { NutritionProfile } from "@/types";
 import { LimitNote } from "./limit-note";
 
@@ -29,7 +29,7 @@ export function NutritionPlan({ profile, targets, onEdit, onAdjust, onModeChange
         <NumberMetric size="s" value={targets.carbs} unit="g" label="Carbohidratos" />
         <NumberMetric size="s" value={targets.fat} unit="g" label="Grasa" />
         <NumberMetric size="s" value={targets.fiber} unit="g" label="Fibra" />
-        <NumberMetric size="s" value={targets.waterLiters.toLocaleString("es-CL")} unit="L" label="Agua" />
+        <NumberMetric size="s" value={targets.waterLiters.toLocaleString("es-CL")} unit="L" label={`Agua · ${Math.round((targets.waterLiters * 1000) / GLASS_ML)} vasos`} />
       </div>
       <p className="nut-plan-why">
         Gastas cerca de <b className="num">{formatKcal(targets.tdee)}</b> kcal al día (metabolismo basal <span className="num">{formatKcal(targets.bmr)}</span> × actividad {activity?.label.toLowerCase()}).

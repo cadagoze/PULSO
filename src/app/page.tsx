@@ -2,6 +2,7 @@
 
 import { useNow } from "@/lib/use-now";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
+import { DayFuel } from "@/components/home/day-fuel";
 import { HomeDigest } from "@/components/home/home-digest";
 import { HomeHeader } from "@/components/home/home-header";
 import { QuickActions } from "@/components/home/quick-actions";
@@ -45,6 +46,7 @@ export default function Home() {
         <TodayHero now={now} readiness={todayEntry?.recommendation} />
       </div>
       <div className="home-side">
+        <DayFuel now={now} />
         <WeekStrip now={now} />
         <ReadinessCard today={today} now={now} />
         <QuickActions />

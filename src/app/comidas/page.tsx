@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Undo2 } from "lucide-react";
 import { PageHeader, Sheet } from "@/components/ui";
 import { DayBalance } from "@/components/content/day-balance";
@@ -18,13 +18,15 @@ import { MealDiary } from "@/components/nutrition/meal-diary";
 import { NutritionPlan } from "@/components/nutrition/nutrition-plan";
 import { NutritionSetup } from "@/components/nutrition/nutrition-setup";
 import { SetupPrompt } from "@/components/nutrition/setup-prompt";
+import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
-import { activityLevels, entryFromFood, entryTotals, formatKcal, mealSlots, nutritionTargets, pruneFoodLog, recentFoods, suggestedNutritionProfile } from "@/lib/nutrition";
+import { activityLevels, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, suggestedNutritionProfile } from "@/lib/nutrition";
 import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
+import { useLatestWeight, useWaterToday } from "@/lib/use-nutrition";
 import { formatLongDate, formatShortDate, localDateKey } from "@/lib/utils";
 import type { FoodEntry, FoodItem, MealSlot, NutritionProfile } from "@/types";
 
@@ -41,7 +43,9 @@ export default function NutritionPage() {
   const [profile, setProfile] = useNutritionProfile();
   const [log, setLog] = useFoodLog();
   const [customFoods, setCustomFoods] = useCustomFoods();
-  const [weights, setWeights] = useWeights();
+  const [, setWeights] = useWeights();
+  const latestWeight = useLatestWeight();
+  const water = useWaterToday(now);
   const [settings] = useSettings();
   const [assessment] = useProfile();
   const [workouts] = useWorkouts();
@@ -59,13 +63,10 @@ export default function NutritionPage() {
   // Última fila marcada en esta visita: sólo ella anima su check (las que ya venían hechas no).
   const [fresh, setFresh] = useState<string | null>(null);
 
-  if (now === 0) return <div className="page cnt-page" aria-busy="true"><div className="nut-skeleton" /></div>;
-
   const today = localDateKey(new Date(now));
   const yesterdayDate = new Date(now);
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const yesterday = localDateKey(yesterdayDate);
-  const latestWeight = [...weights].sort((a, b) => a.date.localeCompare(b.date)).at(-1)?.weight ?? null;
   const targets = profile && latestWeight ? nutritionTargets(profile, latestWeight, new Date(now)) : null;
   const counting = Boolean(profile && targets && profile.mode === "count");
   const todayEntries = log.filter((entry) => entry.date === today);
@@ -147,7 +148,7 @@ export default function NutritionPage() {
     if (!picker || !targets) return;
     const id = newId("comida");
     const entry = entryFromFood(food, { id, date: today, meal: picker.meal, portions });
-    setLog((current) => pruneFoodLog([...current, entry], today));
+    setLog((current) => pruneHistory([...current, entry], today));
     setPickerOpen(false);
     setFresh(id);
     const protein = totals.protein + food.protein * portions;
@@ -182,10 +183,31 @@ export default function NutritionPage() {
   function repeatMeal(meal: MealSlot) {
     const copies = yesterdayEntries.filter((entry) => entry.meal === meal).map((entry) => ({ ...entry, id: newId("comida"), date: today }));
     if (!copies.length) return;
-    setLog((current) => pruneFoodLog([...current, ...copies], today));
+    setLog((current) => pruneHistory([...current, ...copies], today));
     setFresh(copies[0].id);
     showToast(`${slotLabel(meal)} repetido · ${formatKcal(entryTotals(copies).kcal)} kcal`);
   }
+
+  // Accesos desde Inicio: «?registrar» abre el registro de la comida de esta hora y «?calcular», el cálculo.
+  const openFromLink = useEffectEvent(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("registrar") && !params.has("calcular")) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    if (params.has("calcular") || !profile || !targets) openSetup();
+    else if (counting) openPicker(mealSlotAt(new Date()));
+    else {
+      const next = meals.find((meal) => !isLogged(meal));
+      if (next) openMeal(next.id);
+    }
+  });
+  const ready = now !== 0;
+  useEffect(() => {
+    if (!ready) return;
+    const frame = window.requestAnimationFrame(openFromLink);
+    return () => window.cancelAnimationFrame(frame);
+  }, [ready]);
+
+  if (!ready) return <div className="page cnt-page" aria-busy="true"><div className="nut-skeleton" /></div>;
 
   const subtitle = counting
     ? "Tus calorías y macros de hoy, para entrenar con energía."
@@ -196,9 +218,10 @@ export default function NutritionPage() {
   return (
     <div className="page cnt-page cnt-split nut-page">
       <div className="cnt-lead">
-        <PageHeader meta={formatLongDate(new Date(now))} title="Alimentación" subtitle={subtitle} />
+        <PageHeader meta={formatLongDate(new Date(now))} title="Nutrición" subtitle={subtitle} />
         {!targets && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
         {counting && targets ? <CalorieSummary targets={targets} totals={totals} /> : <DayProgress meals={meals} habitsDone={habitsDone} habitsTotal={habits.length} />}
+        <WaterTracker className="nut-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />
       </div>
 
       <div className="cnt-main">
@@ -220,7 +243,7 @@ export default function NutritionPage() {
           </section>
         )}
 
-        <section className="cnt-section" aria-labelledby="cnt-habits-title">
+        <section id="habitos" className="cnt-section" aria-labelledby="cnt-habits-title">
           <div className="cnt-head">
             <h2 id="cnt-habits-title" className="meta">Hábitos</h2>
             <span className="cnt-hint">Se reinician cada día</span>

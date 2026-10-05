@@ -335,3 +335,9 @@ export interface FoodEntry {
   carbs: number;
   fat: number;
 }
+
+/** Vasos de agua (250 ml) bebidos en un día. */
+export interface WaterEntry {
+  date: string;
+  glasses: number;
+}

@@ -193,14 +193,14 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
   );
 }
 
-/** Alimentación dentro del plan: calorías y proteína del día, o la invitación a calcularlas. */
+/** Nutrición dentro del plan: calorías y proteína del día, o la invitación a calcularlas. */
 function NutritionLine() {
   const now = useNow();
   const { targets } = useNutritionDay(now);
   return (
     <Link href="/comidas" className="prof-plan-program prof-plan-food pressable">
       <span className="prof-plan-program-text">
-        <span className="meta">Alimentación</span>
+        <span className="meta">Nutrición</span>
         {targets ? (
           <>
             <strong><span className="num">{formatKcal(targets.kcal)}</span> kcal al día</strong>
