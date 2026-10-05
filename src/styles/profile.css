@@ -156,3 +156,4 @@ button.prof-avatar:active { transform: scale(.96); }
   .prof-settings { padding-top: 40px; }
   .prof-settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start; }
 }
+.prof-plan-food { margin-top: 4px; }

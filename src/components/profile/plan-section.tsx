@@ -8,7 +8,10 @@ import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet, Stepper, Toggle
 import { equipmentOptions } from "@/data/mock-data";
 import { durationOptions } from "@/lib/generator";
 import { nextProgramSession, programById, programTotalSessions } from "@/lib/programs";
+import { formatKcal } from "@/lib/nutrition";
 import { usePreference, useProfile, useProgram, useSettings } from "@/lib/store";
+import { useNow } from "@/lib/use-now";
+import { useNutritionDay } from "@/lib/use-nutrition";
 import { cn } from "@/lib/utils";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
 import { careAreas, placeSummary, splitFocus } from "./profile-format";
@@ -73,6 +76,8 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
             </p>
           )}
         </div>
+
+        <NutritionLine />
 
         {program && progress && (
           <Link href={`/entrenar/programas/${program.id}`} className="prof-plan-program pressable">
@@ -185,5 +190,30 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
 
       <Button size="l" block onClick={onDone}>Listo</Button>
     </div>
+  );
+}
+
+/** Alimentación dentro del plan: calorías y proteína del día, o la invitación a calcularlas. */
+function NutritionLine() {
+  const now = useNow();
+  const { targets } = useNutritionDay(now);
+  return (
+    <Link href="/comidas" className="prof-plan-program prof-plan-food pressable">
+      <span className="prof-plan-program-text">
+        <span className="meta">Alimentación</span>
+        {targets ? (
+          <>
+            <strong><span className="num">{formatKcal(targets.kcal)}</span> kcal al día</strong>
+            <small className="num">{targets.protein} g proteína · {targets.carbs} g carbohidratos · {targets.fat} g grasa</small>
+          </>
+        ) : (
+          <>
+            <strong>Calcula tus calorías</strong>
+            <small>Según tu edad, estatura, peso, actividad y objetivo.</small>
+          </>
+        )}
+      </span>
+      <ArrowRight size={18} aria-hidden="true" />
+    </Link>
   );
 }

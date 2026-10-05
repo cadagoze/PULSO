@@ -275,3 +275,63 @@ export interface WeekDay {
   number: number;
   status: "done" | "today" | "rest" | "planned";
 }
+
+// ─── Alimentación ───────────────────────────────────────────────────────────
+
+export type Sex = "female" | "male";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "active" | "very-active";
+export type NutritionGoal = "lose" | "maintain" | "gain";
+/** Situaciones en que PULSO no propone déficit y recomienda a un profesional. */
+export type NutritionSpecialCase = "none" | "pregnancy" | "eating-disorder";
+
+/** Datos para calcular las calorías del día. El peso sale del registro de peso. */
+export interface NutritionProfile {
+  sex: Sex;
+  birthYear: number;
+  heightCm: number;
+  activity: ActivityLevel;
+  goal: NutritionGoal;
+  /** Ajuste sobre el gasto diario, en %: negativo para bajar, positivo para ganar, 0 para mantener. */
+  adjustment: number;
+  special: NutritionSpecialCase;
+  /** "count": registro de alimentos con calorías y macros. "simple": por saciedad, sin contar. */
+  mode: "count" | "simple";
+  /** Calorías fijadas a mano (reemplazan el cálculo, respetando el mínimo seguro). */
+  customKcal?: number;
+  updatedAt: string;
+}
+
+export type FoodCategory = "panes" | "proteinas" | "lacteos" | "frutas" | "verduras" | "legumbres" | "grasas" | "bebidas" | "snacks" | "platos" | "propios";
+
+/** Alimento con sus valores por porción casera. */
+export interface FoodItem {
+  id: string;
+  name: string;
+  /** Porción de referencia, por ejemplo «1 taza (160 g)». */
+  portion: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  category: FoodCategory;
+  /** Bebidas alcohólicas: sus calorías no salen sólo de los macros. */
+  alcohol?: boolean;
+}
+
+export type MealSlot = "desayuno" | "almuerzo" | "once" | "cena" | "colacion";
+
+/** Alimento registrado: copia los valores por porción para que el historial no cambie. */
+export interface FoodEntry {
+  id: string;
+  date: string;
+  meal: MealSlot;
+  foodId: string;
+  name: string;
+  portion: string;
+  /** Cuántas porciones (0,5 = media). */
+  portions: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}

@@ -356,3 +356,11 @@
   .train-cover { position: sticky; top: 24px; aspect-ratio: auto; height: min(760px, calc(100dvh - var(--nav-h) - var(--nav-gap) - 72px)); max-height: none; padding: 20px 24px 28px; }
   .train-cover-number .num-display { font-size: clamp(120px, 11vw, 176px); }
 }
+
+/* ─── Biblioteca (acceso) ──────────────────────────────────────────────── */
+.train-library { display: flex; align-items: center; gap: 18px; padding: 18px 18px 18px 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); }
+.train-library .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.train-library strong { font-size: 16px; font-weight: 600; letter-spacing: -.015em; line-height: 1.25; }
+.train-library small { font-size: 13px; color: var(--ink-2); }
+.train-library > svg { flex: none; color: var(--ink-3); }
+.train-library-count { font-size: 46px; flex: none; }

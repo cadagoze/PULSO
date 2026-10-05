@@ -1,0 +1,111 @@
+/* PULSO — Alimentación: calorías del día, diario de comidas, buscador de alimentos y plan. */
+
+.nut-skeleton { height: 420px; border-radius: var(--radius-xl); background: var(--surface-2); animation: home-shimmer 1.4s ease-in-out infinite; }
+.nut-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.nut-label small { font-weight: 500; color: var(--ink-2); }
+.nut-field { display: flex; flex-direction: column; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+legend.nut-label { margin-bottom: 10px; }
+.nut-disclaimer { font-size: 12px; line-height: 1.5; }
+.nut-note { font-size: 13.5px; line-height: 1.45; }
+.nut-hint { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+
+/* ─── Invitación a calcular ────────────────────────────────────────────── */
+.nut-prompt { position: relative; display: flex; flex-direction: column; gap: 22px; padding: 24px 22px 22px; border-radius: var(--radius-xl); overflow: hidden; }
+.nut-prompt > * { position: relative; z-index: 3; }
+.nut-prompt-number { font-size: clamp(76px, 24vw, 120px); color: rgb(242 241 236 / 92%); }
+.nut-prompt-body { display: flex; flex-direction: column; gap: 10px; }
+.nut-prompt-body p:not(.meta) { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); max-width: 42ch; }
+
+/* ─── Resumen del día ──────────────────────────────────────────────────── */
+.nut-summary { display: flex; flex-direction: column; gap: 16px; }
+.nut-remaining .nmetric-value { transition: color var(--motion-base); }
+.nut-remaining.is-over .nmetric-value { color: var(--orange-text); }
+.nut-kcal-track { height: 10px; border-radius: var(--radius-pill); background: var(--surface-3); overflow: hidden; }
+.nut-kcal-track > span, .nut-macro-track > span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--lime); transform-origin: left center; transform: scaleX(var(--value, 0)); transition: transform var(--motion-slow) var(--ease-standard); animation: bar-x-in 700ms var(--ease-standard) backwards; }
+.nut-kcal-track > span.is-over { background: var(--orange); }
+.nut-summary-line { font-size: 14px; color: var(--ink-2); }
+.nut-summary-line b { color: var(--ink); font-weight: 600; }
+.nut-macros { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.nut-macro { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.nut-macro-head { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; color: var(--ink-2); }
+.nut-macro-head .num { font-size: 13px; }
+.nut-macro-head b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 20px; font-weight: 600; letter-spacing: -.03em; color: var(--ink); }
+.nut-macro-track { height: 6px; border-radius: var(--radius-pill); background: var(--surface-3); overflow: hidden; }
+.nut-macro-carbs .nut-macro-track > span { background: var(--ink-3); }
+.nut-macro-fat .nut-macro-track > span { background: var(--forest); }
+:root[data-theme="dark"] .nut-macro-fat .nut-macro-track > span { background: var(--on-forest-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nut-macro-fat .nut-macro-track > span { background: var(--on-forest-2); } }
+.nut-macro.is-met .nut-macro-head span:first-child::after { content: " ✓"; color: var(--lime-text); font-weight: 700; }
+
+/* ─── Diario de comidas ────────────────────────────────────────────────── */
+.nut-diary { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.nut-meal { display: flex; flex-direction: column; padding: 14px 14px 14px 20px; }
+.nut-meal + .nut-meal { box-shadow: inset 0 1px 0 var(--line); }
+.nut-meal-head { display: flex; align-items: center; gap: 12px; min-height: 48px; }
+.nut-meal-head .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nut-meal-head strong { font-size: 16.5px; font-weight: 600; letter-spacing: -.015em; }
+.nut-meal-head small { font-size: 13px; color: var(--ink-2); }
+.nut-meal.has-items .nut-meal-head small { color: var(--ink); font-weight: 600; }
+.nut-add { background: var(--lime); color: var(--lime-ink); box-shadow: none; }
+@media (hover: hover) { .nut-add:hover { background: var(--lime-bright); } }
+.nut-items { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
+.nut-item, .nut-food { position: relative; isolation: isolate; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 10px; border-radius: var(--radius-s); text-align: left; transition: background-color var(--motion-fast); }
+.nut-item::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--lime-soft); opacity: 0; }
+.nut-item.is-fresh::before { animation: nut-flash 1.6s var(--ease-standard) var(--motion-base) backwards; }
+@keyframes nut-flash { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+@media (hover: hover) { .nut-item:hover, .nut-food:hover { background: var(--surface-2); } }
+.nut-item:active, .nut-food:active { background: var(--surface-2); }
+.nut-item .grow, .nut-food .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.nut-item-name { font-size: 14.5px; font-weight: 500; line-height: 1.3; }
+.nut-item small, .nut-food small { font-size: 12.5px; color: var(--ink-2); }
+.nut-item-kcal { flex: none; font-size: 14px; font-weight: 600; }
+.nut-repeat { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 4px; padding: 0 14px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
+.nut-repeat:active { transform: scale(.96); }
+
+/* ─── Hojas: buscador, porciones y formularios ─────────────────────────── */
+.nut-picker { display: flex; flex-direction: column; gap: 18px; }
+.nut-back { align-self: flex-start; text-decoration: none; }
+.nut-search { position: sticky; top: 22px; z-index: 1; }
+.nut-search button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); }
+.nut-cats { flex-shrink: 0; scroll-snap-type: none; margin: -4px -22px 0; padding: 2px 22px; }
+.nut-results { display: flex; flex-direction: column; gap: 8px; }
+.nut-food-list { list-style: none; margin: 0 -10px; padding: 0; display: flex; flex-direction: column; }
+.nut-empty { padding: 12px 0; font-size: 14px; }
+.nut-picker-actions { position: sticky; bottom: calc(-24px - var(--safe-b)); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 -22px calc(-24px - var(--safe-b)); padding: 14px 22px calc(18px + var(--safe-b)); background: linear-gradient(transparent, var(--surface) 22%); }
+.nut-picker-actions .btn { padding: 0 12px; }
+.nut-detail-head { display: flex; flex-direction: column; gap: 6px; }
+.nut-portions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nut-detail-values { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }
+.nut-quad { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* ─── Cálculo ──────────────────────────────────────────────────────────── */
+.nut-setup { display: flex; flex-direction: column; gap: 22px; }
+.nut-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.nut-trio .field input { padding: 0 12px; }
+.nut-options { display: flex; flex-direction: column; gap: 8px; }
+.nut-option { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 12px 14px 12px 16px; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); text-align: left; transition: box-shadow var(--motion-fast), background-color var(--motion-fast), transform var(--motion-base) var(--ease-standard); }
+.nut-option .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nut-option strong { font-size: 15px; font-weight: 600; }
+.nut-option small { font-size: 12.5px; color: var(--ink-2); }
+.nut-option-s { min-height: 50px; }
+.nut-option-s strong { font-size: 14px; font-weight: 500; }
+.nut-option.is-selected { background: var(--lime-soft); box-shadow: inset 0 0 0 1.5px var(--lime-text); }
+.nut-option-check { display: grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); color: var(--lime-ink); }
+.nut-option.is-selected .nut-option-check { background: var(--lime); box-shadow: none; animation: pop var(--motion-base) var(--ease-spring) backwards; }
+.nut-preview { display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: var(--radius-l); background: var(--surface-2); }
+.nut-preview-macros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 4px; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
+
+/* ─── Plan ─────────────────────────────────────────────────────────────── */
+.nut-plan { display: flex; flex-direction: column; gap: 20px; padding: 22px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.nut-plan-head { display: flex; flex-direction: column; gap: 6px; }
+.nut-plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; }
+.nut-plan-grid .nmetric-s .nmetric-value { font-size: 22px; }
+.nut-plan-why { font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.nut-plan-why b { color: var(--ink); font-weight: 600; }
+.nut-plan-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 380px) {
+  .nut-trio { grid-template-columns: 1fr 1fr; }
+  .nut-trio .field:last-child { grid-column: 1 / -1; }
+  .nut-macros { gap: 10px; }
+}

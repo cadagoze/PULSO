@@ -4,8 +4,10 @@ import Link from "next/link";
 import { BookOpen, ChevronRight, History, Sparkles, Utensils } from "lucide-react";
 import { articles, habits } from "@/data/mock-data";
 import { formatVolume } from "@/lib/analytics";
+import { formatKcal } from "@/lib/nutrition";
 import { useHabits, useMeals, useWorkouts } from "@/lib/store";
 import { recordsVolume, sortedWorkouts } from "@/lib/training";
+import { useNutritionDay } from "@/lib/use-nutrition";
 import { formatRelativeDay } from "@/lib/utils";
 
 /** Resumen del día en una sola lista: último entrenamiento, comidas y hábitos, y la guía del día. */
@@ -13,6 +15,7 @@ export function HomeDigest({ now, seed }: { now: number; seed: number }) {
   const [workouts] = useWorkouts();
   const [meals] = useMeals();
   const [checked] = useHabits();
+  const nutrition = useNutritionDay(now);
   const last = sortedWorkouts(workouts)[0];
   const registered = meals.filter((meal) => meal.status === "Registrada").length;
   const doneHabits = habits.filter((habit) => checked.includes(habit.id)).length;
@@ -45,8 +48,14 @@ export function HomeDigest({ now, seed }: { now: number; seed: number }) {
         <Link href="/comidas" className="list-row">
           <span className="icon-tile" aria-hidden="true"><Utensils size={18} /></span>
           <span className="grow">
-            <small>Comidas y hábitos</small>
-            <strong><span className="num">{registered}</span> de <span className="num">{meals.length}</span> comidas · <span className="num">{doneHabits}</span> de <span className="num">{habits.length}</span> hábitos</strong>
+            <small>Alimentación y hábitos</small>
+            {nutrition.counting && nutrition.targets ? (
+              <strong><span className="num">{formatKcal(nutrition.totals.kcal)}</span> de <span className="num">{formatKcal(nutrition.targets.kcal)}</span> kcal · <span className="num">{doneHabits}</span> de <span className="num">{habits.length}</span> hábitos</strong>
+            ) : nutrition.profile ? (
+              <strong><span className="num">{registered}</span> de <span className="num">{meals.length}</span> comidas · <span className="num">{doneHabits}</span> de <span className="num">{habits.length}</span> hábitos</strong>
+            ) : (
+              <strong>Calcula tus calorías del día</strong>
+            )}
           </span>
           <ChevronRight size={18} className="subtle" aria-hidden="true" />
         </Link>

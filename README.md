@@ -29,7 +29,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `npm run dev`: servidor de desarrollo.
 - `npm run lint`: validación de código.
 - `npm run typecheck`: validación de tipos sin generar archivos.
-- `npm test`: pruebas de la lógica de entrenamiento (progresión, récords, recuperación, rachas, generador y programas).
+- `npm test`: pruebas de la lógica de entrenamiento (progresión, récords, recuperación, rachas, generador y programas) y de alimentación (calorías, macros, mínimos y base de alimentos).
 - `npm run build`: compilación de producción.
 - `npm run verify`: ejecuta lint, tipos, pruebas y build como control completo.
 - `npm run start`: servidor de producción.
@@ -45,15 +45,16 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación.
 - `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
 - `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
-- `/comidas`: comidas por saciedad y hábitos del día. `/guia`: lecturas breves.
+- `/comidas`: Alimentación. Cálculo de calorías y macros según tu objetivo, diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de unos 145 alimentos chilenos por porción casera, alimentos propios y calorías rápidas; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos.
+- `/guia`: lecturas breves.
 
 ## Estructura
 
 - `src/app`: rutas.
-- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `ui`).
+- `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
-- `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido e ilustraciones).
-- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`).
+- `src/data`: datos centralizados (ejercicios, programas, catálogo, contenido, ilustraciones y alimentos).
+- `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`).
 - `src/types`: contratos.
 
 ## Sistema visual
@@ -78,6 +79,8 @@ Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas 
 - **Volumen semanal:** 10–20 series por músculo (6–10 para principiantes).
 - **Carga de entrenamiento:** esfuerzo × minutos; relación de 7 días frente a la media de 28 días (0,8–1,3 zona óptima).
 - **Racha:** semanas seguidas cumpliendo el objetivo; se puede pausar una semana.
+- **Calorías:** metabolismo basal con Mifflin-St Jeor × factor de actividad (1,2 a 1,9). Bajar grasa resta 10, 15 (recomendado) o 20 %; ganar músculo suma 5 (recomendado) o 10 %. Nunca baja de 1.200 kcal (mujeres) o 1.500 kcal (hombres) ni del metabolismo basal. Sin déficit para menores de 18, embarazo o lactancia, o antecedentes de trastorno alimentario (que además activa el modo sin contar).
+- **Macros:** proteína 2,0 g/kg al bajar, 1,6 al mantener y 1,8 al ganar (con IMC sobre 30 se usa el peso de IMC 25); grasa al menos 27 % de las calorías y 0,6 g/kg; el resto, carbohidratos. Fibra 14 g por cada 1.000 kcal y agua 35 ml/kg.
 
 ## Datos
 

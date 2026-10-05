@@ -254,3 +254,70 @@ test('ilustraciones: coordenadas válidas, dentro del cuadro y apoyadas en el su
     });
   }
 });
+
+const nutrition = load('src/lib/nutrition.ts');
+const { foods } = load('src/data/foods.ts');
+const baseProfile = { sex: 'male', birthYear: 1986, heightCm: 178, activity: 'moderate', goal: 'maintain', adjustment: 0, special: 'none', mode: 'count', updatedAt: '2026-10-05T12:00:00.000Z' };
+const october = new Date('2026-10-05T12:00:00');
+
+test('alimentación: metabolismo basal con Mifflin-St Jeor', () => {
+  assert.equal(nutrition.basalMetabolism({ sex: 'male', weightKg: 81.5, heightCm: 178, age: 40 }), 1732.5);
+  assert.equal(nutrition.basalMetabolism({ sex: 'female', weightKg: 60, heightCm: 165, age: 30 }), 1320.25);
+});
+
+test('alimentación: mantención, déficit y macros que suman las calorías', () => {
+  const maintain = nutrition.nutritionTargets(baseProfile, 81.5, october);
+  assert.equal(maintain.tdee, 2690);
+  assert.equal(maintain.kcal, 2690);
+  assert.equal(maintain.weeklyChangeKg, 0);
+  const lose = nutrition.nutritionTargets({ ...baseProfile, goal: 'lose', adjustment: -15 }, 81.5, october);
+  assert.equal(lose.kcal, 2280);
+  assert.equal(lose.protein, 163);
+  assert.ok(lose.weeklyChangeKg < -0.3 && lose.weeklyChangeKg > -0.45, `ritmo ${lose.weeklyChangeKg}`);
+  const fromMacros = lose.protein * 4 + lose.carbs * 4 + lose.fat * 9;
+  assert.ok(Math.abs(fromMacros - lose.kcal) <= 12, `macros ${fromMacros} vs ${lose.kcal}`);
+  assert.equal(lose.limited, null);
+});
+
+test('alimentación: nunca baja del mínimo seguro ni del basal', () => {
+  const small = { ...baseProfile, sex: 'female', birthYear: 1966, heightCm: 155, activity: 'sedentary', goal: 'lose', adjustment: -20 };
+  const targets = nutrition.nutritionTargets(small, 50, october);
+  assert.equal(targets.kcal, 1200);
+  assert.equal(targets.limited, 'floor');
+  const custom = nutrition.nutritionTargets({ ...small, customKcal: 900 }, 50, october);
+  assert.equal(custom.kcal, 1200);
+  assert.equal(custom.custom, true);
+});
+
+test('alimentación: sin déficit con embarazo, antecedente de TCA o menos de 18 años', () => {
+  const lose = { ...baseProfile, goal: 'lose', adjustment: -20 };
+  const pregnancy = nutrition.nutritionTargets({ ...lose, sex: 'female', special: 'pregnancy' }, 70, october);
+  assert.equal(pregnancy.kcal, pregnancy.tdee);
+  assert.equal(pregnancy.limited, 'special');
+  const minor = nutrition.nutritionTargets({ ...lose, birthYear: 2010 }, 60, october);
+  assert.equal(minor.kcal, minor.tdee);
+  assert.equal(minor.limited, 'minor');
+});
+
+test('alimentación: totales del día y alimentos recientes', () => {
+  const entry = (id, foodId, portions, kcal) => ({ id, date: '2026-10-05', meal: 'almuerzo', foodId, name: foodId, portion: '1', portions, kcal, protein: 10, carbs: 10, fat: 1 });
+  const totals = nutrition.entryTotals([entry('a', 'arroz', 1.5, 200), entry('b', 'pollo', 1, 198)]);
+  assert.equal(totals.kcal, 498);
+  assert.equal(totals.protein, 25);
+  const recent = nutrition.recentFoods([entry('a', 'arroz', 1, 200), entry('b', 'pollo', 1, 198), entry('c', 'arroz', 1, 200)]);
+  assert.deepEqual(Array.from(recent, (item) => item.foodId), ['arroz', 'pollo']);
+  const pruned = nutrition.pruneFoodLog([{ ...entry('x', 'a', 1, 1), date: '2026-01-01' }, entry('y', 'b', 1, 1)], '2026-10-05');
+  assert.deepEqual(Array.from(pruned, (item) => item.id), ['y']);
+});
+
+test('alimentos: ids únicos y calorías coherentes con los macros', () => {
+  const ids = new Set();
+  for (const food of foods) {
+    assert.ok(!ids.has(food.id), `id repetido ${food.id}`);
+    ids.add(food.id);
+    if (food.alcohol) continue;
+    const fromMacros = food.protein * 4 + food.carbs * 4 + food.fat * 9;
+    assert.ok(Math.abs(fromMacros - food.kcal) <= Math.max(15, food.kcal * 0.15), `${food.id}: ${food.kcal} kcal vs ${Math.round(fromMacros)} por macros`);
+  }
+  assert.ok(foods.length >= 120);
+});

@@ -8,7 +8,7 @@ import { defaultRoutine, defaultTrainingPreference, routineWithId } from "@/lib/
 import { useNow } from "@/lib/use-now";
 import { removePersistentKey, removePersistentMemory, usePersistentState } from "@/lib/use-persistent-state";
 import { localDateKey } from "@/lib/utils";
-import type { Meal, MeasurementEntry, ProgramProgress, ReadinessEntry, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WeightEntry, WorkoutEntry } from "@/types";
+import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, ProgramProgress, ReadinessEntry, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WeightEntry, WorkoutEntry } from "@/types";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
 export const STORAGE_KEYS = {
@@ -26,6 +26,9 @@ export const STORAGE_KEYS = {
   settings: "pulso:settings",
   program: "pulso:program",
   favorites: "pulso:favorites",
+  nutrition: "pulso:nutrition",
+  foodLog: "pulso:food-log",
+  customFoods: "pulso:custom-foods",
 } as const;
 
 export const defaultSettings: Settings = {
@@ -50,6 +53,8 @@ const emptyWeights: WeightEntry[] = [];
 const emptyFavorites: number[] = [];
 const emptySettings: Partial<Settings> = {};
 const emptyIds: number[] = [];
+const emptyFoodLog: FoodEntry[] = [];
+const emptyFoods: FoodItem[] = [];
 /** Plantilla diaria de comidas: todas pendientes. */
 const mealTemplate: Meal[] = initialMeals.map((meal) => ({ id: meal.id, name: meal.name, time: meal.time, status: "Pendiente" as const }));
 
@@ -128,6 +133,21 @@ export function useFavorites() {
   return usePersistentState<number[]>(STORAGE_KEYS.favorites, emptyFavorites);
 }
 
+/** Datos para calcular calorías y macros (null hasta completar el cálculo). */
+export function useNutritionProfile() {
+  return usePersistentState<NutritionProfile | null>(STORAGE_KEYS.nutrition, null);
+}
+
+/** Alimentos registrados de los últimos días (cada uno con su fecha y comida). */
+export function useFoodLog() {
+  return usePersistentState<FoodEntry[]>(STORAGE_KEYS.foodLog, emptyFoodLog);
+}
+
+/** Alimentos creados por la persona. */
+export function useCustomFoods() {
+  return usePersistentState<FoodItem[]>(STORAGE_KEYS.customFoods, emptyFoods);
+}
+
 /** Ajustes con valores por defecto para campos añadidos después de guardarse. */
 export function useSettings() {
   const [stored, setStored] = usePersistentState<Partial<Settings>>(STORAGE_KEYS.settings, emptySettings);
@@ -187,6 +207,9 @@ const keyShapes: Record<string, Shape> = {
   [STORAGE_KEYS.settings]: "object",
   [STORAGE_KEYS.program]: "object-or-null",
   [STORAGE_KEYS.favorites]: "array",
+  [STORAGE_KEYS.nutrition]: "object-or-null",
+  [STORAGE_KEYS.foodLog]: "array",
+  [STORAGE_KEYS.customFoods]: "array",
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
