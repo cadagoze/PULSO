@@ -351,3 +351,14 @@
 @media (min-width: 1200px) {
   .prog-badges { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* ─── Compartir mi semana ──────────────────────────────────────────────── */
+.share-sheet { display: flex; flex-direction: column; gap: 16px; }
+.share-preview { align-self: center; height: min(46dvh, calc((100vw - 44px) * 1.25)); aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--radius); background: #0a0a0a; box-shadow: var(--shadow); }
+.share-preview img { display: block; width: 100%; height: 100%; transition: opacity var(--motion-fast); }
+.share-preview img.is-stale { opacity: .55; }
+.share-parts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.share-parts .chips { flex-wrap: wrap; }
+.share-secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.share-secondary .btn { padding: 0 12px; }
+.share-notice { min-height: 18px; margin-top: -6px; text-align: center; font-size: 13px; color: var(--ink-2); }

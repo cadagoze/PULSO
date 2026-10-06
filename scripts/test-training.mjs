@@ -764,3 +764,45 @@ test('¿qué me falta hoy?: ideas que caben, con proteína y lo de siempre prime
     for (const id of ids) assert.ok(foods.some((food) => food.id === id), `${meal}: ${id} no existe`);
   }
 });
+
+const recapLib = load('src/lib/week-recap.ts');
+const shareLib = load('src/components/progress/week-share.ts');
+
+test('resumen semanal: semana en números y texto para compartir', () => {
+  const now = new Date(2026, 9, 7, 18); // miércoles
+  const workout = (date, extra = {}) => ({ id: date, name: 'Fuerza', date, completedAt: `${date}T19:00:00.000Z`, durationMinutes: 40, sets: 12, volume: 5000, ...extra });
+  const workouts = [
+    ...['2026-09-21', '2026-09-23', '2026-09-25'].map((date) => workout(date)),
+    ...['2026-09-28', '2026-09-30', '2026-10-02'].map((date) => workout(date)),
+    workout('2026-10-05', { prs: [{ exerciseId: 'x' }, { exerciseId: 'y' }] }),
+    workout('2026-10-06', { durationMinutes: 35, volume: 2400 }),
+  ];
+  const food = (date, kcal, protein) => ({ id: date + kcal, date, meal: 'almuerzo', foodId: 'x', name: 'x', portion: '', portions: 1, kcal, protein, carbs: 0, fat: 0 });
+  const base = { now, workouts, goal: 3, foodLog: [food('2026-10-05', 600, 50), food('2026-10-05', 400, 30), food('2026-10-06', 2000, 120)], water: [{ date: '2026-10-05', glasses: 8 }, { date: '2026-10-06', glasses: 5 }], waterGoal: 8, weights: [{ date: '2026-09-30', label: '', weight: 80 }, { date: '2026-10-06', label: '', weight: 79.4 }] };
+  const current = recapLib.weekRecap({ ...base, targets: { kcal: 2100, protein: 140 } });
+  assert.equal(current.start, '2026-10-05');
+  assert.equal(current.sessions, 2);
+  assert.equal(current.minutes, 75);
+  assert.equal(current.volume, 7400);
+  assert.equal(current.prs, 2);
+  assert.deepEqual(Array.from(current.days, (day) => (day.trained ? 'x' : day.future ? '·' : '-')).join(''), 'xx-····');
+  assert.deepEqual({ ...current.nutrition }, { days: 2, kcal: 1500, protein: 100, targetKcal: 2100, targetProtein: 140 });
+  assert.deepEqual({ ...current.water }, { days: 2, met: 1, average: 6.5, goal: 8 });
+  assert.deepEqual({ ...current.weight }, { change: -0.6, latest: 79.4 });
+  assert.equal(recapLib.weekRecap({ ...base, targets: null }).nutrition, null, 'sin contar calorías no se comparte nutrición');
+  const last = recapLib.weekRecap({ ...base, offset: -1, targets: null });
+  assert.equal(last.sessions, 3);
+  assert.equal(last.streak, 2, 'racha al cierre de esa semana');
+  assert.ok(!last.current && last.days.every((day) => !day.future));
+  assert.equal(recapLib.defaultRecapOffset(new Date(2026, 9, 5, 9), workouts), -1, 'el lunes se propone la semana pasada');
+  assert.equal(recapLib.defaultRecapOffset(now, workouts), 0);
+  const text = shareLib.recapText(current, 'kg', { nutrition: true, water: true, weight: false });
+  assert.match(text, /^Mi semana en PULSO · 5 oct – 11 oct/);
+  assert.match(text, /2 entrenamientos \(meta: 3\) · 75 min/);
+  assert.match(text, /7\.400 kg levantados · 2 récords/);
+  assert.match(text, /Nutrición: 1\.500 kcal · 100 g proteína al día/);
+  assert.match(text, /Agua: meta cumplida 1 de 2 días/);
+  assert.ok(!text.includes('Peso'), 'el peso sólo si se elige');
+  assert.match(shareLib.recapText(current, 'kg', { nutrition: false, water: false, weight: true }), /Peso: −0,6 kg en la semana/);
+  assert.equal(shareLib.signedWeight(0.45, 'kg'), '+0,5 kg');
+});

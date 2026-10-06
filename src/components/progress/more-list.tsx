@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Award, ChevronRight, Download, Gauge, History, Ruler, Trophy } from "lucide-react";
+import { Award, ChevronRight, Download, Gauge, History, Ruler, Share2, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { ExportSheet } from "@/components/progress/export-sheet";
 import { weightLabel } from "@/components/progress/format";
@@ -38,8 +38,8 @@ function ViewRow({ view, icon, title, detail }: { view: ProgressSubview; icon: R
   );
 }
 
-/** Índice del resto de Progreso: vistas completas (historial, récords, cuerpo, logros) y hojas (carga, exportar). */
-export function MoreList({ workouts, nowMs }: { workouts: WorkoutEntry[]; nowMs: number }) {
+/** Índice del resto de Progreso: vistas completas (historial, récords, cuerpo, logros) y hojas (compartir, carga, exportar). */
+export function MoreList({ workouts, nowMs, onShare }: { workouts: WorkoutEntry[]; nowMs: number; onShare?: () => void }) {
   const [settings] = useSettings();
   const [weights] = useWeights();
   const [sheet, setSheet] = useState<"load" | "export" | null>(null);
@@ -55,6 +55,13 @@ export function MoreList({ workouts, nowMs }: { workouts: WorkoutEntry[]; nowMs:
     <section className="section prog-more" aria-labelledby="prog-more-title">
       <h2 id="prog-more-title" className="meta">Más de tu progreso</h2>
       <ul className="list prog-list">
+        {onShare && (
+          <li>
+            <button type="button" className="list-row" onClick={onShare}>
+              <RowContent icon={<Share2 size={18} />} title="Compartir mi semana" detail="Imagen para WhatsApp o Instagram" />
+            </button>
+          </li>
+        )}
         <ViewRow
           view="historial"
           icon={<History size={18} />}

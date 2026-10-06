@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Share2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { ButtonLink, PageHeader, SegmentedControl } from "@/components/ui";
 import { RoutineCard } from "@/components/ui/cards";
@@ -12,6 +13,7 @@ import { MusclesSection } from "@/components/progress/muscles-section";
 import { periods, summarizePeriod, type Period, type PeriodSummary } from "@/components/progress/period";
 import { defaultMetric, PeriodChart, type ChartMetric } from "@/components/progress/period-chart";
 import { clearFromSummary } from "@/components/progress/progress-nav";
+import { WeekShareSheet } from "@/components/progress/week-share-sheet";
 import { WeightSummary } from "@/components/progress/weight-summary";
 import { weekStreak } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
@@ -42,6 +44,7 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
   const now = useNow();
+  const [sharing, setSharing] = useState(false);
 
   // Al volver al resumen, la próxima vista secundaria vuelve a contar como abierta desde aquí.
   useEffect(() => {
@@ -63,6 +66,7 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
           meta={summary.meta}
           title="Progreso"
           subtitle={empty ? "Aquí verás tu semana, tu constancia y tus mejores marcas." : headline(summary, goal, { met: streak.currentMet, paused: streak.currentPaused })}
+          actions={!empty && <button type="button" className="icon-button" onClick={() => setSharing(true)} aria-label="Compartir mi semana"><Share2 size={19} /></button>}
         />
         {!empty && <SegmentedControl options={periods} value={period} onChange={onPeriod} label="Periodo del resumen" className="prog-periods" />}
       </div>
@@ -94,9 +98,10 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
           <div className="prog-area-marks rise" style={rise(3)}><BestMarks summary={summary} workouts={workouts} unit={settings.unit} /></div>
           <div className="prog-area-weight rise" style={rise(4)}><WeightSummary period={period} nowMs={now} /></div>
           <div className="prog-area-muscles rise" style={rise(5)}><MusclesSection workouts={workouts} summary={summary} nowMs={now} /></div>
-          <div className="prog-area-more rise" style={rise(6)}><MoreList workouts={workouts} nowMs={now} /></div>
+          <div className="prog-area-more rise" style={rise(6)}><MoreList workouts={workouts} nowMs={now} onShare={() => setSharing(true)} /></div>
         </div>
       )}
+      {!empty && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}
     </div>
   );
 }
