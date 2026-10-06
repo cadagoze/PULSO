@@ -1,5 +1,6 @@
 import type { IllustrationSpec } from "@/lib/illustration";
 import { coreCardioIllustrations } from "./core-cardio";
+import { equipmentIllustrations } from "./equipment";
 import { lowerAIllustrations } from "./lower-a";
 import { lowerBIllustrations } from "./lower-b";
 import { mobilityIllustrations } from "./mobility";
@@ -14,4 +15,5 @@ export const exerciseIllustrations: Partial<Record<number, IllustrationSpec>> = 
   ...pullIllustrations,
   ...coreCardioIllustrations,
   ...mobilityIllustrations,
+  ...equipmentIllustrations,
 };

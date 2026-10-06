@@ -601,3 +601,32 @@ test('colores de acento: contraste AA en claro y oscuro', () => {
     assert.ok(ratio(read(dark, 'accent-text'), '#0a0a0a') >= 4.5, `${name}: texto de acento (oscuro)`);
   }
 });
+
+const equipmentData = load('src/data/equipment.ts');
+
+test('equipamiento: cada equipo habilita ejercicios y cada ejercicio se puede habilitar', () => {
+  const provided = new Set(equipmentData.equipmentCatalog.flatMap((item) => item.provides));
+  const used = new Set(exercises.flatMap((exercise) => exercise.equipment.flat()));
+  for (const capability of used) assert.ok(provided.has(capability), `ningún equipo aporta «${capability}»`);
+  for (const item of equipmentData.equipmentCatalog) {
+    assert.ok(item.provides.length > 0, `${item.id} no aporta nada`);
+    assert.ok(item.provides.some((capability) => used.has(capability)), `ningún ejercicio usa ${item.id}`);
+    assert.ok(item.base.every((place) => item.places.includes(place)), `${item.id}: base fuera de sus lugares`);
+  }
+  const ids = equipmentData.equipmentCatalog.map((item) => item.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test('equipamiento: casa, gimnasio completo y gimnasio ajustado', () => {
+  const has = (preference, capability) => generator.availableEquipment(preference).has(capability);
+  assert.equal(generator.availableEquipment({ location: 'home', equipment: [] }).size, 0);
+  assert.ok(has({ location: 'home', equipment: ['load-bag'] }, 'dumbbells'), 'bidones o mochila sirven como mancuernas');
+  assert.ok(has({ location: 'gym', equipment: [] }, 'leg-press'), 'gimnasio completo por defecto');
+  assert.ok(!has({ location: 'gym', equipment: [], gymEquipment: ['dumbbells', 'bench'] }, 'cable'), 'respeta lo que tiene el gimnasio');
+  const treadmill = exercises.find((exercise) => exercise.id === 86);
+  assert.ok(generator.isAvailable(treadmill, generator.availableEquipment({ location: 'home', equipment: ['treadmill'] })));
+  assert.ok(!generator.isAvailable(treadmill, generator.availableEquipment({ location: 'home', equipment: ['bike'] })));
+  const stepUp = exercises.find((exercise) => exercise.id === 16);
+  assert.ok(generator.isAvailable(stepUp, generator.availableEquipment({ location: 'home', equipment: ['box'] })), 'subida con cajón o banco');
+  assert.ok(equipmentData.homeBase.length >= 5);
+});

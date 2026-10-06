@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowRight, ClipboardCheck, HeartPulse, House, Building2, SlidersHorizontal } from "lucide-react";
-import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet, Stepper, ToggleChip } from "@/components/ui";
-import { equipmentOptions } from "@/data/mock-data";
+import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet, Stepper } from "@/components/ui";
 import { durationOptions } from "@/lib/generator";
 import { nextProgramSession, programById, programTotalSessions } from "@/lib/programs";
 import { formatKcal } from "@/lib/nutrition";
@@ -13,8 +12,9 @@ import { usePreference, useProfile, useProgram, useSettings } from "@/lib/store"
 import { useNow } from "@/lib/use-now";
 import { useNutritionDay } from "@/lib/use-nutrition";
 import { cn } from "@/lib/utils";
-import type { TrainingEquipment, TrainingLocation } from "@/types";
+import type { TrainingLocation } from "@/types";
 import { careAreas, placeSummary, splitFocus } from "./profile-format";
+import { EquipmentChips } from "@/components/train/equipment-picker";
 
 const locationOptions: Array<{ value: TrainingLocation; label: string }> = [
   { value: "home", label: "Casa" },
@@ -137,14 +137,6 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
     onChange();
   }
 
-  function toggleEquipment(item: TrainingEquipment) {
-    setPreference((current) => ({
-      ...current,
-      equipment: current.equipment.includes(item) ? current.equipment.filter((value) => value !== item) : [...current.equipment, item],
-    }));
-    onChange();
-  }
-
   return (
     <div className="prof-form">
       <div className="prof-field prof-field-inline">
@@ -165,20 +157,10 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
       <div className="prof-field">
         <span className="prof-field-label">Dónde entrenas</span>
         <SegmentedControl<TrainingLocation> label="Lugar de entrenamiento" options={locationOptions} value={preference.location} onChange={setLocation} />
-        {preference.location === "home" ? (
-          <div key="home" className="prof-field-reveal">
-            <div className="chips" role="group" aria-label="Equipamiento disponible">
-              {equipmentOptions.map((option) => (
-                <ToggleChip key={option.value} pressed={preference.equipment.includes(option.value)} onChange={() => toggleEquipment(option.value)}>
-                  {option.label}
-                </ToggleChip>
-              ))}
-            </div>
-            <p className="prof-field-help">Marca lo que tienes en casa. Sin nada, usamos tu peso corporal.</p>
-          </div>
-        ) : (
-          <p key="gym" className="prof-field-reveal prof-field-help">En el gimnasio asumimos máquinas, poleas y pesos libres.</p>
-        )}
+        <div key={preference.location} className="prof-field-reveal">
+          <EquipmentChips place={preference.location} className="chips" />
+          <p className="prof-field-help">{preference.location === "home" ? "Marca lo que tienes en casa. Sin nada, usamos tu peso corporal." : "Desmarca lo que tu gimnasio no tiene."}</p>
+        </div>
       </div>
 
       {profile && (

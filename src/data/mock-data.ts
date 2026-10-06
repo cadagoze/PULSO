@@ -1,13 +1,4 @@
-import type { Article, Habit, Meal, TrainingEquipment, User, WeekDay, WeightEntry } from "@/types";
-
-export const equipmentOptions: Array<{ value: TrainingEquipment; label: string }> = [
-  { value: "dumbbells", label: "Mancuernas" },
-  { value: "barbell", label: "Barra y discos" },
-  { value: "kettlebell", label: "Kettlebell" },
-  { value: "bands", label: "Bandas" },
-  { value: "bench", label: "Banco" },
-  { value: "pullup-bar", label: "Barra de dominadas" },
-];
+import type { Article, Habit, Meal, User, WeekDay, WeightEntry } from "@/types";
 
 export const user: User = {
   name: "Carlos",

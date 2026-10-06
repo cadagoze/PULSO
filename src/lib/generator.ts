@@ -3,6 +3,7 @@ import { progressedSets } from "@/lib/progression";
 import { lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
+import { capabilitiesOf, fullGym } from "@/data/equipment";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
@@ -51,10 +52,9 @@ export interface GeneratedWorkout {
   notes: string[];
 }
 
+/** Capacidades disponibles: lo marcado en casa, o lo de tu gimnasio (completo si no lo has ajustado). */
 export function availableEquipment(preference: TrainingPreference): Set<Equipment> {
-  return preference.location === "gym"
-    ? new Set<Equipment>(["dumbbells", "barbell", "kettlebell", "bands", "bench", "pullup-bar", "machine", "cable"])
-    : new Set<Equipment>(preference.equipment);
+  return capabilitiesOf(preference.location === "gym" ? preference.gymEquipment ?? fullGym : preference.equipment);
 }
 
 export function isAvailable(exercise: Exercise, equipment: Set<Equipment>) {

@@ -20,8 +20,6 @@
 .train-equip-count { font-size: 13px; color: var(--ink-2); }
 .train-chips { gap: 8px; }
 .train-chips .chip { min-height: 44px; }
-.train-gym-note { display: flex; align-items: flex-start; gap: 10px; max-width: 44ch; font-size: 15px; line-height: 1.4; color: var(--ink); }
-.train-gym-check { display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring) backwards; }
 
 /* ─── Tu rutina de hoy ─────────────────────────────────────────────────── */
 .train-hero-slot { min-width: 0; }
@@ -387,3 +385,21 @@
   .goal-week-focus { grid-column: 2; grid-row: 3; margin-top: 0; }
   .goal-week-foot { grid-column: 2; grid-row: 4; margin-top: 0; }
 }
+
+/* ─── Equipamiento: «Más equipamiento» y catálogo ──────────────────────── */
+.equip-more { border-style: dashed; color: var(--ink-2); }
+.equip-more svg { color: var(--accent-text); }
+.equip-sheet { display: flex; flex-direction: column; gap: 20px; }
+.equip-sheet-lead { font-size: 14px; line-height: 1.5; }
+.equip-group { display: flex; flex-direction: column; gap: 10px; }
+.equip-list { display: flex; flex-direction: column; border-radius: var(--radius-l); background: var(--surface-2); overflow: hidden; }
+.equip-row { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 10px 16px; text-align: left; transition: background-color var(--motion-fast); }
+.equip-row + .equip-row { box-shadow: inset 0 1px 0 var(--line); }
+.equip-row:active { background: var(--surface-3); }
+.equip-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.equip-row strong { font-size: 15px; font-weight: 600; }
+.equip-row small { font-size: 12.5px; color: var(--ink-2); }
+.equip-check { position: relative; flex: none; width: 26px; height: 26px; border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--line-strong); transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
+.equip-row[aria-pressed="true"] .equip-check { background: var(--accent); box-shadow: none; }
+.equip-row[aria-pressed="true"] .equip-check::after { content: ""; position: absolute; left: 9px; top: 5px; width: 6px; height: 11px; border: solid var(--accent-ink); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.equip-sheet-actions { position: sticky; bottom: calc(-24px - var(--safe-b)); display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; margin: 0 -22px calc(-24px - var(--safe-b)); padding: 14px 22px calc(18px + var(--safe-b)); background: linear-gradient(transparent, var(--surface) 22%); }

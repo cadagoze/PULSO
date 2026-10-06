@@ -1,5 +1,5 @@
 import { bodyAreaLabels } from "@/data/catalog";
-import { equipmentOptions } from "@/data/mock-data";
+import { equipmentLabel, fullGym } from "@/data/equipment";
 import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
 import { toDisplayWeight } from "@/lib/utils";
 import type { BodyArea, Settings, TrainingPreference, WeightEntry } from "@/types";
@@ -42,10 +42,13 @@ export function goalsSentence(goalLabel: string) {
   return `${parts.slice(0, -1).join(", ")} y ${parts.at(-1)}`;
 }
 
-/** Dónde y con qué entrenas: «Casa» + «Mancuernas + bandas». */
+/** Dónde y con qué entrenas: «Casa» + «Mancuernas + bandas», «Gimnasio» + «Gimnasio completo». */
 export function placeSummary(preference: TrainingPreference) {
-  if (preference.location === "gym") return { place: "Gimnasio", gear: "Máquinas, poleas y pesos libres" };
-  const labels = equipmentOptions.filter((option) => preference.equipment.includes(option.value)).map((option) => option.label);
+  if (preference.location === "gym") {
+    const gym = preference.gymEquipment;
+    return { place: "Gimnasio", gear: !gym || fullGym.every((id) => gym.includes(id)) ? "Máquinas, poleas y pesos libres" : `${gym.length} de ${fullGym.length} equipos` };
+  }
+  const labels = preference.equipment.map(equipmentLabel);
   if (!labels.length) return { place: "Casa", gear: "Peso corporal" };
   const shown = labels.slice(0, 3).map((label, index) => (index === 0 ? label : lowerFirst(label)));
   const extra = labels.length - shown.length;

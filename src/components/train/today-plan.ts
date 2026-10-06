@@ -61,7 +61,7 @@ export function useTodayPlan(now: number) {
   }, [hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [preference.location, preference.equipment.join(","), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
+  const planKey = [preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 

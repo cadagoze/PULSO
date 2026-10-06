@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Check, Lock, PenLine } from "lucide-react";
 import { ToggleChip } from "@/components/ui";
-import { equipmentOptions } from "@/data/mock-data";
+import { homeBase } from "@/data/equipment";
 import { cn } from "@/lib/utils";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
 import type { ChoiceStep, SelectionValue } from "./wellness-assessment";
@@ -167,11 +167,11 @@ export function LocationStep({ options, location, equipment, onLocation, onEquip
         <section className="onb-equipment" aria-labelledby="onb-equipment-title">
           <div className="onb-equipment-head">
             <h2 id="onb-equipment-title">¿Qué tienes en casa?</h2>
-            <p>Marca lo que tengas. Si no marcas nada, entrenaremos con tu peso corporal.</p>
+            <p>Marca lo que tengas. Si no marcas nada, entrenaremos con tu peso corporal. Después puedes agregar más en Entrenar.</p>
           </div>
           <div className="chips">
-            {equipmentOptions.map((option) => (
-              <ToggleChip key={option.value} pressed={equipment.includes(option.value)} onChange={() => toggle(option.value)}>
+            {homeBase.map((option) => (
+              <ToggleChip key={option.id} pressed={equipment.includes(option.id)} onChange={() => toggle(option.id)}>
                 {option.label}
               </ToggleChip>
             ))}

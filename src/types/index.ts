@@ -9,10 +9,14 @@ export type MovementPattern =
   | "core" | "carry" | "isolation" | "cardio" | "mobility";
 
 export type ExerciseCategory = "strength" | "cardio" | "mobility";
-export type HomeEquipment = "dumbbells" | "barbell" | "kettlebell" | "bands" | "bench" | "pullup-bar";
-export type Equipment = HomeEquipment | "machine" | "cable";
-/** Alias conservado por compatibilidad con registros anteriores. */
-export type TrainingEquipment = HomeEquipment;
+/** Lo que un ejercicio necesita (capacidades). Cada equipo del catálogo aporta una o más. */
+export type Equipment =
+  | "dumbbells" | "barbell" | "kettlebell" | "bands" | "mini-band" | "bench" | "box" | "pullup-bar"
+  | "suspension" | "jump-rope" | "ab-wheel" | "medicine-ball" | "foam-roller"
+  | "bike" | "treadmill" | "elliptical" | "rower"
+  | "leg-press" | "leg-machines" | "press-machines" | "cable";
+/** Equipos que puedes marcar en Casa o Gimnasio (ver src/data/equipment.ts). */
+export type TrainingEquipment = Equipment | "load-bag";
 export type TrainingLocation = "home" | "gym";
 export type BodyArea = "knees" | "back" | "shoulders";
 export type ExerciseLevel = 1 | 2 | 3;
@@ -53,7 +57,13 @@ export interface Exercise {
   imageAlt?: string;
 }
 
-export interface TrainingPreference { location: TrainingLocation; equipment: TrainingEquipment[] }
+export interface TrainingPreference {
+  location: TrainingLocation;
+  /** Lo que tienes en casa (vacío = peso corporal). */
+  equipment: TrainingEquipment[];
+  /** Lo que hay en tu gimnasio; sin valor, un gimnasio completo. */
+  gymEquipment?: TrainingEquipment[];
+}
 
 // ─── Registro de entrenamiento ───────────────────────────────────────────────
 
