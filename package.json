@@ -17,6 +17,7 @@
     "deploy:response-store": "cf deploy --prebuilt --mode production --worker pulso-response-store"
   },
   "dependencies": {
+    "@block65/webcrypto-web-push": "^2.0.0",
     "@cloudflare/workers-response-store": "^1.0.0",
     "@vinext/cloudflare": "^1.0.0",
     "barcode-detector": "^3.2.2",

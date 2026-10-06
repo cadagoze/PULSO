@@ -8,6 +8,7 @@ import { useSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { CloudBoot } from "@/components/cloud/cloud-boot";
 import { captureInstallPrompt } from "@/lib/install";
+import { PushStateSync } from "@/lib/push";
 import { usePersonalization } from "@/lib/use-personalize";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <BottomNavigation />
       <OfflineSupport />
       <CloudBoot />
+      <PushStateSync />
     </div>
   );
 }

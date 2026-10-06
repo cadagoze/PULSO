@@ -127,7 +127,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
 
   return (
     <>
-      <SettingsGroup id="datos" index="04" title="Tus datos" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
+      <SettingsGroup id="datos" index="05" title="Tus datos" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
         <button type="button" className="list-row" onClick={exportBackup}>
           <RowText icon={<Download size={19} />} title="Exportar respaldo" detail="Un archivo .json con todo lo que has registrado." />
         </button>

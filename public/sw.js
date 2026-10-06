@@ -161,3 +161,36 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(networkFirstPage(request, url));
   }
 });
+
+// ─── Avisos ──────────────────────────────────────────────────────────────
+// El servidor envía { title, body, url, tag }; al tocar el aviso se abre (o enfoca) PULSO en esa pantalla.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(self.registration.showNotification(data.title || "PULSO", {
+    body: data.body || "",
+    icon: "/icon/192",
+    tag: data.tag || "pulso",
+    lang: "es",
+    data: { url: data.url || "/" },
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const client = windows.find((item) => new URL(item.url).origin === self.location.origin);
+    if (client) {
+      await client.focus();
+      if ("navigate" in client) await client.navigate(url).catch(() => undefined);
+      return;
+    }
+    await self.clients.openWindow(url);
+  })());
+});

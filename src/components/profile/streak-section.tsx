@@ -15,7 +15,7 @@ function streakDetail(paused: boolean, remaining: number, currentCount: number, 
 export function StreakSection({ streak, currentCount, weeklyGoal, paused, onTogglePause, order }: { streak: number; currentCount: number; weeklyGoal: number; paused: boolean; onTogglePause: (paused: boolean) => void; order?: number }) {
   const remaining = Math.max(0, weeklyGoal - currentCount);
   return (
-    <SettingsGroup id="racha" index="03" title="Racha" description="Cuenta semanas, no días: descansar también es parte del plan." order={order}>
+    <SettingsGroup id="racha" index="04" title="Racha" description="Cuenta semanas, no días: descansar también es parte del plan." order={order}>
       <div className={cn("prof-row prof-streak", streak > 0 && "active")}>
         <span className="prof-streak-num num-display">{streak}</span>
         <div className="prof-row-text">

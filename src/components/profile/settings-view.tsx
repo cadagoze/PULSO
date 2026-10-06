@@ -8,12 +8,13 @@ import { useNow } from "@/lib/use-now";
 import { AboutSection } from "./about-section";
 import { AppearanceSection } from "./appearance-section";
 import { DataSection } from "./data-section";
+import { NotificationsSection } from "./notifications-section";
 import { StreakSection } from "./streak-section";
 import { Toast, useToast } from "@/components/ui/toast";
 import { TrainingSection } from "./training-section";
 import { usePersonalization } from "@/lib/use-personalize";
 
-/** Ajustes: apariencia, entrenamiento, racha, datos y acerca de, en grupos editoriales. */
+/** Ajustes: apariencia, entrenamiento, avisos, racha, datos y acerca de, en grupos editoriales. */
 export function SettingsView() {
   const [settings, update] = useSettings();
   const { identity } = usePersonalization();
@@ -49,7 +50,7 @@ export function SettingsView() {
 
   return (
     <div className="page prof-settings">
-      <PageHeader backHref="/perfil" meta="Perfil" title="Ajustes" subtitle="Apariencia, entrenamiento, racha y tus datos." />
+      <PageHeader backHref="/perfil" meta="Perfil" title="Ajustes" subtitle="Apariencia, entrenamiento, avisos, racha y tus datos." />
       {ready ? (
         <div className="prof-settings-grid">
           <div className="prof-settings-col">
@@ -57,9 +58,10 @@ export function SettingsView() {
             <TrainingSection settings={settings} update={update} order={1} />
           </div>
           <div className="prof-settings-col">
-            <StreakSection streak={streak.streak} currentCount={streak.currentCount} weeklyGoal={settings.weeklyGoal} paused={streak.currentPaused} onTogglePause={togglePause} order={2} />
-            <DataSection workouts={workouts} onToast={show} order={3} />
-            <AboutSection order={4} />
+            <NotificationsSection onToast={show} order={2} />
+            <StreakSection streak={streak.streak} currentCount={streak.currentCount} weeklyGoal={settings.weeklyGoal} paused={streak.currentPaused} onTogglePause={togglePause} order={3} />
+            <DataSection workouts={workouts} onToast={show} order={4} />
+            <AboutSection order={5} />
           </div>
         </div>
       ) : (

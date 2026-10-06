@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Smartphone, Utensils } from "lucide-react";
+import { Bell, BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Smartphone, Utensils } from "lucide-react";
 
 function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -17,7 +17,7 @@ function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; deta
   );
 }
 
-/** Accesos ligeros bajo el plan: ajustes, nutrición, guía, evaluación y respaldo. */
+/** Accesos ligeros bajo el plan: ajustes, avisos, nutrición, guía, evaluación y respaldo. */
 export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: boolean; onAssess: () => void; onInstall?: () => void }) {
   return (
     <section className="prof-links rise" style={{ "--i": 2 } as CSSProperties} aria-labelledby="prof-links-title">
@@ -25,6 +25,9 @@ export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: 
       <div className="list">
         <Link href="/ajustes" className="list-row">
           <RowBody icon={<Settings size={19} />} title="Ajustes" detail="Tema, unidades, descanso, sonido y racha." />
+        </Link>
+        <Link href="/ajustes#avisos" className="list-row">
+          <RowBody icon={<Bell size={19} />} title="Notificaciones" detail="Hora de entrenar, racha, comidas y agua." />
         </Link>
         <Link href="/comidas" className="list-row">
           <RowBody icon={<Utensils size={19} />} title="Nutrición" detail="Calorías, agua, comidas y hábitos del día." />

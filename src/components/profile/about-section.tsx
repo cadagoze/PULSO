@@ -8,7 +8,7 @@ export function AboutSection({ order = 0 }: { order?: number }) {
   return (
     <section id="acerca" className="prof-group prof-about rise" style={{ "--i": order } as CSSProperties} aria-labelledby="acerca-title">
       <header className="prof-group-head">
-        <h2 id="acerca-title" className="meta"><span className="prof-group-index num" aria-hidden="true">05</span>Acerca de</h2>
+        <h2 id="acerca-title" className="meta"><span className="prof-group-index num" aria-hidden="true">06</span>Acerca de</h2>
       </header>
       <div className="prof-about-body">
         <p className="wordmark prof-about-mark">PULSO<span>.</span></p>

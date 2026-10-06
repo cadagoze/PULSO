@@ -806,3 +806,43 @@ test('resumen semanal: semana en números y texto para compartir', () => {
   assert.match(shareLib.recapText(current, 'kg', { nutrition: false, water: false, weight: true }), /Peso: −0,6 kg en la semana/);
   assert.equal(shareLib.signedWeight(0.45, 'kg'), '+0,5 kg');
 });
+
+const reminders = load('src/lib/reminders.ts');
+
+test('avisos: cuándo toca cada uno y cuándo no', () => {
+  const tz = 'America/Santiago';
+  // 2026-10-07 es miércoles; en Santiago (UTC−3 en octubre) las 19:05 son las 22:05 UTC.
+  const at = (date, hh, mm = 5) => { const [y, m, d] = date.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d, hh + 3, mm)); };
+  const clock = reminders.localClock(at('2026-10-07', 19), tz);
+  assert.deepEqual({ ...clock }, { date: '2026-10-07', minutes: 19 * 60 + 5, weekday: 2, weekStart: '2026-10-05' });
+  const prefs = { ...reminders.defaultPushPrefs, meals: true, water: true };
+  const state = { date: '2026-10-07', weekStart: '2026-10-05', trainedToday: false, weekSessions: 1, weekGoal: 3, streak: 2, counting: true, loggedToday: true, loggedEvening: false, water: 8, waterGoal: 9 };
+  const due = (overrides = {}, when = at('2026-10-07', 19), sent = {}) => reminders.dueReminders({ prefs, state: { ...state, ...overrides }, sent, timeZone: tz, now: when });
+  const training = due();
+  assert.equal(training.send.kind, 'training');
+  assert.match(training.send.body, /1 de 3 sesiones/);
+  assert.equal(due({ trainedToday: true }).send, null, 'ya entrenó hoy');
+  assert.equal(due({ weekSessions: 3 }).send, null, 'meta semanal cumplida');
+  assert.equal(due({}, at('2026-10-07', 19), { training: '2026-10-07' }).send, null, 'una vez al día');
+  assert.equal(due({}, at('2026-10-07', 21, 0)).send?.kind, 'meals', 'fuera de la ventana de entrenar, toca comidas a las 21');
+  assert.equal(due({ trainedToday: true }, at('2026-10-08', 19)).send.kind, 'training', 'estado de ayer: el día empieza de cero');
+  assert.equal(due({}, at('2026-10-07', 18, 0)).send, null, 'antes de la hora, nada');
+  // Comidas: neutro y sólo si cuenta calorías y falta la noche.
+  assert.match(due({ trainedToday: true }, at('2026-10-07', 21, 10)).send.body, /once o la cena/);
+  assert.equal(due({ trainedToday: true, loggedEvening: true }, at('2026-10-07', 21, 10)).send, null);
+  assert.equal(due({ trainedToday: true, counting: false }, at('2026-10-07', 21, 10)).send, null);
+  // Agua: según lo esperado a esa hora.
+  assert.equal(due({ trainedToday: true, water: 2 }, at('2026-10-07', 11, 10)).send.kind, 'water-1');
+  assert.equal(due({ water: 2 }).send.kind, 'training', 'si coinciden, gana entrenar');
+  assert.deepEqual(Array.from(due({ water: 2 }).skip), ['water-3']);
+  assert.equal(due({ trainedToday: true, water: 3 }, at('2026-10-07', 11, 10)).send, null, '3 de 9 a las 11 va bien');
+  // Racha: domingo 18:00 si falta exactamente una; gana sobre el de entrenar.
+  const sunday = reminders.dueReminders({ prefs: { ...prefs, trainingTime: '18:00' }, state: { ...state, date: '2026-10-11', weekSessions: 2 }, sent: {}, timeZone: tz, now: at('2026-10-11', 18, 10) });
+  assert.equal(sunday.send.kind, 'streak');
+  assert.match(sunday.send.body, /2 semanas seguidas/);
+  assert.deepEqual(Array.from(sunday.skip), ['training'], 'el de entrenar se marca para no repetirlo');
+  assert.equal(reminders.parseTime('07:30'), 450);
+  assert.equal(reminders.parseTime('03:00'), null);
+  assert.equal(reminders.parseTime('19:75'), null);
+  assert.ok(reminders.validTimeZone('Europe/Madrid') && !reminders.validTimeZone('Marte/Base'));
+});
