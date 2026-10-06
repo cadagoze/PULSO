@@ -65,6 +65,7 @@ PULSO combina funcionalidad limpia, fotografía editorial y tipografía con car�
 - **Tipografía**: Archivo con eje de ancho para títulos y números protagonistas, Geist para la interfaz y Geist Mono para etiquetas editoriales.
 - **Componentes** (`src/components/ui`): `Button`, `SegmentedControl` (indicador que se desliza), `Sheet` (hoja inferior que se cierra deslizando), `NumberMetric`, `Metric`, `StatCard`, `Card`, `PhotoCard`, `RoutineCard`, `ProgressRing`, `WorkoutTimer`, `ToggleChip` y `Toast`; `ExerciseVisual` y `ExerciseCard` en `src/components/exercises`.
 - **Movimiento**: `--motion-fast` 140 ms, `--motion-base` 220 ms, `--motion-slow` 320 ms y la curva `--ease-standard`; sólo `transform` y `opacity`, y todo se desactiva con «reducir movimiento». Las animaciones de entrada usan `animation-fill-mode: backwards` (nunca `both`): una transformación que persiste rompe los elementos fijos como las hojas.
+- **Portada de Inicio** (`src/data/hero-photos.ts`): la foto cambia según la sesión del día (cardio, movilidad, gimnasio o casa; si hay dos, se alternan por día) y lleva una frase según tu progreso (`src/lib/motivation.ts`). Las fotos de cardio, gimnasio y movilidad son de StockSnap con licencia CC0 (uso libre, sin atribución).
 - **Textura** (grano, desenfoque, atmósfera) sólo en onboarding, portadas, estados especiales y fondos de foto. Las fotos viven en `public/images` en WebP.
 
 ## Ilustraciones de ejercicios

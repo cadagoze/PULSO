@@ -515,3 +515,31 @@ test('comidas guardadas: guardar, repetir y porción habitual', () => {
   const usual = nutrition.usualPortions([entry('x', 'arroz', 1), entry('y', 'arroz', 1.5), entry('z', 'rapido', 3)]);
   assert.deepEqual({ ...usual }, { arroz: 1.5 });
 });
+
+const hero = load('src/data/hero-photos.ts');
+const motivation = load('src/lib/motivation.ts');
+
+test('portada: foto según la sesión y frase según el progreso', () => {
+  assert.equal(hero.heroKind({ focus: 'conditioning', location: 'home' }), 'cardio');
+  assert.equal(hero.heroKind({ focus: 'mobility', location: 'gym' }), 'mobility');
+  assert.equal(hero.heroKind({ focus: 'full', location: 'gym' }), 'gym');
+  assert.equal(hero.heroKind({ focus: 'upper', location: 'home' }), 'home');
+  assert.equal(hero.heroKind({ programGoal: 'conditioning', location: 'gym' }), 'cardio');
+  assert.notEqual(hero.heroPhoto('gym', 0).src, hero.heroPhoto('gym', 1).src, 'se alternan por día');
+  for (const kind of ['home', 'gym', 'cardio', 'mobility']) {
+    const photo = hero.heroPhoto(kind, 3);
+    assert.ok(fs.existsSync(path.join(root, 'public', photo.src)), `falta ${photo.src}`);
+    assert.ok(photo.alt.length > 10);
+  }
+
+  const wednesday = new Date(2026, 9, 7, 9);
+  const day = (date) => ({ id: date, date, completedAt: `${date}T10:00:00.000Z`, durationMinutes: 30, exerciseCount: 4, sets: 12, mode: 'full' });
+  const line = (dates, goal = 3) => motivation.heroLine({ workouts: dates.map(day), weeklyGoal: goal, minutes: 20, now: wednesday });
+  assert.equal(line([]), 'Tu primera sesión: 20 minutos y listo.');
+  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Semana cumplida. Lo de hoy suma extra.');
+  assert.equal(line(['2026-09-28']), 'Volver es lo más difícil. Hoy, sólo 20 minutos.');
+  assert.equal(line(['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06']), '1 semana seguida · te faltan 2 para mantener la racha.');
+  assert.equal(line(['2026-09-22', '2026-09-23', '2026-09-24', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06', '2026-10-07']), '2 semanas seguidas · te falta 1 sesión para mantener la racha.');
+  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta de la semana.');
+  assert.equal(line(['2026-10-05']), '20 minutos también cuentan.');
+});

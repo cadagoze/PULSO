@@ -2,19 +2,21 @@
 
 import { useMemo } from "react";
 import type { ReactNode } from "react";
-import { Play, SlidersHorizontal } from "lucide-react";
+import { Flame, Play, SlidersHorizontal } from "lucide-react";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
 import { estimateMinutes, focusLabels, generateWorkout, todayGeneratorInput } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
-import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, useWorkouts } from "@/lib/store";
+import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { completedSets, totalSets } from "@/lib/training";
+import { heroKind, heroPhoto, type HeroPhoto } from "@/data/hero-photos";
+import { heroLine } from "@/lib/motivation";
+import { localDaySeed } from "@/lib/utils";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
 const HOUR = 3_600_000;
-const photo = { src: "/images/editorial/home-squat.webp", alt: "Persona haciendo una sentadilla en su sala, con luz natural", position: "66% 38%" };
 
 /** La sesión de hoy como portada: fotografía, nombre, datos clave y el botón para empezar. */
 export function TodayHero({ now, readiness }: { now: number; readiness?: ReadinessEntry["recommendation"] }) {
@@ -24,7 +26,10 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const [profile] = useProfile();
   const [nutrition] = useNutritionProfile();
   const [preference] = usePreference();
+  const [settings] = useSettings();
   const start = useStartWorkout();
+  const seed = localDaySeed(now);
+  const motivation = (minutes: number) => heroLine({ workouts, weeklyGoal: settings.weeklyGoal, pausedWeeks: settings.pausedWeeks, minutes, now: new Date(now) });
 
   const program = progress ? programById(progress.programId) : undefined;
   const next = program && progress ? nextProgramSession(program, progress) : null;
@@ -48,7 +53,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const done = completedSets(draft.records);
     const total = totalSets(draft.records);
     return (
-      <HeroFrame tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
+      <HeroFrame photo={heroPhoto("home", seed)} tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
         <div className="home-hero-progress">
           <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
@@ -62,7 +67,14 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const day = program.days[next.day - 1];
     const name = programSessionName(program, next.week, next.day);
     return (
-      <HeroFrame tag={`Semana ${next.week} de ${program.weeks}`} meta={program.name} title={day ? `${day.name} · ${day.focus}` : name} note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}>
+      <HeroFrame
+        photo={heroPhoto(heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed)}
+        line={motivation(program.minutes)}
+        tag={`Semana ${next.week} de ${program.weeks}`}
+        meta={program.name}
+        title={day ? `${day.name} · ${day.focus}` : name}
+        note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}
+      >
         <Details records={programRecords} minutes={program.minutes} place={place} />
         <Actions
           disabled={!programRecords.length}
@@ -75,15 +87,23 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
 
   if (!generated) {
     return (
-      <HeroFrame tag="Tu sesión de hoy" meta="Preparando" title="Armando tu sesión…">
+      <HeroFrame photo={heroPhoto("home", seed)} tag="Tu sesión de hoy" meta="Preparando" title="Armando tu sesión…">
         <div className="home-hero-skeleton" aria-hidden="true" />
       </HeroFrame>
     );
   }
 
+  const minutes = generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds);
   return (
-    <HeroFrame tag="Tu sesión de hoy" meta={focusLabels[generated.focus]} title={generated.name} note={easier ? generated.notes[0] : undefined}>
-      <Details records={generated.records} minutes={generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds)} place={place} />
+    <HeroFrame
+      photo={heroPhoto(heroKind({ focus: generated.focus, location: preference.location }), seed)}
+      line={motivation(minutes)}
+      tag="Tu sesión de hoy"
+      meta={focusLabels[generated.focus]}
+      title={generated.name}
+      note={easier ? generated.notes[0] : undefined}
+    >
+      <Details records={generated.records} minutes={minutes} place={place} />
       <Actions
         disabled={!generated.records.length}
         onStart={() => start({ name: generated.name, records: generated.records, restSeconds: generated.restSeconds, source: { type: "generated" } })}
@@ -93,11 +113,12 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   );
 }
 
-function HeroFrame({ tag, meta, title, note, children }: { tag: ReactNode; meta: string; title: string; note?: string; children: ReactNode }) {
+function HeroFrame({ photo, line, tag, meta, title, note, children }: { photo: HeroPhoto; line?: string; tag: ReactNode; meta: string; title: string; note?: string; children: ReactNode }) {
   return (
     <section aria-labelledby="home-hero-title">
       <PhotoCard photo={photo} priority tag={tag} className="home-hero" sizes="(max-width: 960px) 100vw, 640px">
         <div className="home-hero-head">
+          {line && <p className="home-hero-line"><Flame size={15} aria-hidden="true" />{line}</p>}
           <p className="meta home-hero-meta">{meta}</p>
           <h2 id="home-hero-title" className="home-hero-title">{title}</h2>
           {note && <p className="home-hero-note">{note}</p>}

@@ -11,17 +11,15 @@ import { QuickActions } from "@/components/home/quick-actions";
 import { ReadinessCard } from "@/components/home/readiness-card";
 import { TodayHero } from "@/components/home/today-hero";
 import { WeekStrip } from "@/components/home/week-strip";
-import { weekStreak } from "@/lib/analytics";
-import { useDraft, useProfile, useReadiness, useSettings, useWorkouts } from "@/lib/store";
+import { useDraft, useProfile, useReadiness } from "@/lib/store";
 import { localDateKey, localDaySeed } from "@/lib/utils";
 import type { ReadinessEntry } from "@/types";
 
-/** Frase bajo el saludo, según lo que toca hoy. */
-function homeLine({ inProgress, goalMet, readiness }: { inProgress: boolean; goalMet: boolean; readiness?: ReadinessEntry["recommendation"] }) {
+/** Frase bajo el saludo, según lo que toca hoy (el progreso de la semana va en la portada). */
+function homeLine({ inProgress, readiness }: { inProgress: boolean; readiness?: ReadinessEntry["recommendation"] }) {
   if (inProgress) return "Tienes un entrenamiento a medias.";
   if (readiness === "recovery") return "Hoy toca moverte suave y recuperar.";
   if (readiness === "short") return "Hoy, una sesión más corta y bien hecha.";
-  if (goalMet) return "Meta semanal cumplida. Hoy, lo que te pida el cuerpo.";
   return "Hoy es un buen día para entrenar.";
 }
 
@@ -30,8 +28,6 @@ export default function Home() {
   const [profile, setProfile] = useProfile();
   const [readiness] = useReadiness();
   const [draft] = useDraft();
-  const [workouts] = useWorkouts();
-  const [settings] = useSettings();
   const { counting } = useNutritionDay(now);
 
   // Hasta hidratar no sabemos si hay perfil guardado: evitamos mostrar la evaluación por error.
@@ -40,11 +36,10 @@ export default function Home() {
 
   const today = localDateKey(new Date(now));
   const todayEntry = readiness.find((entry) => entry.date === today);
-  const { currentMet } = weekStreak(workouts, Math.max(1, settings.weeklyGoal), settings.pausedWeeks, new Date(now));
 
   return (
     <div className="page home">
-      <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), goalMet: currentMet, readiness: todayEntry?.recommendation })} />
+      <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), readiness: todayEntry?.recommendation })} />
       {/* Si cuentas calorías, lo primero al abrir es cuánto llevas; si no, la sesión de hoy. */}
       {counting && <div className="home-fuel-slot"><DayFuel now={now} /></div>}
       <div className="home-hero-slot">
