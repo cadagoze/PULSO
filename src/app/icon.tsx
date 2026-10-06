@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { BrandMark } from "@/components/profile/brand-mark";
 
+// Paleta oscura (v2, 2026-10-06): editar este archivo cambia la URL del ícono y evita copias guardadas.
 export const contentType = "image/png";
 
 const icons = [

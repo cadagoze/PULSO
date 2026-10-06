@@ -32,6 +32,7 @@ import type { SetMode } from "./set-block";
 import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, normalizeGroups, primaryMuscles, setBadge, setHeading, sourceLabel, supersetLetters, toggleSuperset, useHydrated, validateSet, volumeLabel } from "./session-utils";
 import type { Effort } from "./session-utils";
 import { useCountdownCues } from "./use-countdown-cues";
+import { clearFinishRequest, finishRequestPending } from "@/components/session/draft-controls";
 
 type SetCountdown = { recordIndex: number; setIndex: number; until: number };
 type Picker = { mode: "add" } | { mode: "replace"; index: number };
@@ -99,7 +100,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const [sessionOpen, setSessionOpen] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
   const [rirTarget, setRirTarget] = useState<SetRef | null>(null);
-  const [finishOpen, setFinishOpen] = useState(false);
+  // «Terminar y guardar» desde Inicio o la barra del entrenamiento en curso (o «?terminar» al recargar): abre la hoja para guardar.
+  const [finishOpen, setFinishOpen] = useState(() => (finishRequestPending() || new URLSearchParams(window.location.search).has("terminar")) && completedSets(draft.records) > 0);
   const [error, setError] = useState<(SetRef & { message: string }) | null>(null);
   const [countdown, setCountdown] = useState<SetCountdown | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -117,6 +119,10 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   });
   useEffect(() => () => {
     if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+  }, []);
+  useEffect(() => {
+    clearFinishRequest();
+    if (window.location.search) window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
   useWakeLock(settings.keepAwake && draft.runningSince !== null);

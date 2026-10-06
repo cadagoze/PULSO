@@ -36,7 +36,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ## Rutas
 
-- `/`: Inicio. Portada con la sesión de hoy (en curso, programa activo o generada), nutrición de hoy (calorías restantes, proteína, contador de agua y registro directo), semana editorial con racha, chequeo de preparación, atajos y resumen del día.
+- `/`: Inicio. Primero la nutrición de hoy (calorías restantes, proteína, contador de agua y registro directo) y después la sesión de hoy (en curso, programa activo o generada; si está en curso, se puede pausar, terminar o descartar desde la tarjeta o la barra flotante), semana editorial con racha, chequeo de preparación, atajos y resumen del día.
 - `/entrenar`: Casa o Gimnasio, equipamiento, Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), Tu semana según tu objetivo (días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar), biblioteca, rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
 - `/entrenar/programas/[id]`: detalle de cada programa de varias semanas con descarga.
 - `/entrenar/sesion`: registro en vivo con serie anterior, tipos de serie, RIR, descanso automático, superseries, sustituciones, récords y resumen final.

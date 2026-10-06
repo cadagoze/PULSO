@@ -4,7 +4,7 @@ import { BrandMark } from "@/components/profile/brand-mark";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
-/** iOS redondea el ícono por su cuenta: se dibuja a sangre completa. */
+/** iOS redondea el ícono por su cuenta: se dibuja a sangre completa. Paleta oscura (v2, 2026-10-06): cambiarla también cambia la URL. */
 export default function AppleIcon() {
   return new ImageResponse(<BrandMark size={180} rounded={false} />, size);
 }

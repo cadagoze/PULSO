@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Flame, Play, SlidersHorizontal } from "lucide-react";
+import { Flame, Pause, Play, SlidersHorizontal, Square } from "lucide-react";
+import { DraftEndSheet, useDraftControls } from "@/components/session/draft-controls";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
@@ -59,6 +60,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
         </div>
         <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar entrenamiento</ButtonLink>
+        <DraftButtons />
       </HeroFrame>
     );
   }
@@ -149,6 +151,19 @@ function Actions({ disabled, onStart, secondaryLabel }: { disabled: boolean; onS
       <ButtonLink href="/entrenar" variant="glass" size="l" className="home-hero-more" aria-label={secondaryLabel} title={secondaryLabel}>
         <SlidersHorizontal size={19} />
       </ButtonLink>
+    </div>
+  );
+}
+
+/** Pausar o reanudar el reloj y terminar o descartar, sin entrar a la sesión. */
+function DraftButtons() {
+  const { paused, togglePause } = useDraftControls();
+  const [ending, setEnding] = useState(false);
+  return (
+    <div className="home-hero-draft">
+      <Button variant="glass" onClick={togglePause}>{paused ? <><Play size={16} fill="currentColor" />Reanudar</> : <><Pause size={16} fill="currentColor" />Pausar</>}</Button>
+      <Button variant="glass" onClick={() => setEnding(true)}><Square size={14} fill="currentColor" />Terminar o descartar</Button>
+      <DraftEndSheet open={ending} onClose={() => setEnding(false)} />
     </div>
   );
 }

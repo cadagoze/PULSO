@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartNoAxesColumn, Dumbbell, House, Play, Salad, UserRound, type LucideIcon } from "lucide-react";
-import type { CSSProperties } from "react";
+import { ChartNoAxesColumn, Dumbbell, House, Pause, Play, Salad, Square, UserRound, type LucideIcon } from "lucide-react";
+import { useState, type CSSProperties } from "react";
 import { clockLabel, completedSets, durationSeconds, totalSets } from "@/lib/training";
-import { useDraft } from "@/lib/store";
+import { DraftEndSheet, useDraftControls } from "@/components/session/draft-controls";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
@@ -53,20 +53,34 @@ export function BottomNavigation() {
   );
 }
 
-/** Acceso permanente al entrenamiento en curso, como un mini reproductor. */
+/**
+ * Acceso permanente al entrenamiento en curso, como un mini reproductor: tocarlo vuelve a la sesión;
+ * los botones pausan o reanudan el reloj y abren las opciones para terminar o descartar.
+ */
 function ResumeBanner() {
-  const [draft] = useDraft();
+  const { draft, paused, togglePause } = useDraftControls();
+  const [ending, setEnding] = useState(false);
   const now = useNow(1000);
   if (!draft) return null;
   const elapsed = now ? durationSeconds(draft, now) : draft.elapsedSeconds;
   return (
-    <Link href="/entrenar/sesion" className="nav-resume" aria-label={`Volver al entrenamiento en curso: ${draft.name}`}>
-      <span className="pulse-dot" aria-hidden="true" />
-      <span className="grow">
-        <strong>{draft.name}</strong>
-        <small><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{draft.runningSince === null ? " · En pausa" : ""}</small>
-      </span>
-      <span className="resume-go" aria-hidden="true"><Play size={16} fill="currentColor" /></span>
-    </Link>
+    <>
+      <div className={cn("nav-resume", paused && "is-paused")}>
+        <Link href="/entrenar/sesion" className="nav-resume-link" aria-label={`Volver al entrenamiento en curso: ${draft.name}`}>
+          <span className="pulse-dot" aria-hidden="true" />
+          <span className="grow">
+            <strong>{draft.name}</strong>
+            <small><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{paused ? " · En pausa" : ""}</small>
+          </span>
+        </Link>
+        <button type="button" className="resume-btn resume-go" onClick={togglePause} aria-label={paused ? "Reanudar el reloj" : "Pausar el reloj"}>
+          {paused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
+        </button>
+        <button type="button" className="resume-btn resume-end" onClick={() => setEnding(true)} aria-label="Terminar o descartar el entrenamiento">
+          <Square size={14} fill="currentColor" />
+        </button>
+      </div>
+      <DraftEndSheet open={ending} onClose={() => setEnding(false)} />
+    </>
   );
 }

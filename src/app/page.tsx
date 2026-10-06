@@ -1,7 +1,6 @@
 "use client";
 
 import { useNow } from "@/lib/use-now";
-import { useNutritionDay } from "@/lib/use-nutrition";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
 import { DayFuel } from "@/components/home/day-fuel";
 import { HomeDigest } from "@/components/home/home-digest";
@@ -28,7 +27,6 @@ export default function Home() {
   const [profile, setProfile] = useProfile();
   const [readiness] = useReadiness();
   const [draft] = useDraft();
-  const { counting } = useNutritionDay(now);
 
   // Hasta hidratar no sabemos si hay perfil guardado: evitamos mostrar la evaluación por error.
   if (now === 0) return <HomeSkeleton />;
@@ -40,13 +38,12 @@ export default function Home() {
   return (
     <div className="page home">
       <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), readiness: todayEntry?.recommendation })} />
-      {/* Si cuentas calorías, lo primero al abrir es cuánto llevas; si no, la sesión de hoy. */}
-      {counting && <div className="home-fuel-slot"><DayFuel now={now} /></div>}
+      {/* Lo primero al abrir: calorías, alimentación y agua; después, el entrenamiento de hoy. */}
+      <div className="home-fuel-slot"><DayFuel now={now} /></div>
       <div className="home-hero-slot">
         <TodayHero now={now} readiness={todayEntry?.recommendation} />
       </div>
       <div className="home-side">
-        {!counting && <DayFuel now={now} />}
         <InstallCard />
         <WeekStrip now={now} />
         <ReadinessCard today={today} now={now} />
