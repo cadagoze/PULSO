@@ -37,11 +37,11 @@ La aplicación estará disponible en `http://localhost:3000`.
 ## Rutas
 
 - `/`: Inicio. Primero la nutrición de hoy (calorías restantes, proteína, contador de agua y registro directo) y después la sesión de hoy (en curso, programa activo o generada; si está en curso, se puede pausar, terminar o descartar desde la tarjeta o la barra flotante), semana editorial con racha, chequeo de preparación, atajos y resumen del día.
-- `/entrenar`: Casa o Gimnasio con su equipamiento (lista base y «Más equipamiento» con 22 equipos por categoría: pesas, accesorios, cardio y máquinas; el gimnasio parte completo y se puede ajustar), Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), Tu semana según tu objetivo (días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar), biblioteca, rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
+- `/entrenar`: Casa o Gimnasio con su equipamiento (lista base y «Más equipamiento» con 29 equipos por categoría: pesas, accesorios, cardio y máquinas; el gimnasio parte completo y se puede ajustar), Tu rutina de hoy (la misma del Inicio; ajustar duración y enfoque, editar ejercicios y cargas, guardar como rutina), Tu semana según tu objetivo (días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar), biblioteca, rutinas sugeridas, tus rutinas y herramientas (1RM, discos, calentamiento, intervalos).
 - `/entrenar/programas/[id]`: detalle de cada programa de varias semanas con descarga.
 - `/entrenar/sesion`: registro en vivo con serie anterior, tipos de serie, RIR, descanso automático, superseries, sustituciones, récords y resumen final.
 - `/entrenar/intervalos`: temporizador de intervalos (Tabata, HIIT, EMOM o personalizado) con sonido y voz.
-- `/ejercicios` y `/ejercicios/[id]`: biblioteca de 80 ejercicios con foto o ilustración (inicio y final), filtros, mapa muscular, técnica, progreso y alternativas.
+- `/ejercicios` y `/ejercicios/[id]`: biblioteca de 87 ejercicios con foto o ilustración (inicio y final), filtros, mapa muscular, técnica, progreso y alternativas.
 - `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación.
 - `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
 - `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
@@ -53,7 +53,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `src/app`: rutas.
 - `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `cloud`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
-- `src/data`: datos centralizados (ejercicios, programas, catálogo, equipamiento, contenido, ilustraciones y alimentos). En `equipment.ts` cada equipo aporta capacidades (`provides`) que habilitan ejercicios: p. ej. bidones o una mochila con peso cuentan como mancuernas livianas. `npm test` falla si un equipo no habilita ningún ejercicio o si un ejercicio pide algo que no se puede marcar.
+- `src/data`: datos centralizados (ejercicios, programas, catálogo, equipamiento, contenido, ilustraciones y alimentos). En `equipment.ts` cada equipo aporta capacidades (`provides`) que habilitan ejercicios: p. ej. bidones o una mochila con peso cuentan como mancuernas livianas, el set unible como mancuernas y barra, y el multigimnasio habilita poleas y máquinas en casa. La lista base de casa sigue lo que más se compra para el hogar (Mercado Libre, Amazon y CyberDay, 2025). `npm test` falla si un equipo no habilita ningún ejercicio o si un ejercicio pide algo que no se puede marcar.
 - `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`, `energy`) y `cloud` (cuenta y sincronización con Firebase).
 - `src/types`: contratos.
 

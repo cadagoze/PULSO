@@ -36,6 +36,25 @@ const wheel: Prop[] = [
   { kind: "circle", at: { at: "hand", dy: 3 }, r: 1.8, tone: "prop" },
 ];
 
+
+/** Pelota de pilates bajo la zona lumbar, en los talones o bajo los antebrazos. */
+const ball = (at: { at?: "hip" | "ankle" | "elbow"; dx: number; dy: number }, r = 12): Prop => ({ kind: "circle", at, r, tone: "pad" });
+
+/** Tobilleras con peso en ambos tobillos. */
+const ankleWeights: Prop[] = [
+  { kind: "circle", at: { at: "ankleFar", dy: -2 }, r: 3.4, tone: "pad" },
+  { kind: "circle", at: { at: "ankle", dy: -2 }, r: 3.4, tone: "pad" },
+];
+
+/** Saco colgado al frente (fijo respecto de la punta del pie adelantado), con su cadena. */
+const punchingBag: Prop[] = [
+  { kind: "line", from: { at: "toe", dx: 30, dy: -96 }, to: { at: "toe", dx: 30, dy: -110 }, tone: "metal", width: 1.8 },
+  { kind: "block", at: { at: "toe", dx: 30, dy: -70 }, width: 20, height: 52, tone: "pad" },
+];
+
+/** Pared detrás (fija respecto de la punta del pie). */
+const wall: Prop[] = [{ kind: "line", from: { at: "toe", dx: -44, dy: -104 }, tone: "metal", width: 3, toGround: true }];
+
 export const equipmentIllustrations: Partial<Record<number, IllustrationSpec>> = {
   // Caminata inclinada en cinta: zancada con la pierna cercana adelante → pierna cercana atrás (brazos alternos).
   86: {
@@ -112,6 +131,73 @@ export const equipmentIllustrations: Partial<Record<number, IllustrationSpec>> =
       torso: -84, head: -96, arm: { upper: 160, lower: 70 }, leg: { upper: 118, lower: 14 },
       props: [{ kind: "mat" }, { kind: "circle", at: { at: "shoulder", dx: 12, dy: 8 }, r: 7, tone: "pad" }],
       arrows: [{ at: { at: "shoulder", dx: 6, dy: -10 }, angle: -90, length: 9 }],
+    },
+  },
+
+  // Encogimiento en pelota: espalda apoyada en la pelota y brazos al frente → pecho arriba hacia las rodillas.
+  93: {
+    start: { torso: -78, head: -76, arm: { upper: 128, lower: 128 }, leg: { upper: 70, lower: 0 }, props: [ball({ dx: -10, dy: 18 }, 14)] },
+    end: {
+      torso: -122, head: -132, arm: { upper: 112, lower: 112 }, leg: { upper: 70, lower: 0 }, props: [ball({ dx: -10, dy: 18 }, 14)],
+      arrows: [{ at: { at: "shoulder", dx: 2, dy: -10 }, angle: 150, length: 9 }],
+    },
+  },
+  // Curl femoral con pelota: cadera arriba y piernas estiradas sobre la pelota → rodillas al pecho recogiendo la pelota.
+  94: {
+    start: {
+      torso: -60, head: -82, arm: { upper: 90, lower: 90 }, leg: { upper: 94, lower: 92, foot: 175 },
+      props: [{ kind: "mat" }, ball({ at: "ankle", dx: 3, dy: 10 }, 10)],
+    },
+    end: {
+      torso: -42, head: -78, arm: { upper: 90, lower: 90 }, leg: { upper: 135, lower: 25, foot: 150 },
+      props: [{ kind: "mat" }, ball({ at: "ankle", dx: 3, dy: 10 }, 10)],
+      arrows: [{ at: { at: "ankle", dx: -4, dy: -14 }, angle: -90, length: 9 }],
+    },
+  },
+  // Sentadilla en pared con pelota: de pie con la pelota en la zona lumbar → muslos paralelos rodando la pelota.
+  95: {
+    start: { torso: 176, arm: { upper: 8, lower: 8 }, leg: { upper: 18, lower: 18 }, props: [...wall, ball({ dx: -9, dy: -12 }, 8)] },
+    end: {
+      torso: 176, arm: { upper: 82, lower: 86 }, leg: { upper: 80, lower: -22 }, props: [...wall, ball({ dx: -9, dy: -12 }, 8)],
+      arrows: [{ at: { at: "hip", dx: -4, dy: -10 }, angle: 0, length: 10 }],
+    },
+  },
+  // Plancha en pelota: antebrazos en la pelota y cuerpo recto → antebrazos un poco más adelante.
+  96: {
+    start: { torso: 111.5, head: 115, arm: { upper: 0, lower: 90 }, leg: { upper: -68.5, lower: -68.5, foot: 15 }, props: [ball({ at: "elbow", dx: 2, dy: 11 }, 12)] },
+    end: {
+      torso: 106, head: 110, arm: { upper: 28, lower: 100 }, leg: { upper: -74, lower: -74, foot: 15 }, props: [ball({ at: "elbow", dx: 2, dy: 11 }, 12)],
+      arrows: [{ at: { at: "elbow", dx: 10, dy: -6 }, angle: 90, length: 9 }],
+    },
+  },
+  // Patada de glúteo con tobilleras: cuatro apoyos → talón hacia el techo con la rodilla doblada.
+  97: {
+    start: { torso: 103.5, arm: { upper: 0, lower: 0 }, leg: { upper: 0, lower: -88, foot: -85 }, props: [{ kind: "mat" }, ...ankleWeights] },
+    end: {
+      torso: 103.5, arm: { upper: 0, lower: 0 }, leg: { upper: -108, lower: 172, foot: -100 }, legFar: { upper: 0, lower: -88, foot: -85 },
+      props: [{ kind: "mat" }, ...ankleWeights],
+      arrows: [{ at: { at: "knee", dx: -4, dy: -10 }, angle: 180, length: 9 }],
+    },
+  },
+  // Abducción de pie con tobilleras (vista frontal): de pie → pierna al costado sin inclinar el tronco.
+  98: {
+    view: "front",
+    start: { torso: 180, arm: { upper: 12, lower: 8 }, leg: { upper: 3, lower: 3, foot: 60 }, props: ankleWeights },
+    end: {
+      torso: 180, arm: { upper: 12, lower: 8 }, leg: { upper: 36, lower: 36, foot: 70 }, legFar: { upper: 3, lower: 3, foot: 60 }, props: ankleWeights,
+      arrows: [{ at: { at: "knee", dx: 8, dy: -4 }, angle: 120, length: 10 }],
+    },
+  },
+  // Golpes al saco: en guardia con las manos a la cara → golpe recto con el brazo adelantado.
+  99: {
+    start: {
+      torso: 175, head: 178, arm: { upper: 20, lower: 165 }, armFar: { upper: 34, lower: 160 },
+      leg: { upper: 12, lower: 6, foot: 100 }, legFar: { upper: -14, lower: -8, foot: 80 }, props: punchingBag,
+    },
+    end: {
+      torso: 168, head: 172, arm: { upper: 90, lower: 90 }, armFar: { upper: 34, lower: 160 },
+      leg: { upper: 12, lower: 6, foot: 100 }, legFar: { upper: -14, lower: -8, foot: 80 }, props: punchingBag,
+      arrows: [{ at: { at: "elbow", dx: 0, dy: -9 }, angle: 90, length: 10 }],
     },
   },
 };

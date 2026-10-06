@@ -12,11 +12,11 @@ export type ExerciseCategory = "strength" | "cardio" | "mobility";
 /** Lo que un ejercicio necesita (capacidades). Cada equipo del catálogo aporta una o más. */
 export type Equipment =
   | "dumbbells" | "barbell" | "kettlebell" | "bands" | "mini-band" | "bench" | "box" | "pullup-bar"
-  | "suspension" | "jump-rope" | "ab-wheel" | "medicine-ball" | "foam-roller"
+  | "suspension" | "jump-rope" | "ab-wheel" | "medicine-ball" | "foam-roller" | "fitball" | "ankle-weights" | "punching-bag"
   | "bike" | "treadmill" | "elliptical" | "rower"
   | "leg-press" | "leg-machines" | "press-machines" | "cable";
 /** Equipos que puedes marcar en Casa o Gimnasio (ver src/data/equipment.ts). */
-export type TrainingEquipment = Equipment | "load-bag";
+export type TrainingEquipment = Equipment | "load-bag" | "dumbbell-set" | "multigym" | "mat";
 export type TrainingLocation = "home" | "gym";
 export type BodyArea = "knees" | "back" | "shoulders";
 export type ExerciseLevel = 1 | 2 | 3;

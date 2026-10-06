@@ -609,6 +609,7 @@ test('equipamiento: cada equipo habilita ejercicios y cada ejercicio se puede ha
   const used = new Set(exercises.flatMap((exercise) => exercise.equipment.flat()));
   for (const capability of used) assert.ok(provided.has(capability), `ningún equipo aporta «${capability}»`);
   for (const item of equipmentData.equipmentCatalog) {
+    if (item.comfort) { assert.equal(item.provides.length, 0, `${item.id}: marcado como complemento pero aporta capacidades`); continue; }
     assert.ok(item.provides.length > 0, `${item.id} no aporta nada`);
     assert.ok(item.provides.some((capability) => used.has(capability)), `ningún ejercicio usa ${item.id}`);
     assert.ok(item.base.every((place) => item.places.includes(place)), `${item.id}: base fuera de sus lugares`);
@@ -629,4 +630,9 @@ test('equipamiento: casa, gimnasio completo y gimnasio ajustado', () => {
   const stepUp = exercises.find((exercise) => exercise.id === 16);
   assert.ok(generator.isAvailable(stepUp, generator.availableEquipment({ location: 'home', equipment: ['box'] })), 'subida con cajón o banco');
   assert.ok(equipmentData.homeBase.length >= 5);
+  const set = generator.availableEquipment({ location: 'home', equipment: ['dumbbell-set'] });
+  assert.ok(set.has('dumbbells') && set.has('barbell'), 'el set unible sirve como mancuernas y barra');
+  const multigym = generator.availableEquipment({ location: 'home', equipment: ['multigym'] });
+  assert.ok(multigym.has('cable') && multigym.has('press-machines'), 'el multigimnasio habilita poleas y press');
+  assert.equal(generator.availableEquipment({ location: 'home', equipment: ['mat'] }).size, 0, 'la colchoneta no cambia la rutina');
 });
