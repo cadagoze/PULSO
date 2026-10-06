@@ -1,32 +1,30 @@
 "use client";
 
-import { SegmentedControl } from "@/components/ui";
+import { useState } from "react";
+import { ChevronDown, Dumbbell } from "lucide-react";
 import { usePreference } from "@/lib/store";
-import { placeOptions } from "@/components/train/shared";
-import { EquipmentChips, equipmentCount, useEquipment } from "@/components/train/equipment-picker";
-import type { TrainingLocation } from "@/types";
+import { PlaceSheet, equipmentCount, useEquipment } from "@/components/train/equipment-picker";
 
-/** Dónde entrenas y con qué: alimenta la sesión de hoy y el filtro del selector de ejercicios. */
-export function PlacePicker() {
-  const [preference, setPreference] = usePreference();
+/**
+ * Lugar y equipamiento en un chip compacto («Casa · 2 equipos»): al tocarlo se abre la hoja para
+ * cambiarlos, sin ocupar la pantalla del entreno.
+ */
+export function PlaceChip() {
+  const [preference] = usePreference();
   const place = preference.location;
   const { selected } = useEquipment(place);
-
-  function setLocation(location: TrainingLocation) {
-    setPreference((current) => ({ ...current, location }));
-  }
-
+  const [open, setOpen] = useState(false);
   return (
-    <section className="train-place" aria-label="Dónde entrenas">
-      <SegmentedControl size="l" options={placeOptions} value={place} onChange={setLocation} label="Lugar de entrenamiento" />
-      {/* La clave vuelve a montar el bloque para que entre con un fundido al cambiar de lugar. */}
-      <div key={place} className="train-equip train-swap">
-        <div className="train-equip-head">
-          <h2 className="meta">{place === "home" ? "Tu equipamiento" : "Equipamiento del gimnasio"}</h2>
-          <span className="train-equip-count num">{equipmentCount(place, selected)}</span>
-        </div>
-        <EquipmentChips place={place} />
-      </div>
-    </section>
+    <>
+      <button type="button" className="place-chip pressable" onClick={() => setOpen(true)} aria-haspopup="dialog">
+        <Dumbbell size={15} aria-hidden="true" />
+        <span className="place-chip-text">
+          <strong>{place === "home" ? "Casa" : "Gimnasio"}</strong>
+          <small>{equipmentCount(place, selected)}</small>
+        </span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      <PlaceSheet open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

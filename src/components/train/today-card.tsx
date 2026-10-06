@@ -4,7 +4,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { CalendarDays, ChevronDown, Play, RotateCcw, Shuffle, SlidersHorizontal } from "lucide-react";
 import { Button, ButtonLink, MetaLine, ProgressBar, SegmentedControl } from "@/components/ui";
 import { Card } from "@/components/ui/cards";
-import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { focusLabels } from "@/lib/generator";
 import { programSessionName } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
@@ -12,7 +11,7 @@ import { useDraft, usePreference } from "@/lib/store";
 import { completedSets, durationSeconds, exerciseById, totalSets } from "@/lib/training";
 import { cn } from "@/lib/utils";
 import { useProgramActions } from "@/components/train/program-actions";
-import { locationLabels, pad2 } from "@/components/train/shared";
+import { locationLabels, targetLabel } from "@/components/train/shared";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, TrainingDraft } from "@/types";
 
@@ -44,7 +43,7 @@ export function TodayCard({ now, source, sources, onSource, today, active, listO
 
   let body: ReactNode;
   if (source === "draft" && draft) body = <DraftBody draft={draft} now={now} />;
-  else if (source === "program" && active) body = <ProgramBody active={active} place={place} easier={easier} listOpen={listOpen} onToggleList={onToggleList} notify={notify} />;
+  else if (source === "program" && active) body = <ProgramBody active={active} place={place} easier={easier} notify={notify} />;
   else body = <CustomBody today={today} place={place} easier={easier} listOpen={listOpen} onToggleList={onToggleList} onAdjust={onAdjust} />;
 
   return (
@@ -67,15 +66,15 @@ export function TodayCard({ now, source, sources, onSource, today, active, listO
   );
 }
 
-/** El número editorial se reduce cuando tiene más cifras (p. ej. «12/20» series). */
-function Head({ meta, context, number, digits = 2, label, live = false }: { meta: string; context?: ReactNode; number: ReactNode; digits?: number; label: ReactNode; live?: boolean }) {
+/** Cabecera compacta: de dónde sale la rutina y, a la derecha, la cifra clave (minutos o series). */
+function Head({ meta, context, number, label, live = false }: { meta: string; context?: ReactNode; number: ReactNode; label: ReactNode; live?: boolean }) {
   return (
     <div className="train-hero-head">
       <div className="train-hero-copy">
         <p className="meta train-hero-meta">{live && <span className="train-live-dot" aria-hidden="true" />}{meta}</p>
         {context && <p className="train-hero-context">{context}</p>}
       </div>
-      <p className={cn("train-hero-number", digits === 3 && "is-m", digits > 3 && "is-s")}>
+      <p className="train-hero-stat">
         <span className="num-display">{number}</span>
         <span className="meta">{label}</span>
       </p>
@@ -84,9 +83,10 @@ function Head({ meta, context, number, digits = 2, label, live = false }: { meta
 }
 
 function Title({ children, details, note }: { children: ReactNode; details: ReactNode[]; note?: string }) {
+  const long = typeof children === "string" && children.length > 16;
   return (
     <div className="train-hero-main">
-      <h2 id="train-hero-title" className="train-hero-title">{children}</h2>
+      <h2 id="train-hero-title" className={cn("train-hero-title", long && "is-long")}>{children}</h2>
       <MetaLine className="train-hero-details" items={details} />
       {note && <p className="train-hero-note">{note}</p>}
     </div>
@@ -97,26 +97,36 @@ function count(value: number, one: string, many: string) {
   return <><b className="num">{value}</b> {value === 1 ? one : many}</>;
 }
 
-/** Miniaturas de los ejercicios; la clave las vuelve a animar cuando cambia la selección. */
-function Thumbs({ records }: { records: ExerciseRecord[] }) {
-  const items = records.map((record) => exerciseById(record.exerciseId)).filter((item): item is Exercise => Boolean(item));
-  if (!items.length) return null;
-  const shown = items.length > 5 ? items.slice(0, 4) : items;
-  const rest = items.length - shown.length;
+const SESSION_ROWS = 4;
+
+/**
+ * Los ejercicios de la sesión en una lista breve: orden, nombre y series × repeticiones. Muestra
+ * hasta cuatro para que «Empezar» quede a la vista; el resto, en «+N más».
+ */
+function SessionList({ records, ranges, onMore }: { records: ExerciseRecord[]; ranges?: Array<[number, number] | undefined>; onMore?: () => void }) {
+  const rows = records
+    .map((record, index) => ({ record, exercise: exerciseById(record.exerciseId), range: ranges?.[index] }))
+    .filter((row): row is { record: ExerciseRecord; exercise: Exercise; range: [number, number] | undefined } => Boolean(row.exercise));
+  if (!rows.length) return null;
+  const shown = rows.length > SESSION_ROWS + 1 ? rows.slice(0, SESSION_ROWS) : rows;
+  const rest = rows.length - shown.length;
   return (
-    <ul key={items.map((item) => item.id).join("-")} className="train-thumbs" aria-label="Ejercicios de la sesión">
-      {shown.map((exercise, index) => (
-        <li key={`${exercise.id}-${index}`} className="train-thumb" style={{ "--i": index } as CSSProperties}>
-          <ExerciseVisual exercise={exercise} size="thumb" />
+    <ol key={rows.map((row) => row.exercise.id).join("-")} className="train-session" aria-label="Ejercicios de la sesión">
+      {shown.map(({ record, exercise, range }, index) => (
+        <li key={`${exercise.id}-${index}`} style={{ "--i": index } as CSSProperties}>
+          <span className="num train-session-index">{index + 1}</span>
+          <span className="train-session-name">{exercise.name}</span>
+          <span className="num train-session-target">{targetLabel(exercise, record.sets.length, range)}</span>
         </li>
       ))}
       {rest > 0 && (
-        <li className="train-thumb train-thumb-more num" style={{ "--i": shown.length } as CSSProperties}>
-          <span aria-hidden="true">+{rest}</span>
-          <span className="sr-only">y {rest} más</span>
+        <li className="train-session-more" style={{ "--i": shown.length } as CSSProperties}>
+          {onMore
+            ? <button type="button" className="link-button" onClick={onMore}>+{rest} más · ver todos</button>
+            : <span>+{rest} más: {rows.slice(SESSION_ROWS).map((row) => row.exercise.name).join(", ")}</span>}
         </li>
       )}
-    </ul>
+    </ol>
   );
 }
 
@@ -137,7 +147,7 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
   if (!today.ready) {
     return (
       <>
-        <Head meta="Tu rutina de hoy" context="Preparando" number="––" label="Min" />
+        <Head meta="Tu rutina de hoy" context="Preparando" number="––" label="min" />
         <div className="train-hero-main">
           <h2 id="train-hero-title" className="train-hero-title">Armando tu sesión…</h2>
         </div>
@@ -148,32 +158,33 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
 
   return (
     <>
-      <Head meta="Tu rutina de hoy" context={context} number={today.estimated} digits={String(today.estimated).length} label="Min" />
-      <Title details={[count(total, "ejercicio", "ejercicios"), <><b className="num">{today.estimated}</b> min</>, place]} note={easier ? today.plan?.notes[0] : undefined}>
+      <Head meta="Tu rutina de hoy" context={context} number={today.estimated} label="min" />
+      <Title details={[count(total, "ejercicio", "ejercicios"), place]} note={easier ? today.plan?.notes[0] : undefined}>
         {focusLabels[today.focus]}
       </Title>
-      <Thumbs records={today.records} />
+      <SessionList records={today.records} onMore={listOpen === false ? onToggleList : undefined} />
       <div className="train-hero-actions">
         <Button size="l" disabled={!total} onClick={() => start({ name: today.name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } })}>
           <Play size={18} fill="currentColor" />
-          Comenzar sesión
-        </Button>
-        <Button variant="glass" size="l" className="train-hero-icon" onClick={onAdjust} aria-label="Ajustar duración y enfoque" title="Ajustar">
-          <SlidersHorizontal size={19} />
+          Empezar ahora
         </Button>
       </div>
       <div className="train-hero-foot">
+        <Button variant="ghost" size="s" onClick={onAdjust}>
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          Ajustar
+        </Button>
         <Button variant="ghost" size="s" className="train-hero-reroll" onClick={today.reroll}>
           <Shuffle size={16} aria-hidden="true" />
           Otra variante
         </Button>
-        {listOpen !== null && <ListToggle open={listOpen} onToggle={onToggleList} label="Ver y editar" />}
+        {listOpen !== null && <ListToggle open={listOpen} onToggle={onToggleList} label="Editar" />}
       </div>
     </>
   );
 }
 
-function ProgramBody({ active, place, easier, listOpen, onToggleList, notify }: { active: ActiveProgram; place: string; easier: boolean; listOpen: boolean | null; onToggleList: () => void; notify: (message: string) => void }) {
+function ProgramBody({ active, place, easier, notify }: { active: ActiveProgram; place: string; easier: boolean; notify: (message: string) => void }) {
   const { startSession, restart } = useProgramActions();
   const { program, next, day, records, done, total, weekDone } = active;
   const href = `/entrenar/programas/${program.id}`;
@@ -182,7 +193,7 @@ function ProgramBody({ active, place, easier, listOpen, onToggleList, notify }: 
   if (!next) {
     return (
       <>
-        <Head meta="Tu programa" context={program.name} number={total} label={<>Sesiones<br />completadas</>} />
+        <Head meta="Tu programa" context={program.name} number={total} label="sesiones" />
         <Title details={[`${program.weeks} semanas`, `${program.days.length} días por semana`]} note="Repite el ciclo para consolidar lo ganado o elige otro programa más abajo.">
           Programa completado
         </Title>
@@ -201,34 +212,29 @@ function ProgramBody({ active, place, easier, listOpen, onToggleList, notify }: 
 
   return (
     <>
-      <Head
-        meta="Tu rutina de hoy"
-        context={program.name}
-        number={pad2(next.week)}
-        label={<>Semana<br /><span className="num">{weekDone}</span> de <span className="num">{program.days.length}</span> sesiones</>}
-      />
+      <Head meta={`Semana ${next.week} · ${weekDone} de ${program.days.length}`} context={program.name} number={program.minutes} label="min" />
       <Title
-        details={[count(records.length, "ejercicio", "ejercicios"), <><b className="num">{program.minutes}</b> min</>, programPlace]}
+        details={[count(records.length, "ejercicio", "ejercicios"), programPlace]}
         note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}
       >
         {day ? `${day.name} · ${day.focus}` : programSessionName(program, next.week, next.day)}
       </Title>
-      <Thumbs records={records} />
+      <SessionList records={records} ranges={(day?.items ?? []).filter((item) => exerciseById(item.exerciseId)).map((item) => item.range)} />
       <div className="train-hero-actions">
         <Button size="l" disabled={!records.length} onClick={() => startSession(program, next.week, next.day)}>
           <Play size={18} fill="currentColor" />
-          Comenzar sesión
+          Empezar ahora
         </Button>
-        <ButtonLink href={href} variant="glass" size="l" className="train-hero-icon" aria-label={`Ver ${program.name}`} title="Ver programa">
-          <CalendarDays size={19} />
-        </ButtonLink>
       </div>
       <div className="train-hero-foot">
         <div className="train-hero-progress">
           <ProgressBar value={(done / total) * 100} label={`${done} de ${total} sesiones del programa`} />
           <span className="num">{done}/{total}</span>
         </div>
-        {listOpen !== null && <ListToggle open={listOpen} onToggle={onToggleList} label="Ver ejercicios" />}
+        <ButtonLink href={href} variant="ghost" size="s" className="train-hero-toggle">
+          <CalendarDays size={16} aria-hidden="true" />
+          Ver programa
+        </ButtonLink>
       </div>
     </>
   );
@@ -241,7 +247,7 @@ function DraftBody({ draft, now }: { draft: TrainingDraft; now: number }) {
   const elapsed = minutes < 60 ? <><b className="num">{minutes}</b> min</> : <><b className="num">{Math.floor(minutes / 60)}</b> h <b className="num">{minutes % 60}</b> min</>;
   return (
     <>
-      <Head live meta="En curso" context="Entrenamiento a medias" number={<>{done}<span className="train-soft">/{total}</span></>} digits={`${done}/${total}`.length} label="Series" />
+      <Head live meta="En curso" context="Entrenamiento a medias" number={<>{done}<span className="train-soft">/{total}</span></>} label="series" />
       <Title details={[count(draft.records.length, "ejercicio", "ejercicios"), elapsed, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]}>
         {draft.name}
       </Title>

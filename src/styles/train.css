@@ -3,7 +3,7 @@
  * Detalle de programa: portada editorial, avance y semana a semana. */
 
 /* ─── Página ───────────────────────────────────────────────────────────── */
-.train-page { gap: 30px; }
+.train-page { gap: 20px; }
 /* Con un entrenamiento en curso, el acceso flotante ocupa espacio sobre la barra: deja sitio al final. */
 .train-page.has-resume, .train-detail.has-resume { padding-bottom: 72px; }
 .train-soft { color: var(--ink-3); }
@@ -23,36 +23,28 @@
 
 /* ─── Tu rutina de hoy ─────────────────────────────────────────────────── */
 .train-hero-slot { min-width: 0; }
-.train-hero { position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 20px; overflow: hidden; overflow: clip; padding: 20px 20px 14px; }
+.train-hero { position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 12px; overflow: hidden; overflow: clip; padding: 20px 20px 14px; }
 /* Profundidad sutil detrás del número (no es textura: la tarjeta sigue limpia). */
 /* Dentro de los bordes de la tarjeta: si sobresaliera, la tarjeta se podría desplazar al enfocar algo. */
 .train-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(70% 46% at 92% 4%, rgb(var(--accent-rgb) / 9%), transparent 72%); pointer-events: none; }
 .train-hero-switch { align-self: flex-start; max-width: 100%; background: rgb(255 255 255 / 7%); }
 .train-hero-switch .segmented-indicator { background: rgb(255 255 255 / 15%); box-shadow: none; }
 .train-hero-switch button { padding: 0 14px; font-size: 13px; }
-.train-hero-body { display: flex; flex-direction: column; gap: 20px; flex: 1; min-width: 0; }
+.train-hero-body { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
 .train-hero-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.train-hero-copy { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding-top: 6px; }
+.train-hero-copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 4px; }
+.train-hero-stat { display: flex; align-items: baseline; gap: 4px; flex: none; color: var(--ink); }
+.train-hero-stat .num-display { font-size: 46px; line-height: .9; }
+.train-hero-stat .meta { color: var(--ink-2); }
 .train-hero-meta { display: inline-flex; align-items: center; gap: 8px; }
 .train-hero .train-hero-context { max-width: 22ch; font-size: 14px; line-height: 1.35; color: var(--ink-2); }
-.train-hero .train-hero-number { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: none; text-align: right; color: var(--ink); }
-.train-hero-number .num-display { font-size: clamp(84px, 25vw, 120px); }
-.train-hero-number.is-m .num-display { font-size: clamp(72px, 21vw, 104px); }
-.train-hero-number.is-s .num-display { font-size: clamp(56px, 15vw, 80px); }
-.train-hero-number .meta { line-height: 1.55; }
-.train-hero-main { display: flex; flex-direction: column; gap: 10px; }
+.train-hero-main { display: flex; flex-direction: column; gap: 8px; }
 .train-hero .train-hero-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; color: var(--ink); text-wrap: balance; overflow-wrap: anywhere; }
 .train-hero-details { font-size: 14.5px; color: var(--ink-2); }
 .train-hero-details b { color: var(--ink); font-weight: 600; }
 .train-hero .train-hero-note { max-width: 44ch; font-size: 13.5px; color: var(--ink-2); }
-.train-thumbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 56px)); gap: 8px; }
-.train-thumb { animation: train-thumb-in var(--motion-base) var(--ease-standard) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
-.train-thumb .exercise-visual-thumb { width: 100%; height: auto; aspect-ratio: 1; border-radius: 14px; }
-.train-thumb-more { display: grid; place-items: center; aspect-ratio: 1; border-radius: 14px; background: var(--surface-2); color: var(--ink); font-size: 15px; font-weight: 600; }
-@keyframes train-thumb-in { from { opacity: 0; transform: scale(.86); } }
-.train-hero-actions { display: flex; gap: 10px; }
+.train-hero-actions { display: flex; gap: 10px; margin-top: 4px; }
 .train-hero-actions > .btn-primary { flex: 1; }
-.train-hero-icon { flex: none; width: 58px; padding: 0; }
 .train-hero-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin: -4px -8px 0; padding-top: 6px; box-shadow: inset 0 1px 0 var(--line); }
 .train-hero-foot .btn-ghost { min-height: 40px; padding: 0 10px; color: var(--ink-2); }
 @media (hover: hover) { .train-hero-foot .btn-ghost:hover:not(:disabled) { color: var(--ink); background: rgb(255 255 255 / 7%); } }
@@ -116,11 +108,6 @@
 @media (max-width: 400px) { .train-ex .exercise-card-index { display: none; } }
 
 /* Aviso del chequeo de hoy (ligero, sin tarjeta). */
-.train-hint { display: flex; align-items: center; gap: 12px; min-height: 48px; color: var(--ink-2); font-size: 14px; line-height: 1.35; transition: color var(--motion-fast); }
-.train-hint .grow { flex: 1; min-width: 0; }
-.train-hint-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); }
-.train-hint > svg { flex: none; color: var(--ink-3); transition: transform var(--motion-fast) var(--ease-standard); }
-@media (hover: hover) { .train-hint:hover { color: var(--ink); } .train-hint:hover > svg { transform: translateX(2px); } }
 
 /* ─── Hojas: ajustar y carga ───────────────────────────────────────────── */
 .train-adjust { gap: 20px; }
@@ -243,7 +230,7 @@
 .train-bar-grip::after { right: -8px; }
 .train-bar-side { position: relative; display: flex; flex: 0 1 auto; align-items: center; gap: 2px; min-width: 0; height: 100%; padding: 8px 6px; }
 .train-bar-side.left { flex-direction: row-reverse; }
-.train-plate { display: block; flex: 0 1 14px; width: 14px; min-width: 6px; border-radius: 4px; background: var(--ink-3); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); animation: train-thumb-in var(--motion-base) var(--ease-standard) backwards; }
+.train-plate { display: block; flex: 0 1 14px; width: 14px; min-width: 6px; border-radius: 4px; background: var(--ink-3); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); animation: train-plate-in var(--motion-base) var(--ease-standard) backwards; }
 .train-plate[data-plate="25"] { flex-basis: 18px; width: 18px; background: var(--danger); }
 .train-plate[data-plate="20"] { flex-basis: 17px; width: 17px; background: var(--violet); }
 .train-plate[data-plate="15"] { flex-basis: 16px; width: 16px; background: var(--warning); }
@@ -335,35 +322,21 @@
 
 /* ─── Escritorio: configuración a la izquierda, tu rutina de hoy a la derecha (fija) ── */
 @media (min-width: 1024px) {
-  .train-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "header hero" "place hero" "extra hero" "more more"; column-gap: 56px; row-gap: 32px; align-items: start; padding-top: 40px; }
+  .train-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; grid-template-areas: "header hero" "extra hero" "more hero" ". hero"; column-gap: 56px; row-gap: 32px; align-items: start; padding-top: 40px; }
   .train-page > .page-header { grid-area: header; }
-  .train-place { grid-area: place; }
   .train-extra { grid-area: extra; gap: 18px; }
-  .train-hint { order: -1; }
-  /* El hueco ocupa toda su área y la tarjeta se fija dentro: así no tapa lo que viene debajo (Tu semana, biblioteca, rutinas). */
+    /* El hueco ocupa toda su área y la tarjeta se fija dentro: así no tapa lo que viene debajo (Tu semana, biblioteca, rutinas). */
   .train-page > .train-hero-slot { grid-area: hero; align-self: stretch; }
   .train-hero-slot > * { position: sticky; top: 24px; }
-  .train-hero { min-height: min(720px, calc(100dvh - var(--nav-h) - var(--nav-gap) - 96px)); padding: 26px 26px 16px; }
-  .train-hero-main { margin-top: auto; }
-  .train-hero-number .num-display { font-size: clamp(124px, 11vw, 168px); }
-  .train-hero-number.is-m .num-display { font-size: clamp(104px, 9vw, 140px); }
-  .train-hero-number.is-s .num-display { font-size: clamp(80px, 7vw, 108px); }
-  .train-more { grid-area: more; gap: 44px; padding-top: 20px; }
+        .train-more { grid-area: more; }
   .train-routines { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .train-skeleton-hero { height: min(720px, calc(100dvh - var(--nav-h) - var(--nav-gap) - 96px)); }
+  .train-skeleton-hero { height: 520px; }
 
   .train-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); column-gap: 56px; align-items: start; padding-top: 40px; }
   .train-cover { position: sticky; top: 24px; aspect-ratio: auto; height: min(760px, calc(100dvh - var(--nav-h) - var(--nav-gap) - 72px)); max-height: none; padding: 20px 24px 28px; }
   .train-cover-number .num-display { font-size: clamp(120px, 11vw, 176px); }
 }
 
-/* ─── Biblioteca (acceso) ──────────────────────────────────────────────── */
-.train-library { display: flex; align-items: center; gap: 18px; padding: 18px 18px 18px 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); }
-.train-library .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.train-library strong { font-size: 16px; font-weight: 600; letter-spacing: -.015em; line-height: 1.25; }
-.train-library small { font-size: 13px; color: var(--ink-2); }
-.train-library > svg { flex: none; color: var(--ink-3); }
-.train-library-count { font-size: 46px; flex: none; }
 
 /* ─── Tu semana según el objetivo ──────────────────────────────────────── */
 .goal-week { scroll-margin-top: 24px; }
@@ -403,3 +376,44 @@
 .equip-row[aria-pressed="true"] .equip-check { background: var(--accent); box-shadow: none; }
 .equip-row[aria-pressed="true"] .equip-check::after { content: ""; position: absolute; left: 9px; top: 5px; width: 6px; height: 11px; border: solid var(--accent-ink); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
 .equip-sheet-actions { position: sticky; bottom: calc(-24px - var(--safe-b)); display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; margin: 0 -22px calc(-24px - var(--safe-b)); padding: 14px 22px calc(18px + var(--safe-b)); background: linear-gradient(transparent, var(--surface) 22%); }
+
+
+/* ─── Foco en el entreno de hoy ────────────────────────────────────────── */
+.train-page > .page-header { align-items: center; }
+.place-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px 6px 14px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); text-align: left; }
+.place-chip > svg:first-child { color: var(--accent-text); }
+.place-chip > svg:last-child { color: var(--ink-3); }
+.place-chip-text { display: flex; flex-direction: column; line-height: 1.15; }
+.place-chip-text strong { font-size: 14px; font-weight: 600; }
+.place-chip-text small { font-size: 11.5px; color: var(--ink-2); }
+.equip-sheet-body { display: flex; flex-direction: column; gap: 20px; }
+
+.train-session { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.train-session li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: baseline; gap: 10px; padding: 7px 0; box-shadow: inset 0 -1px 0 var(--line); animation: train-row-in var(--motion-base) var(--ease-standard) backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+.train-session li:last-child { box-shadow: none; }
+.train-session-index { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.train-session-name { overflow: hidden; font-size: 15px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.train-session-target { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.train-session li.train-session-more { display: block; padding: 8px 0 2px 32px; font-size: 13px; color: var(--ink-2); }
+.train-session-more span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.train-session-more .link-button { font-size: 13px; }
+.train-hero .train-hero-title.is-long { font-size: clamp(26px, 7.4vw, 36px); }
+@keyframes train-row-in { from { opacity: 0; transform: translateY(4px); } }
+.train-hero-actions > .btn { flex: 1; }
+.train-hero-foot { justify-content: flex-start; gap: 4px; }
+
+.train-more { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.train-week-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 16px 12px 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); text-align: left; }
+.train-week-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.train-week-row strong { font-size: 15px; font-weight: 600; color: var(--ink); }
+.train-week-row > svg, .train-tile > svg { flex: none; color: var(--ink-3); transition: transform var(--motion-base) var(--ease-standard); }
+.train-week-row.is-open > svg { transform: rotate(180deg); }
+.train-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.train-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 92px; padding: 14px 14px 12px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); text-align: left; transition: box-shadow var(--motion-fast); }
+.train-tile.is-open { box-shadow: inset 0 0 0 2px var(--accent); }
+.train-tile-icon { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 8px; border-radius: 11px; background: var(--surface-2); color: var(--accent-text); }
+.train-tile strong { font-size: 15px; font-weight: 600; }
+.train-tile small { font-size: 12.5px; color: var(--ink-2); }
+.train-panel { display: flex; flex-direction: column; gap: 14px; padding-top: 6px; scroll-margin-top: 24px; }
+@media (min-width: 720px) { .train-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@keyframes train-plate-in { from { opacity: 0; transform: scale(.86); } }

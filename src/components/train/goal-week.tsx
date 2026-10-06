@@ -23,7 +23,8 @@ function range({ min, max }: { min: number; max: number }) {
  * Qué entrenar esta semana según tu objetivo (el de Nutrición o, si aún no lo calculas, el de tu
  * evaluación): días de fuerza, intervalos o minutos de actividad, pasos y qué ejercicios priorizar.
  */
-export function GoalWeek({ now }: { now: number }) {
+/** Objetivo, guía y lo entrenado esta semana (lo usan la versión compacta y la completa). */
+export function useGoalWeek(now: number) {
   const [nutrition] = useNutritionProfile();
   const [assessment] = useProfile();
   const [workouts] = useWorkouts();
@@ -32,14 +33,30 @@ export function GoalWeek({ now }: { now: number }) {
   const guide = goalGuides[goal];
   const week = weekTraining(workouts, new Date(now));
   const kcal = weightKg ? totalCalories(week.sessions, weightKg) : 0;
+  return { nutrition, goal, guide, week, kcal };
+}
+
+/** «Fuerza 1/3 · Intervalos 0/1»: el avance de la semana en una línea. */
+export function weekSummary({ guide, week }: Pick<ReturnType<typeof useGoalWeek>, "guide" | "week">) {
+  const parts = [`Fuerza ${week.strengthDays}/${guide.strength.min}`];
+  if (guide.intervals) parts.push(`Intervalos ${week.intervals}/${guide.intervals.min}`);
+  if (guide.activityMinutes) parts.push(`${week.minutes}/${guide.activityMinutes} min`);
+  if (guide.setsPerMuscle) parts.push(`${week.musclesOnTarget}/${majorMuscleGroups.length} músculos`);
+  return parts.join(" · ");
+}
+
+export function GoalWeek({ now, bare = false }: { now: number; bare?: boolean }) {
+  const { nutrition, goal, guide, week, kcal } = useGoalWeek(now);
   const routineNote = nutrition ? routineNotes[goal] : null;
 
   return (
-    <section id="objetivo" className="section train-section goal-week" aria-labelledby="goal-week-title">
-      <div className="section-head">
-        <h2 id="goal-week-title">Tu semana</h2>
-        <span className="meta">{goalLabels[goal]}</span>
-      </div>
+    <section className="section train-section goal-week" aria-labelledby={bare ? undefined : "goal-week-title"} aria-label={bare ? "Tu semana" : undefined}>
+      {!bare && (
+        <div className="section-head">
+          <h2 id="goal-week-title">Tu semana</h2>
+          <span className="meta">{goalLabels[goal]}</span>
+        </div>
+      )}
       <p className="train-section-line">{guide.headline}</p>
 
       <div className="list">
