@@ -680,3 +680,51 @@ test('pesos: el generador adapta la rutina a las pesas de casa', () => {
   const unknown = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'] } });
   assert.ok(unknown.records.every((record) => record.sets.every((set) => set.load === 0) && !record.range), 'sin pesos marcados, la rutina queda como antes');
 });
+
+const barcode = load('src/lib/barcode.ts');
+
+test('comida en gramos: porción, conversión y etiqueta', () => {
+  assert.equal(nutrition.portionGrams('1 taza (160 g)'), 160);
+  assert.equal(nutrition.portionGrams('1 plato (150 g, con 1 cdta de aceite)'), 150);
+  assert.equal(nutrition.portionGrams('100 g cocida'), 100);
+  assert.equal(nutrition.portionGrams('1 vaso (200 ml)'), 200);
+  assert.equal(nutrition.portionGrams('1 vaso (45 ml de pisco)'), null, 'sólo mide una parte');
+  assert.equal(nutrition.portionGrams('1 bowl (40 g de avena)'), null);
+  assert.equal(nutrition.portionGrams('8 piezas'), null);
+  assert.equal(nutrition.portionUnit('1 vaso (200 ml)'), 'ml');
+  assert.equal(nutrition.portionUnit('1 taza (160 g)'), 'g');
+  const arroz = foods.find((food) => food.id === 'arroz-blanco');
+  const entry = nutrition.entryFromFood(arroz, { id: 'e1', date: '2026-10-06', meal: 'almuerzo', portions: 1, grams: 240 });
+  assert.equal(entry.portions, 1.5);
+  assert.equal(entry.grams, 240);
+  assert.equal(nutrition.entryTotals([entry]).kcal, 312);
+  assert.equal(nutrition.amountLabel(entry), '240 g');
+  const byPortion = nutrition.entryFromFood(arroz, { id: 'e2', date: '2026-10-06', meal: 'almuerzo', portions: 2 });
+  assert.ok(!('grams' in byPortion));
+  assert.equal(nutrition.amountLabel(byPortion), '2 × 1 taza (160 g)');
+  assert.deepEqual({ ...nutrition.usualGrams([entry, { ...byPortion, foodId: 'avena' }]) }, { 'arroz-blanco': 240 });
+  assert.deepEqual({ ...nutrition.usualGrams([entry, byPortion]) }, {}, 'la última vez fue en porciones');
+  const saved = nutrition.savedMealFromEntries([entry], { id: 's', name: 'Almuerzo', meal: 'almuerzo' });
+  assert.equal(saved.items[0].grams, 240, 'las comidas guardadas recuerdan los gramos');
+  const ids = new Set(foods.map((food) => food.id));
+  assert.ok(foods.length >= 200 && ids.has('porotos-granados') && ids.has('mote-huesillo'));
+  const withGrams = foods.filter((food) => nutrition.portionGrams(food.portion)).length;
+  assert.ok(withGrams / foods.length > 0.85, `casi todo se puede registrar en gramos (${withGrams} de ${foods.length})`);
+});
+
+test('código de barras: producto de Open Food Facts a alimento', () => {
+  const product = { product_name: 'Galletas de avena', brands: 'Marca X, Otra', serving_quantity: '30', nutriments: { 'energy-kcal_100g': 450, proteins_100g: 8, carbohydrates_100g: 65, fat_100g: 17 } };
+  const food = barcode.foodFromOpenFoodFacts('7801234567890', product);
+  assert.deepEqual({ ...food }, { id: 'off-7801234567890', name: 'Galletas de avena · Marca X', portion: '1 porción (30 g)', kcal: 135, protein: 2.4, carbs: 19.5, fat: 5.1, category: 'propios' });
+  assert.equal(nutrition.portionGrams(food.portion), 30);
+  const per100 = barcode.foodFromOpenFoodFacts('123', { product_name_es: 'Leche', product_name: 'Milk', nutriments: { energy_100g: 2092 } });
+  assert.equal(per100.portion, '100 g');
+  assert.equal(per100.kcal, 500, 'kJ a kcal');
+  assert.equal(per100.name, 'Leche');
+  const drink = barcode.foodFromOpenFoodFacts('5449000000996', { product_name: 'Coca-Cola Original', brands: 'COCA-COLA SERVICES SA/NV', serving_quantity: 330, serving_size: '330 ml', nutriments: { 'energy-kcal_100g': 42, carbohydrates_100g: 10.6 } });
+  assert.equal(drink.name, 'Coca-Cola Original', 'sin repetir la marca');
+  assert.equal(drink.portion, '1 porción (330 ml)');
+  assert.equal(nutrition.portionUnit(drink.portion), 'ml');
+  assert.equal(barcode.foodFromOpenFoodFacts('1', { product_name: 'Sin datos', nutriments: {} }), null);
+  assert.equal(barcode.foodFromOpenFoodFacts('1', { nutriments: { 'energy-kcal_100g': 100 } }), null);
+});

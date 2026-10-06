@@ -65,8 +65,12 @@ legend.nut-label { margin-bottom: 10px; }
 /* ─── Hojas: buscador, porciones y formularios ─────────────────────────── */
 .nut-picker { display: flex; flex-direction: column; gap: 18px; }
 .nut-back { align-self: flex-start; text-decoration: none; }
-.nut-search { position: sticky; top: 22px; z-index: 1; }
-.nut-search button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); }
+.nut-search { position: sticky; top: 22px; z-index: 1; display: flex; align-items: center; gap: 8px; }
+.nut-search .picker-search { flex: 1; min-width: 0; }
+.nut-search .picker-search button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); }
+.nut-scan-button { display: grid; place-items: center; flex: none; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
+.nut-scan-button:active { transform: scale(.92); }
+@media (hover: hover) { .nut-scan-button:hover { background: var(--accent-bright); } }
 .nut-cats { flex-shrink: 0; scroll-snap-type: none; margin: -4px -22px 0; padding: 2px 22px; }
 .nut-results { display: flex; flex-direction: column; gap: 8px; }
 .nut-food-list { list-style: none; margin: 0 -10px; padding: 0; display: flex; flex-direction: column; }
@@ -79,6 +83,34 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-portions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .nut-detail-values { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }
 .nut-quad { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* ─── Cantidad: porciones o gramos ─────────────────────────────────────── */
+.nut-amount { display: flex; flex-direction: column; gap: 16px; }
+.nut-grams { display: flex; flex-direction: column; gap: 12px; }
+.nut-grams-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nut-grams-input { display: flex; align-items: baseline; gap: 6px; min-height: 52px; padding: 0 18px; border-radius: var(--radius); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.nut-grams-input:focus-within { box-shadow: inset 0 0 0 2px var(--accent-text); }
+.nut-grams-input input { width: 4.2ch; border: 0; background: transparent; outline: none; text-align: right; font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 26px; font-weight: 700; color: var(--ink); line-height: 52px; }
+.nut-grams-input span { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.nut-gram-chips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+.nut-gram-chips .chip { justify-content: center; padding: 0 4px; }
+
+/* ─── Código de barras ─────────────────────────────────────────────────── */
+.scan-frame { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-l); background: #050505; color: #f4f4f4; }
+.scan-frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scan-guide { position: absolute; left: 12%; right: 12%; top: 30%; bottom: 30%; border-radius: 14px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .38), inset 0 0 0 2px rgba(255, 255, 255, .85); }
+.scan-guide::after { content: ""; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: scan-line 1.8s var(--ease-standard) infinite alternate; }
+@keyframes scan-line { from { transform: translateY(-34px); } to { transform: translateY(34px); } }
+@media (prefers-reduced-motion: reduce) { .scan-guide::after { animation: none; } }
+.scan-status { position: relative; padding: 8px 14px; border-radius: var(--radius-pill); background: rgba(0, 0, 0, .55); font-size: 13.5px; font-weight: 600; }
+.scan-frame[data-status="scanning"] .scan-status { display: none; }
+.scan-blocked { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 30ch; padding: 20px; text-align: center; font-size: 14px; line-height: 1.45; color: rgba(244, 244, 244, .82); }
+.scan-code { font-size: 20px; font-weight: 700; letter-spacing: .04em; color: #fff; }
+.scan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.scan-actions .btn { padding: 0 12px; }
+.scan-manual { display: flex; align-items: center; gap: 8px; }
+.scan-manual .picker-search { flex: 1; min-width: 0; }
+.scan-source { font-size: 12.5px; line-height: 1.45; color: var(--ink-3); }
 
 /* ─── Cálculo ──────────────────────────────────────────────────────────── */
 .nut-setup { display: flex; flex-direction: column; gap: 22px; }

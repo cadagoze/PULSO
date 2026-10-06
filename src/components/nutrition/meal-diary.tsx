@@ -1,9 +1,8 @@
 import { BookmarkCheck, BookmarkPlus, Plus, RotateCcw } from "lucide-react";
-import { entryTotals, formatKcal, mealSlots } from "@/lib/nutrition";
+import { amountLabel, entryTotals, formatKcal, mealSlots } from "@/lib/nutrition";
 import { cn } from "@/lib/utils";
 import type { FoodEntry, MealSlot, SavedMeal } from "@/types";
 
-const portionLabel = (portions: number) => (portions === 1 ? "" : `${portions.toLocaleString("es-CL")} × `);
 /** Identifica una combinación de alimentos y porciones (para saber si ya está guardada). */
 const mealKey = (items: Array<{ foodId: string; portions: number }>) => items.map((item) => `${item.foodId}:${item.portions}`).sort().join("|");
 
@@ -50,7 +49,7 @@ export function MealDiary({ entries, yesterday, saved, fresh, onAdd, onEdit, onR
                     <button type="button" className={cn("nut-item", fresh === entry.id && "is-fresh")} onClick={() => onEdit(entry)}>
                       <span className="grow">
                         <span className="nut-item-name">{entry.name}</span>
-                        <small>{portionLabel(entry.portions)}{entry.portion}</small>
+                        <small>{amountLabel(entry)}</small>
                       </span>
                       <span className="num nut-item-kcal">{formatKcal(entry.kcal * entry.portions)}</span>
                     </button>

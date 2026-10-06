@@ -1,31 +1,37 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, Bookmark, ChevronRight, PenLine, Plus, Search, Trash2, X, Zap } from "lucide-react";
-import { Button, MetaLine, NumberMetric, Stepper } from "@/components/ui";
+import { ArrowLeft, Bookmark, ChevronRight, PenLine, Plus, ScanBarcode, Search, Trash2, X, Zap } from "lucide-react";
+import { Button, MetaLine, NumberMetric } from "@/components/ui";
+import { AmountInput, initialAmount, resolveAmount, type Amount } from "@/components/nutrition/amount-input";
+import { BarcodeScanner } from "@/components/nutrition/barcode-scanner";
+import { barcodeFoodId } from "@/lib/barcode";
 import { foodCategoryLabels, foods } from "@/data/foods";
-import { entryTotals, formatKcal } from "@/lib/nutrition";
+import { amountLabel, entryTotals, formatKcal } from "@/lib/nutrition";
 import { cn, normalizeText } from "@/lib/utils";
 import type { FoodCategory, FoodEntry, FoodItem, SavedMeal } from "@/types";
 
-type View = "list" | "detail" | "custom" | "quick";
+type View = "list" | "detail" | "custom" | "quick" | "scan";
 const categories = Object.keys(foodCategoryLabels) as FoodCategory[];
 const parse = (value: string) => Number(value.trim().replace(",", ".") || 0);
 
 /**
- * Buscador para registrar un alimento en una comida: recientes, categorías y búsqueda sin tildes;
- * luego las porciones con calorías y macros en vivo. También permite crear alimentos propios
- * y anotar calorías rápidas.
+ * Buscador para registrar un alimento en una comida: recientes, categorías, búsqueda sin tildes y
+ * código de barras; luego porciones o gramos con calorías y macros en vivo. También permite crear
+ * alimentos propios y anotar calorías rápidas.
  */
-export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPortions, onPick, onCreate, onPickSaved, onDeleteSaved }: {
+export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPortions, usualGrams, onPick, onCreate, onPickSaved, onDeleteSaved }: {
   mealLabel: string;
   customFoods: FoodItem[];
   recent: FoodEntry[];
   savedMeals: SavedMeal[];
   /** Última porción usada de cada alimento (se propone al elegirlo). */
   usualPortions: Record<string, number>;
-  onPick: (food: FoodItem, portions: number) => void;
-  onCreate: (food: FoodItem, portions: number) => void;
+  /** Gramos de la última vez, si se registró en gramos. */
+  usualGrams: Record<string, number>;
+  onPick: (food: FoodItem, portions: number, grams?: number) => void;
+  /** Alimento nuevo (creado o escaneado): se guarda en «Mis alimentos» y se registra. */
+  onCreate: (food: FoodItem, portions: number, grams?: number) => void;
   onPickSaved: (saved: SavedMeal) => void;
   onDeleteSaved: (id: string) => void;
 }) {
@@ -33,8 +39,10 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<FoodCategory | null>(null);
   const [selected, setSelected] = useState<FoodItem | null>(null);
-  const [portions, setPortions] = useState(1);
+  const [amount, setAmount] = useState<Amount>(() => initialAmount(""));
   const [editingSaved, setEditingSaved] = useState(false);
+  // Código escaneado que no está en la base: el alimento creado a mano queda con ese código.
+  const [barcode, setBarcode] = useState<string | null>(null);
 
   const catalog = useMemo(() => [...customFoods, ...foods], [customFoods]);
   const results = useMemo(() => {
@@ -46,43 +54,53 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
 
   function choose(food: FoodItem) {
     setSelected(food);
-    setPortions(usualPortions[food.id] ?? 1);
+    setAmount(initialAmount(food.portion, { portions: usualPortions[food.id], grams: usualGrams[food.id] }));
     setView("detail");
   }
 
   if (view === "detail" && selected) {
+    const resolved = resolveAmount(amount, selected.portion);
+    const factor = resolved?.portions ?? 0;
+    const scanned = selected.id.startsWith("off-");
+    const isNew = !catalog.some((food) => food.id === selected.id);
+    const usual = usualPortions[selected.id] !== undefined ? "como la última vez" : undefined;
     return (
       <div className="nut-picker">
-        <button type="button" className="link-button nut-back" onClick={() => setView("list")}><ArrowLeft size={15} />Volver</button>
+        <button type="button" className="link-button nut-back" onClick={() => setView(scanned && isNew ? "scan" : "list")}><ArrowLeft size={15} />Volver</button>
         <div className="nut-detail-head">
-          <p className="meta">{foodCategoryLabels[selected.category]}</p>
+          <p className="meta">{scanned ? "Código de barras" : foodCategoryLabels[selected.category]}</p>
           <h3 className="title-m">{selected.name}</h3>
           <p className="muted">Porción: {selected.portion}</p>
         </div>
-        <div className="nut-portions">
-          <span className="nut-label">Porciones{usualPortions[selected.id] !== undefined && <small> · como la última vez</small>}</span>
-          <Stepper value={portions} onChange={setPortions} min={0.5} max={10} step={0.5} label="porciones" format={(value) => value.toLocaleString("es-CL")} />
-        </div>
+        <AmountInput portion={selected.portion} value={amount} onChange={setAmount} hint={usual} />
         <div className="nut-detail-values">
-          <NumberMetric size="l" value={formatKcal(selected.kcal * portions)} unit="kcal" />
-          <MetaLine items={[`${Math.round(selected.protein * portions)} g proteína`, `${Math.round(selected.carbs * portions)} g carbohidratos`, `${Math.round(selected.fat * portions)} g grasa`]} />
+          <NumberMetric size="l" value={formatKcal(selected.kcal * factor)} unit="kcal" />
+          <MetaLine items={[`${Math.round(selected.protein * factor)} g proteína`, `${Math.round(selected.carbs * factor)} g carbohidratos`, `${Math.round(selected.fat * factor)} g grasa`]} />
         </div>
-        <Button size="l" block onClick={() => onPick(selected, portions)}><Plus size={18} />Agregar a {mealLabel}</Button>
+        {scanned && isNew && <p className="scan-source">Datos de Open Food Facts: revisa que coincidan con la etiqueta. Queda guardado en «Mis alimentos».</p>}
+        <Button size="l" block disabled={!resolved} onClick={() => resolved && (isNew ? onCreate : onPick)(selected, resolved.portions, resolved.grams)}><Plus size={18} />Agregar a {mealLabel}{resolved?.grams ? ` · ${amountLabel({ grams: resolved.grams, portions: resolved.portions, portion: selected.portion })}` : ""}</Button>
       </div>
     );
   }
 
   if (view === "custom" || view === "quick") {
-    return <CustomFoodForm quick={view === "quick"} mealLabel={mealLabel} onBack={() => setView("list")} onSave={onCreate} />;
+    return <CustomFoodForm quick={view === "quick"} barcode={view === "custom" ? barcode : null} mealLabel={mealLabel} onBack={() => setView(barcode ? "scan" : "list")} onSave={onCreate} />;
+  }
+
+  if (view === "scan") {
+    return <BarcodeScanner known={customFoods} onBack={() => setView("list")} onFound={choose} onCreate={(code) => { setBarcode(code); setView("custom"); }} />;
   }
 
   return (
     <div className="nut-picker">
-      <label className="picker-search nut-search">
-        <Search size={18} aria-hidden="true" />
-        <input type="search" name="pulso-buscar-alimento" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca un alimento" aria-label="Buscar alimento" />
-        {query && <button type="button" onClick={() => setQuery("")} aria-label="Borrar búsqueda"><X size={16} /></button>}
-      </label>
+      <div className="nut-search">
+        <label className="picker-search">
+          <Search size={18} aria-hidden="true" />
+          <input type="search" name="pulso-buscar-alimento" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca un alimento" aria-label="Buscar alimento" />
+          {query && <button type="button" onClick={() => setQuery("")} aria-label="Borrar búsqueda"><X size={16} /></button>}
+        </label>
+        <button type="button" className="nut-scan-button" onClick={() => { setBarcode(null); setView("scan"); }} aria-label="Escanear código de barras"><ScanBarcode size={21} /></button>
+      </div>
       <div className="scroll-x nut-cats" role="group" aria-label="Categorías">
         <button type="button" className="chip" aria-pressed={category === null} onClick={() => setCategory(null)}>Todos</button>
         {categories.filter((key) => key !== "propios" || customFoods.length > 0).map((key) => (
@@ -128,8 +146,8 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
       </section>
 
       <div className="nut-picker-actions">
-        <Button variant="secondary" onClick={() => setView("custom")}><PenLine size={16} />Crear alimento</Button>
-        <Button variant="secondary" onClick={() => setView("quick")}><Zap size={16} />Calorías rápidas</Button>
+        <Button variant="secondary" onClick={() => { setBarcode(null); setView("custom"); }}><PenLine size={16} />Crear alimento</Button>
+        <Button variant="secondary" onClick={() => { setBarcode(null); setView("quick"); }}><Zap size={16} />Calorías rápidas</Button>
       </div>
     </div>
   );
@@ -154,8 +172,8 @@ function FoodList({ items, onChoose }: { items: FoodItem[]; onChoose: (food: Foo
   );
 }
 
-/** Alimento propio (queda guardado) o calorías rápidas (sólo para este registro). */
-function CustomFoodForm({ quick, mealLabel, onBack, onSave }: { quick: boolean; mealLabel: string; onBack: () => void; onSave: (food: FoodItem, portions: number) => void }) {
+/** Alimento propio (queda guardado, con su código si se escaneó) o calorías rápidas (sólo para este registro). */
+function CustomFoodForm({ quick, barcode, mealLabel, onBack, onSave }: { quick: boolean; barcode: string | null; mealLabel: string; onBack: () => void; onSave: (food: FoodItem, portions: number) => void }) {
   const [name, setName] = useState("");
   const [portion, setPortion] = useState("");
   const [kcal, setKcal] = useState("");
@@ -167,7 +185,7 @@ function CustomFoodForm({ quick, mealLabel, onBack, onSave }: { quick: boolean; 
 
   function save() {
     if (!valid) return;
-    const id = quick ? "rapido" : `propio-${Date.now().toString(36)}`;
+    const id = quick ? "rapido" : barcode ? barcodeFoodId(barcode) : `propio-${Date.now().toString(36)}`;
     onSave({
       id,
       name: name.trim() || "Calorías rápidas",
@@ -185,7 +203,7 @@ function CustomFoodForm({ quick, mealLabel, onBack, onSave }: { quick: boolean; 
       <button type="button" className="link-button nut-back" onClick={onBack}><ArrowLeft size={15} />Volver</button>
       <div className="nut-detail-head">
         <h3 className="title-m">{quick ? "Calorías rápidas" : "Crear alimento"}</h3>
-        <p className="muted">{quick ? "Anota sólo las calorías cuando no encuentres el alimento." : "Queda guardado en «Mis alimentos» para la próxima vez."}</p>
+        <p className="muted">{quick ? "Anota sólo las calorías cuando no encuentres el alimento." : barcode ? <>Copia los datos de la etiqueta. Queda guardado con el código <span className="num">{barcode}</span>: la próxima vez que lo escanees, aparece directo.</> : "Queda guardado en «Mis alimentos» para la próxima vez."}</p>
       </div>
       <label className="field">
         {quick ? "Descripción (opcional)" : "Nombre"}

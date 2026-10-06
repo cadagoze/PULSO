@@ -45,7 +45,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación.
 - `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
 - `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
-- `/comidas`: Nutrición. Cálculo de calorías y macros según tu objetivo, contador de agua, comidas guardadas para repetir con un toque (y la porción de la última vez), diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de unos 145 alimentos chilenos por porción casera, alimentos propios y calorías rápidas; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos. Desde Inicio, `?registrar` abre el registro de la comida de esa hora y `?calcular`, el cálculo.
+- `/comidas`: Nutrición. Cálculo de calorías y macros según tu objetivo, contador de agua, comidas guardadas para repetir con un toque (y la porción de la última vez), diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de más de 200 alimentos y platos chilenos por porción casera, registro en porciones o en gramos (ml en bebidas), escáner de código de barras con Open Food Facts (base abierta y gratuita; lo escaneado queda en «Mis alimentos» y se encuentra sin conexión), alimentos propios y calorías rápidas; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos. Desde Inicio, `?registrar` abre el registro de la comida de esa hora y `?calcular`, el cálculo.
 - `/guia`: lecturas breves.
 
 ## Estructura
@@ -53,6 +53,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `src/app`: rutas.
 - `src/components`: interfaz por área (`home`, `train`, `session`, `library`, `progress`, `profile`, `content`, `onboarding`, `exercises`, `nutrition`, `cloud`, `ui`).
 - `src/styles`: estilos por área; los tokens y componentes base viven en `src/app/globals.css`.
+- **Código de barras:** usa el lector nativo del navegador (Android/Chrome) y, donde no existe (iPhone/Safari), ZXing en WebAssembly con el paquete `barcode-detector`. El archivo `public/wasm/zxing_reader.wasm` se sirve desde la propia app (sin CDN externo) y el service worker lo guarda tras el primer uso; si se actualiza `zxing-wasm`, hay que copiarlo de nuevo desde `node_modules/zxing-wasm/dist/reader/`.
 - `src/data`: datos centralizados (ejercicios, programas, catálogo, equipamiento, contenido, ilustraciones y alimentos). En `equipment.ts` cada equipo aporta capacidades (`provides`) que habilitan ejercicios: p. ej. bidones o una mochila con peso cuentan como mancuernas livianas, el set unible como mancuernas y barra, y el multigimnasio habilita poleas y máquinas en casa. La lista base de casa sigue lo que más se compra para el hogar (Mercado Libre, Amazon y CyberDay, 2025). `npm test` falla si un equipo no habilita ningún ejercicio o si un ejercicio pide algo que no se puede marcar.
 - `src/lib`: lógica sin interfaz (`progression`, `analytics`, `generator`, `programs`, `store`, `session`, `feedback`, `illustration`, `nutrition`, `energy`) y `cloud` (cuenta y sincronización con Firebase).
 - `src/types`: contratos.

@@ -24,7 +24,7 @@ import { WeeklyReviewCard } from "@/components/nutrition/weekly-review";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
-import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualPortions } from "@/lib/nutrition";
+import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
 import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSavedMeals, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
@@ -158,10 +158,10 @@ export default function NutritionPage() {
     hideToast();
   }
 
-  function addFood(food: FoodItem, portions: number) {
+  function addFood(food: FoodItem, portions: number, grams?: number) {
     if (!picker || !targets) return;
     const id = newId("comida");
-    const entry = entryFromFood(food, { id, date: today, meal: picker.meal, portions });
+    const entry = entryFromFood(food, { id, date: today, meal: picker.meal, portions, grams });
     setLog((current) => pruneHistory([...current, entry], today));
     setPickerOpen(false);
     setFresh(id);
@@ -200,9 +200,9 @@ export default function NutritionPage() {
     showToast(`Guardada · ${meal.name}`, { delay: 260 });
   }
 
-  function createFood(food: FoodItem, portions: number) {
-    if (food.id !== "rapido") setCustomFoods((current) => [food, ...current].slice(0, 200));
-    addFood(food, portions);
+  function createFood(food: FoodItem, portions: number, grams?: number) {
+    if (food.id !== "rapido") setCustomFoods((current) => [food, ...current.filter((item) => item.id !== food.id)].slice(0, 200));
+    addFood(food, portions, grams);
   }
 
   function openEntry(entry: FoodEntry) {
@@ -211,9 +211,14 @@ export default function NutritionPage() {
     hideToast();
   }
 
-  function saveEntry(portions: number) {
+  function saveEntry({ portions, grams }: { portions: number; grams?: number }) {
     if (!editing) return;
-    setLog((current) => current.map((entry) => (entry.id === editing.id ? { ...entry, portions } : entry)));
+    setLog((current) => current.map((entry) => {
+      if (entry.id !== editing.id) return entry;
+      const next: FoodEntry = { ...entry, portions, grams };
+      if (!grams) delete next.grams;
+      return next;
+    }));
     setEditorOpen(false);
   }
 
@@ -351,6 +356,7 @@ export default function NutritionPage() {
             recent={recentFoods(log)}
             savedMeals={savedMealsFor(savedMeals, picker.meal)}
             usualPortions={usualPortions(log)}
+            usualGrams={usualGrams(log)}
             onPick={addFood}
             onCreate={createFood}
             onPickSaved={(saved) => addSavedMeal(picker.meal, saved)}

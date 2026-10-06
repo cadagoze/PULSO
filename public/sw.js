@@ -103,6 +103,7 @@ function isAsset(url) {
   return url.pathname.startsWith("/_next/static/")
     || url.pathname === "/_next/image"
     || url.pathname.startsWith("/images/")
+    || url.pathname.startsWith("/wasm/")
     || url.pathname.startsWith("/icon")
     || url.pathname.startsWith("/apple-icon")
     || url.pathname === "/manifest.webmanifest";

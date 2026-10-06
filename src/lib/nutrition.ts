@@ -155,8 +155,41 @@ export function entryTotals(entries: Array<Pick<FoodEntry, "kcal" | "protein" | 
   }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 }
 
-export function entryFromFood(food: FoodItem, { id, date, meal, portions }: { id: string; date: string; meal: MealSlot; portions: number }): FoodEntry {
-  return { id, date, meal, foodId: food.id, name: food.name, portion: food.portion, portions, kcal: food.kcal, protein: food.protein, carbs: food.carbs, fat: food.fat };
+/**
+ * Gramos (o ml) de una porción, leídos de su descripción: «1 taza (160 g)», «1 plato (150 g, con…)»,
+ * «100 g cocida». Las que miden sólo una parte («45 ml de pisco», «40 g de avena») no cuentan.
+ */
+export function portionGrams(portion: string): number | null {
+  const match = portion.match(/\((\d+(?:[.,]\d+)?)\s*(?:g|ml)\s*[),]/i) ?? portion.match(/^(\d+(?:[.,]\d+)?)\s*(?:g|ml)\b/i);
+  if (!match) return null;
+  const value = Number(match[1].replace(",", "."));
+  return value > 0 ? value : null;
+}
+
+/** Unidad de la porción: ml en bebidas («1 vaso (200 ml)»), si no gramos. */
+export function portionUnit(portion: string): "g" | "ml" {
+  return /\d\s*ml\s*[),]|^\d+\s*ml\b/i.test(portion) ? "ml" : "g";
+}
+
+/** Porciones equivalentes a una cantidad en gramos (redondeadas a centésimas). */
+export function portionsFromGrams(grams: number, portion: string) {
+  const base = portionGrams(portion);
+  return base ? Math.round((grams / base) * 100) / 100 : 1;
+}
+
+export function entryFromFood(food: FoodItem, { id, date, meal, portions, grams }: { id: string; date: string; meal: MealSlot; portions: number; grams?: number }): FoodEntry {
+  return {
+    id, date, meal, foodId: food.id, name: food.name, portion: food.portion,
+    portions: grams ? portionsFromGrams(grams, food.portion) : portions,
+    ...(grams ? { grams } : {}),
+    kcal: food.kcal, protein: food.protein, carbs: food.carbs, fat: food.fat,
+  };
+}
+
+/** Cómo se muestra la cantidad registrada: «180 g», «1,5 × 1 taza (160 g)» o la porción. */
+export function amountLabel(entry: Pick<FoodEntry, "grams" | "portions" | "portion">) {
+  if (entry.grams) return `${entry.grams.toLocaleString("es-CL")} ${portionUnit(entry.portion)}`;
+  return `${entry.portions === 1 ? "" : `${entry.portions.toLocaleString("es-CL")} × `}${entry.portion}`;
 }
 
 /** Días de registro que se conservan (suficiente para tendencias sin llenar el almacenamiento). */
@@ -207,9 +240,19 @@ export function usualPortions(entries: FoodEntry[]) {
   return portions;
 }
 
+/** Gramos de la última vez, para los alimentos que registraste en gramos. */
+export function usualGrams(entries: FoodEntry[]) {
+  const grams: Record<string, number> = {};
+  for (const entry of entries) {
+    if (entry.grams) grams[entry.foodId] = entry.grams;
+    else delete grams[entry.foodId];
+  }
+  return grams;
+}
+
 // ─── Comidas guardadas ─────────────────────────────────────────────────────
 
-const toItem = ({ foodId, name, portion, portions, kcal, protein, carbs, fat }: SavedMealItem): SavedMealItem => ({ foodId, name, portion, portions, kcal, protein, carbs, fat });
+const toItem = ({ foodId, name, portion, portions, grams, kcal, protein, carbs, fat }: SavedMealItem): SavedMealItem => ({ foodId, name, portion, portions, ...(grams ? { grams } : {}), kcal, protein, carbs, fat });
 
 /** Guarda lo registrado en una comida para repetirlo con un toque. */
 export function savedMealFromEntries(entries: FoodEntry[], { id, name, meal, now = new Date() }: { id: string; name: string; meal: MealSlot; now?: Date }): SavedMeal {

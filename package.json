@@ -19,6 +19,7 @@
   "dependencies": {
     "@cloudflare/workers-response-store": "^1.0.0",
     "@vinext/cloudflare": "^1.0.0",
+    "barcode-detector": "^3.2.2",
     "clsx": "^2.1.1",
     "firebase": "^12.19.0",
     "lucide-react": "^1.28.0",

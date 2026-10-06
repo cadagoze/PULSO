@@ -360,6 +360,8 @@ export interface FoodEntry {
   portion: string;
   /** Cuántas porciones (0,5 = media). */
   portions: number;
+  /** Si se registró en gramos (o ml en bebidas): la cantidad; las porciones salen de los gramos de la porción. */
+  grams?: number;
   kcal: number;
   protein: number;
   carbs: number;
@@ -367,7 +369,7 @@ export interface FoodEntry {
 }
 
 /** Alimento dentro de una comida guardada (valores por porción y cuántas porciones). */
-export type SavedMealItem = Pick<FoodEntry, "foodId" | "name" | "portion" | "portions" | "kcal" | "protein" | "carbs" | "fat">;
+export type SavedMealItem = Pick<FoodEntry, "foodId" | "name" | "portion" | "portions" | "grams" | "kcal" | "protein" | "carbs" | "fat">;
 
 /** Comida guardada para registrarla con un toque (p. ej. «Mi desayuno»). */
 export interface SavedMeal {

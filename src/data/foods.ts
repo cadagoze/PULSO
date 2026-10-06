@@ -41,6 +41,12 @@ export const foods: FoodItem[] = [
   { id: "camote", name: "Camote cocido", portion: "1 mediano (130 g)", kcal: 117, protein: 2.1, carbs: 27, fat: 0.2, category: "panes" },
   { id: "choclo", name: "Choclo", portion: "1 unidad (100 g de granos)", kcal: 96, protein: 3.4, carbs: 19, fat: 1.5, category: "panes" },
   { id: "galletas-agua", name: "Galletas de agua", portion: "4 unidades (25 g)", kcal: 110, protein: 2.3, carbs: 18, fat: 3, category: "panes" },
+  { id: "pan-amasado", name: "Pan amasado", portion: "1 unidad (100 g)", kcal: 300, protein: 8, carbs: 52, fat: 6.5, category: "panes" },
+  { id: "pan-frica", name: "Pan frica", portion: "1 unidad (70 g)", kcal: 200, protein: 6.5, carbs: 37, fat: 3, category: "panes" },
+  { id: "dobladita", name: "Dobladita", portion: "1 unidad (70 g)", kcal: 250, protein: 6, carbs: 38, fat: 8, category: "panes" },
+  { id: "tortilla-rescoldo", name: "Tortilla de rescoldo", portion: "1 trozo (100 g)", kcal: 280, protein: 8, carbs: 54, fat: 3.5, category: "panes" },
+  { id: "mote-trigo", name: "Mote de trigo cocido", portion: "1 taza (150 g)", kcal: 165, protein: 5, carbs: 35, fat: 0.8, category: "panes" },
+  { id: "fideos-integrales", name: "Fideos integrales cocidos", portion: "1 taza (140 g)", kcal: 174, protein: 7.5, carbs: 37, fat: 0.8, category: "panes" },
 
   // Proteínas
   { id: "pollo-pechuga", name: "Pechuga de pollo a la plancha", portion: "1 filete (120 g)", kcal: 198, protein: 37, carbs: 0, fat: 4.3, category: "proteinas" },
@@ -62,6 +68,16 @@ export const foods: FoodItem[] = [
   { id: "chorizo", name: "Chorizo", portion: "1 unidad (75 g)", kcal: 340, protein: 18, carbs: 1.5, fat: 29, category: "proteinas" },
   { id: "tofu", name: "Tofu firme", portion: "100 g", kcal: 144, protein: 15.6, carbs: 3.5, fat: 8.7, category: "proteinas" },
   { id: "proteina-whey", name: "Proteína en polvo (whey)", portion: "1 medida (30 g)", kcal: 120, protein: 24, carbs: 3, fat: 1.5, category: "proteinas" },
+  { id: "pollo-asado-piel", name: "Pollo asado con piel", portion: "1 presa (150 g)", kcal: 330, protein: 36, carbs: 0, fat: 20, category: "proteinas" },
+  { id: "pavo-pechuga", name: "Pechuga de pavo asada", portion: "100 g", kcal: 135, protein: 30, carbs: 0, fat: 1, category: "proteinas" },
+  { id: "lomo-vetado", name: "Lomo vetado", portion: "1 bistec (150 g)", kcal: 375, protein: 39, carbs: 0, fat: 24, category: "proteinas" },
+  { id: "costillar-cerdo", name: "Costillar de cerdo asado", portion: "1 porción (150 g)", kcal: 450, protein: 36, carbs: 0, fat: 34, category: "proteinas" },
+  { id: "longaniza", name: "Longaniza", portion: "1 unidad (100 g)", kcal: 330, protein: 15, carbs: 2, fat: 29, category: "proteinas" },
+  { id: "jurel", name: "Jurel en conserva", portion: "½ tarro (110 g)", kcal: 180, protein: 25, carbs: 0, fat: 9, category: "proteinas" },
+  { id: "sardinas", name: "Sardinas en aceite, escurridas", portion: "1 lata (90 g)", kcal: 190, protein: 22, carbs: 0, fat: 11, category: "proteinas" },
+  { id: "choritos", name: "Choritos cocidos", portion: "1 taza (150 g)", kcal: 258, protein: 36, carbs: 11, fat: 6.7, category: "proteinas" },
+  { id: "pollo-apanado", name: "Pollo apanado o nuggets", portion: "6 unidades (100 g)", kcal: 296, protein: 15, carbs: 18, fat: 18, category: "proteinas" },
+  { id: "soya-texturizada", name: "Soya texturizada", portion: "¼ taza seca (25 g)", kcal: 85, protein: 12.5, carbs: 7.5, fat: 0.3, category: "proteinas" },
 
   // Lácteos y bebidas vegetales
   { id: "leche-descremada", name: "Leche descremada", portion: "1 taza (200 ml)", kcal: 70, protein: 6.8, carbs: 10, fat: 0.2, category: "lacteos" },
@@ -77,6 +93,9 @@ export const foods: FoodItem[] = [
   { id: "queso-cottage", name: "Queso cottage", portion: "½ taza (110 g)", kcal: 108, protein: 12, carbs: 4, fat: 4.7, category: "lacteos" },
   { id: "queso-crema", name: "Queso crema", portion: "1 cucharada (15 g)", kcal: 52, protein: 0.9, carbs: 0.6, fat: 5.1, category: "lacteos" },
   { id: "queso-parmesano", name: "Queso parmesano", portion: "1 cucharada (5 g)", kcal: 21, protein: 1.9, carbs: 0.2, fat: 1.4, category: "lacteos" },
+  { id: "leche-cultivada", name: "Leche cultivada", portion: "1 botella (200 ml)", kcal: 140, protein: 6, carbs: 20, fat: 4, category: "lacteos" },
+  { id: "yogur-proteina", name: "Yogur alto en proteína", portion: "1 unidad (155 g)", kcal: 110, protein: 15, carbs: 11, fat: 0.5, category: "lacteos" },
+  { id: "queso-cabra", name: "Queso de cabra", portion: "1 trozo (30 g)", kcal: 110, protein: 6.5, carbs: 0.5, fat: 9, category: "lacteos" },
 
   // Frutas
   { id: "platano", name: "Plátano", portion: "1 mediano (120 g)", kcal: 107, protein: 1.3, carbs: 27, fat: 0.4, category: "frutas" },
@@ -96,6 +115,11 @@ export const foods: FoodItem[] = [
   { id: "papaya", name: "Papaya", portion: "1 taza (145 g)", kcal: 62, protein: 0.7, carbs: 16, fat: 0.4, category: "frutas" },
   { id: "pasas", name: "Pasas", portion: "1 cucharada (15 g)", kcal: 45, protein: 0.5, carbs: 12, fat: 0.1, category: "frutas" },
   { id: "jugo-naranja", name: "Jugo de naranja natural", portion: "1 vaso (200 ml)", kcal: 90, protein: 1.4, carbs: 21, fat: 0.4, category: "frutas" },
+  { id: "chirimoya", name: "Chirimoya", portion: "1 taza (160 g)", kcal: 120, protein: 2.5, carbs: 28, fat: 1, category: "frutas" },
+  { id: "cerezas", name: "Cerezas", portion: "1 taza (140 g)", kcal: 88, protein: 1.5, carbs: 22, fat: 0.3, category: "frutas" },
+  { id: "frambuesas", name: "Frambuesas", portion: "1 taza (125 g)", kcal: 65, protein: 1.5, carbs: 15, fat: 0.8, category: "frutas" },
+  { id: "ciruela", name: "Ciruela", portion: "1 unidad (66 g)", kcal: 30, protein: 0.5, carbs: 7.5, fat: 0.2, category: "frutas" },
+  { id: "pepino-dulce", name: "Pepino dulce", portion: "1 unidad (200 g)", kcal: 44, protein: 0.8, carbs: 10, fat: 0.2, category: "frutas" },
 
   // Verduras
   { id: "lechuga", name: "Lechuga", portion: "1 taza (50 g)", kcal: 8, protein: 0.6, carbs: 1.5, fat: 0.1, category: "verduras" },
@@ -114,6 +138,12 @@ export const foods: FoodItem[] = [
   { id: "coliflor", name: "Coliflor cocida", portion: "1 taza (125 g)", kcal: 29, protein: 2.3, carbs: 5, fat: 0.6, category: "verduras" },
   { id: "ensalada-chilena", name: "Ensalada chilena", portion: "1 plato (150 g, con 1 cdta de aceite)", kcal: 65, protein: 1.3, carbs: 6, fat: 4.2, category: "verduras" },
   { id: "ensalada-surtida", name: "Ensalada surtida con aceite", portion: "1 plato (200 g, 1 cda de aceite)", kcal: 150, protein: 2.5, carbs: 10, fat: 11, category: "verduras" },
+  { id: "acelga", name: "Acelga cocida", portion: "1 taza (175 g)", kcal: 35, protein: 3.3, carbs: 7, fat: 0.1, category: "verduras" },
+  { id: "repollo", name: "Repollo", portion: "1 taza (90 g)", kcal: 22, protein: 1.2, carbs: 5, fat: 0.1, category: "verduras" },
+  { id: "palmitos", name: "Palmitos en conserva", portion: "½ taza (75 g)", kcal: 20, protein: 1.9, carbs: 3.4, fat: 0.5, category: "verduras" },
+  { id: "alcachofa", name: "Alcachofa cocida", portion: "1 unidad (120 g)", kcal: 64, protein: 3.5, carbs: 14, fat: 0.4, category: "verduras" },
+  { id: "esparragos", name: "Espárragos cocidos", portion: "6 unidades (90 g)", kcal: 20, protein: 2.2, carbs: 3.7, fat: 0.2, category: "verduras" },
+  { id: "pebre", name: "Pebre", portion: "2 cucharadas (30 g)", kcal: 25, protein: 0.3, carbs: 2, fat: 1.8, category: "verduras" },
 
   // Legumbres
   { id: "lentejas", name: "Lentejas cocidas", portion: "1 taza (200 g)", kcal: 230, protein: 18, carbs: 40, fat: 0.8, category: "legumbres" },
@@ -135,6 +165,8 @@ export const foods: FoodItem[] = [
   { id: "mantequilla-mani", name: "Mantequilla de maní", portion: "1 cucharada (16 g)", kcal: 94, protein: 3.6, carbs: 3.4, fat: 8, category: "grasas" },
   { id: "aceitunas", name: "Aceitunas", portion: "5 unidades (20 g)", kcal: 23, protein: 0.2, carbs: 1.2, fat: 2.1, category: "grasas" },
   { id: "chia", name: "Semillas de chía", portion: "1 cucharada (12 g)", kcal: 58, protein: 2, carbs: 5, fat: 3.7, category: "grasas" },
+  { id: "pistachos", name: "Pistachos", portion: "1 puñado (30 g)", kcal: 170, protein: 6, carbs: 8, fat: 13.5, category: "grasas" },
+  { id: "maravilla", name: "Semillas de maravilla", portion: "1 puñado (30 g)", kcal: 175, protein: 6, carbs: 6, fat: 15, category: "grasas" },
 
   // Bebidas
   { id: "cafe", name: "Café negro", portion: "1 taza (240 ml)", kcal: 2, protein: 0.3, carbs: 0, fat: 0, category: "bebidas" },
@@ -149,6 +181,9 @@ export const foods: FoodItem[] = [
   { id: "cerveza", name: "Cerveza", portion: "1 lata (350 ml)", kcal: 150, protein: 1.6, carbs: 13, fat: 0, category: "bebidas", alcohol: true },
   { id: "vino", name: "Vino", portion: "1 copa (150 ml)", kcal: 125, protein: 0.1, carbs: 3.8, fat: 0, category: "bebidas", alcohol: true },
   { id: "piscola", name: "Piscola", portion: "1 vaso (45 ml de pisco)", kcal: 190, protein: 0, carbs: 21, fat: 0, category: "bebidas", alcohol: true },
+  { id: "bebida-energetica", name: "Bebida energética", portion: "1 lata (250 ml)", kcal: 112, protein: 0, carbs: 28, fat: 0, category: "bebidas" },
+  { id: "pisco-sour", name: "Pisco sour", portion: "1 copa (120 ml)", kcal: 230, protein: 2, carbs: 20, fat: 0, category: "bebidas", alcohol: true },
+  { id: "terremoto", name: "Terremoto", portion: "1 vaso (300 ml)", kcal: 350, protein: 0.5, carbs: 40, fat: 3, category: "bebidas", alcohol: true },
 
   // Snacks y dulces
   { id: "barra-cereal", name: "Barra de cereal", portion: "1 unidad (25 g)", kcal: 100, protein: 1.5, carbs: 18, fat: 2.5, category: "snacks" },
@@ -162,6 +197,20 @@ export const foods: FoodItem[] = [
   { id: "cabritas", name: "Cabritas", portion: "2 tazas (16 g)", kcal: 62, protein: 2, carbs: 12.5, fat: 0.7, category: "snacks" },
   { id: "queque", name: "Queque", portion: "1 trozo (60 g)", kcal: 230, protein: 3.5, carbs: 32, fat: 10, category: "snacks" },
   { id: "sopaipilla", name: "Sopaipilla", portion: "1 unidad (50 g)", kcal: 160, protein: 2.5, carbs: 20, fat: 8, category: "snacks" },
+  { id: "mote-huesillo", name: "Mote con huesillo", portion: "1 vaso (300 ml)", kcal: 280, protein: 3, carbs: 66, fat: 0.5, category: "snacks" },
+  { id: "manjar", name: "Manjar", portion: "1 cucharada (20 g)", kcal: 64, protein: 1.4, carbs: 11, fat: 1.6, category: "snacks" },
+  { id: "membrillo", name: "Dulce de membrillo", portion: "1 trozo (30 g)", kcal: 80, protein: 0.1, carbs: 20, fat: 0, category: "snacks" },
+  { id: "calzones-rotos", name: "Calzones rotos", portion: "1 unidad (40 g)", kcal: 170, protein: 2.5, carbs: 22, fat: 8, category: "snacks" },
+  { id: "berlin", name: "Berlín", portion: "1 unidad (80 g)", kcal: 300, protein: 5, carbs: 38, fat: 14, category: "snacks" },
+  { id: "kuchen", name: "Kuchen", portion: "1 trozo (100 g)", kcal: 300, protein: 4.5, carbs: 42, fat: 13, category: "snacks" },
+  { id: "torta", name: "Torta", portion: "1 trozo (100 g)", kcal: 360, protein: 5, carbs: 48, fat: 17, category: "snacks" },
+  { id: "leche-asada", name: "Leche asada", portion: "1 pocillo (130 g)", kcal: 180, protein: 7, carbs: 26, fat: 5.5, category: "snacks" },
+  { id: "arroz-leche", name: "Arroz con leche", portion: "1 pocillo (150 g)", kcal: 190, protein: 5, carbs: 34, fat: 4, category: "snacks" },
+  { id: "flan", name: "Flan", portion: "1 unidad (120 g)", kcal: 150, protein: 4, carbs: 26, fat: 3.5, category: "snacks" },
+  { id: "barra-chocolate-galleta", name: "Barra de chocolate con galleta", portion: "1 unidad (29 g)", kcal: 150, protein: 1.7, carbs: 18, fat: 7.6, category: "snacks" },
+  { id: "mani-confitado", name: "Maní confitado", portion: "1 bolsita (50 g)", kcal: 250, protein: 7, carbs: 28, fat: 13, category: "snacks" },
+  { id: "churros", name: "Churros", portion: "2 unidades (60 g)", kcal: 240, protein: 3, carbs: 26, fat: 14, category: "snacks" },
+  { id: "picarones", name: "Picarones con chancaca", portion: "3 unidades (90 g)", kcal: 320, protein: 3.5, carbs: 50, fat: 12, category: "snacks" },
 
   // Platos caseros (porción típica)
   { id: "avena-platano", name: "Avena con leche y plátano", portion: "1 bowl (40 g de avena)", kcal: 351, protein: 13.2, carbs: 63, fat: 6.2, category: "platos" },
@@ -182,6 +231,25 @@ export const foods: FoodItem[] = [
   { id: "pizza", name: "Pizza", portion: "1 trozo (110 g)", kcal: 285, protein: 12, carbs: 36, fat: 10, category: "platos" },
   { id: "hamburguesa-pan", name: "Hamburguesa con pan", portion: "1 unidad", kcal: 500, protein: 25, carbs: 40, fat: 26, category: "platos" },
   { id: "sushi", name: "Sushi", portion: "8 piezas", kcal: 320, protein: 10, carbs: 55, fat: 7, category: "platos" },
+  { id: "cazuela-ave", name: "Cazuela de ave", portion: "1 plato (450 g)", kcal: 300, protein: 25, carbs: 30, fat: 8, category: "platos" },
+  { id: "porotos-granados", name: "Porotos granados", portion: "1 plato (300 g)", kcal: 330, protein: 13, carbs: 52, fat: 8, category: "platos" },
+  { id: "pastel-papas", name: "Pastel de papas", portion: "1 porción (300 g)", kcal: 450, protein: 22, carbs: 38, fat: 23, category: "platos" },
+  { id: "pollo-arvejado", name: "Pollo arvejado", portion: "1 plato (300 g)", kcal: 360, protein: 30, carbs: 25, fat: 15, category: "platos" },
+  { id: "lentejas-arroz", name: "Lentejas con arroz", portion: "1 plato (350 g)", kcal: 420, protein: 20, carbs: 70, fat: 6, category: "platos" },
+  { id: "carbonada", name: "Carbonada", portion: "1 plato (350 g)", kcal: 290, protein: 18, carbs: 32, fat: 10, category: "platos" },
+  { id: "mechada-pure", name: "Carne mechada con puré", portion: "1 plato (350 g)", kcal: 520, protein: 35, carbs: 40, fat: 24, category: "platos" },
+  { id: "salpicon", name: "Salpicón", portion: "1 plato (250 g)", kcal: 280, protein: 22, carbs: 12, fat: 16, category: "platos" },
+  { id: "tortilla-verduras", name: "Tortilla de verduras", portion: "1 trozo (150 g)", kcal: 210, protein: 11, carbs: 9, fat: 14, category: "platos" },
+  { id: "merluza-frita", name: "Merluza frita", portion: "1 filete (150 g)", kcal: 330, protein: 26, carbs: 14, fat: 19, category: "platos" },
+  { id: "paila-marina", name: "Paila marina", portion: "1 plato (400 g)", kcal: 320, protein: 40, carbs: 12, fat: 12, category: "platos" },
+  { id: "caldillo-congrio", name: "Caldillo de congrio", portion: "1 plato (400 g)", kcal: 300, protein: 30, carbs: 18, fat: 11, category: "platos" },
+  { id: "ceviche", name: "Ceviche", portion: "1 porción (200 g)", kcal: 180, protein: 28, carbs: 9, fat: 3, category: "platos" },
+  { id: "crema-zapallo", name: "Crema de zapallo", portion: "1 plato (300 g)", kcal: 180, protein: 4, carbs: 22, fat: 8, category: "platos" },
+  { id: "empanada-queso", name: "Empanada de queso frita", portion: "1 unidad (120 g)", kcal: 380, protein: 12, carbs: 35, fat: 21, category: "platos" },
+  { id: "churrasco-italiano", name: "Churrasco italiano", portion: "1 unidad (350 g)", kcal: 750, protein: 38, carbs: 65, fat: 36, category: "platos" },
+  { id: "barros-luco", name: "Barros Luco", portion: "1 unidad (250 g)", kcal: 620, protein: 38, carbs: 50, fat: 30, category: "platos" },
+  { id: "ave-palta", name: "Sándwich ave palta", portion: "1 unidad (250 g)", kcal: 520, protein: 30, carbs: 45, fat: 24, category: "platos" },
+  { id: "chorrillana", name: "Chorrillana", portion: "1 porción (400 g)", kcal: 950, protein: 40, carbs: 70, fat: 55, category: "platos" },
 ];
 
 export function foodById(id: string) {
