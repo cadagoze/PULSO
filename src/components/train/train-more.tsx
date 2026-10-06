@@ -54,7 +54,7 @@ export function TrainMore({ now, initial, onCreate, onEdit, notify }: { now: num
           <strong>Biblioteca</strong>
           <small className="num">{exercises.length} ejercicios</small>
         </Link>
-        <Tile icon={<Wrench size={18} />} label="Herramientas" detail="1RM, discos, intervalos" open={open === "tools"} onClick={() => toggle("tools")} />
+        <Tile icon={<Wrench size={18} />} label="Herramientas" detail="Libre, movilidad, 1RM" open={open === "tools"} onClick={() => toggle("tools")} />
       </div>
 
       {open && (

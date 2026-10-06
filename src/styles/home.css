@@ -70,15 +70,6 @@
 .home-q-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .home-q-label svg { color: var(--ink-2); flex: none; }
 
-/* ─── Atajos y resumen ─────────────────────────────────────────────────── */
-.home-quick { display: flex; flex-direction: column; gap: 12px; }
-.home-quick-row { gap: 8px; }
-.home-quick-item { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 18px 0 8px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: var(--shadow); font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; transition: transform var(--motion-fast) var(--ease-standard); }
-.home-quick-item:active { transform: scale(.96); }
-.home-quick-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); color: var(--ink); }
-.home-digest { gap: 12px; }
-.home-digest .list-row strong { font-size: 14.5px; line-height: 1.35; }
-
 /* ─── Esqueleto ────────────────────────────────────────────────────────── */
 .home-skeleton { border-radius: var(--radius-l); background: var(--surface-2); animation: home-shimmer 1.4s ease-in-out infinite; }
 .home-skeleton-title { height: 120px; width: 70%; border-radius: var(--radius); }
