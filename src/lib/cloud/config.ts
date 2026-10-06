@@ -19,7 +19,7 @@ export const APP_HOST = "pulso.c-gonzalezzepeda.workers.dev";
  * comunicación con firebaseapp.com y el inicio con Google se queda pegado; desde el propio dominio no.
  * Requiere que https://APP_HOST/__/auth/handler esté autorizada en el cliente OAuth de Google Cloud.
  */
-export const SAME_DOMAIN_AUTH = false;
+export const SAME_DOMAIN_AUTH = true;
 
 /** Dominio de inicio de sesión según dónde corre la app (en local, el de Firebase). */
 export function authDomainFor(host: string) {
