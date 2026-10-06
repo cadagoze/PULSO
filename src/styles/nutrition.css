@@ -73,6 +73,8 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-empty { padding: 12px 0; font-size: 14px; }
 .nut-picker-actions { position: sticky; bottom: calc(-24px - var(--safe-b)); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 -22px calc(-24px - var(--safe-b)); padding: 14px 22px calc(18px + var(--safe-b)); background: linear-gradient(transparent, var(--surface) 22%); }
 .nut-picker-actions .btn { padding: 0 12px; }
+/* Mientras se escribe, los resultados necesitan el espacio sobre el teclado. */
+.keyboard-open .nut-picker-actions { display: none; }
 .nut-detail-head { display: flex; flex-direction: column; gap: 6px; }
 .nut-portions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .nut-detail-values { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }

@@ -74,7 +74,7 @@ export function FoodPicker({ mealLabel, customFoods, recent, onPick, onCreate }:
     <div className="nut-picker">
       <label className="picker-search nut-search">
         <Search size={18} aria-hidden="true" />
-        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca un alimento" aria-label="Buscar alimento" />
+        <input type="search" name="pulso-buscar-alimento" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca un alimento" aria-label="Buscar alimento" />
         {query && <button type="button" onClick={() => setQuery("")} aria-label="Borrar búsqueda"><X size={16} /></button>}
       </label>
       <div className="scroll-x nut-cats" role="group" aria-label="Categorías">
@@ -157,12 +157,12 @@ function CustomFoodForm({ quick, mealLabel, onBack, onSave }: { quick: boolean; 
       </div>
       <label className="field">
         {quick ? "Descripción (opcional)" : "Nombre"}
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder={quick ? "Ej.: almuerzo en el trabajo" : "Ej.: Pan amasado"} maxLength={60} />
+        <input name="pulso-alimento-nombre" autoComplete="off" value={name} onChange={(event) => setName(event.target.value)} placeholder={quick ? "Ej.: almuerzo en el trabajo" : "Ej.: Pan amasado"} maxLength={60} />
       </label>
       {!quick && (
         <label className="field">
           Porción
-          <input value={portion} onChange={(event) => setPortion(event.target.value)} placeholder="Ej.: 1 unidad (120 g)" maxLength={40} />
+          <input name="pulso-alimento-porcion" autoComplete="off" value={portion} onChange={(event) => setPortion(event.target.value)} placeholder="Ej.: 1 unidad (120 g)" maxLength={40} />
         </label>
       )}
       <div className={cn("nut-quad", quick && "is-quick")}>

@@ -170,10 +170,30 @@ export function Sheet({ open, onClose, title, eyebrow, children, labelledBy, cla
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
+    // En el teléfono el teclado no achica la pantalla para los elementos fijos (iPhone): la hoja
+    // sigue el área visible para quedar sobre el teclado y no detrás.
+    const viewport = window.visualViewport;
+    const root = document.documentElement;
+    const syncViewport = () => {
+      if (!viewport) return;
+      root.style.setProperty("--vv-top", `${viewport.offsetTop}px`);
+      root.style.setProperty("--vv-height", `${viewport.height}px`);
+      root.classList.toggle("keyboard-open", window.innerHeight - viewport.height > 150);
+    };
+    syncViewport();
+    viewport?.addEventListener("resize", syncViewport);
+    viewport?.addEventListener("scroll", syncViewport);
     return () => {
       sheetStack.splice(sheetStack.indexOf(token), 1);
       document.body.style.overflow = overflow;
       window.removeEventListener("keydown", onKey);
+      viewport?.removeEventListener("resize", syncViewport);
+      viewport?.removeEventListener("scroll", syncViewport);
+      if (!sheetStack.length) {
+        root.style.removeProperty("--vv-top");
+        root.style.removeProperty("--vv-height");
+        root.classList.remove("keyboard-open");
+      }
       previous?.focus?.({ preventScroll: true });
     };
   }, [open]);

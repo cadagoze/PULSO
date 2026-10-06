@@ -330,6 +330,10 @@ button.list-row:active, a.list-row:active { background: var(--surface-2); }
 .sheet-backdrop.is-closing { animation: fade-out var(--motion-base) var(--ease-exit) forwards; pointer-events: none; }
 .sheet, .sheet-modal { position: relative; width: min(100%, 560px); max-height: min(92dvh, 900px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border-radius: 32px 32px 0 0; padding: 0 22px calc(24px + var(--safe-b)); box-shadow: var(--shadow-float); animation: sheet-up var(--motion-slow) var(--ease-standard); display: flex; flex-direction: column; gap: 18px; }
 .sheet.is-closing { animation: sheet-down var(--motion-base) var(--ease-exit) forwards; }
+/* La hoja ocupa sólo el área visible: con el teclado del teléfono abierto queda justo encima de él. */
+.sheet-backdrop { top: var(--vv-top, 0px); bottom: auto; height: var(--vv-height, 100%); }
+.sheet { max-height: min(92dvh, 900px, calc(var(--vv-height, 100dvh) - 12px)); }
+.keyboard-open .sheet { padding-bottom: 16px; }
 .sheet.is-dragging { transition: none; animation: none; }
 .sheet-grab { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; height: 26px; margin: 0 -22px -10px; touch-action: none; cursor: grab; background: linear-gradient(var(--surface) 60%, transparent); flex: none; }
 .sheet-handle, .modal-handle { width: 40px; height: 5px; border-radius: 9px; background: var(--surface-3); flex: none; }
@@ -436,6 +440,8 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .picker-sheet { gap: 12px; }
 .picker-search { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--ink-3); }
 .picker-search input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font-size: 16px; color: var(--ink); }
+/* Sin la «x» propia del navegador: el buscador ya tiene su botón para borrar. */
+.picker-search input::-webkit-search-cancel-button, .picker-search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
 .picker-toggle { min-height: 40px; font-size: 14px; color: var(--ink-2); }
 .picker-toggle input { width: 20px; height: 20px; accent-color: var(--ink); }
 .picker-sheet .scroll-x { flex-shrink: 0; }
