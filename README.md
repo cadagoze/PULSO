@@ -44,7 +44,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `/ejercicios` y `/ejercicios/[id]`: biblioteca de 87 ejercicios con foto o ilustración (inicio y final), filtros, mapa muscular, técnica, progreso y alternativas.
 - `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación. «Compartir mi semana» arma una imagen vertical (1080 × 1350, dibujada en el navegador con el color de acento) con entrenamientos, días, volumen, minutos, récords y racha, y opcionalmente nutrición, agua y peso (el peso va apagado por defecto); se comparte con el menú del teléfono o se descarga, y también se puede copiar como texto.
 - `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
-- `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
+- `/ajustes`: apariencia, entrenamiento, notificaciones, racha, respaldo de datos y acerca de.
 - `/comidas`: Nutrición. Cálculo de calorías y macros según tu objetivo, contador de agua, comidas guardadas para repetir con un toque (y la porción de la última vez), diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de más de 200 alimentos y platos chilenos por porción casera, registro en porciones o en gramos (ml en bebidas), escáner de código de barras con Open Food Facts (base abierta y gratuita; lo escaneado queda en «Mis alimentos» y se encuentra sin conexión), alimentos propios y calorías rápidas, y «¿Qué me falta hoy?»: calorías y proteína que quedan con tres ideas para la comida de esa hora (lo que sueles comer en ella y opciones típicas), que se agregan con un toque; no aparece con el día cubierto, e Inicio sólo avisa la proteína pendiente; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos. Desde Inicio, `?registrar` abre el registro de la comida de esa hora y `?calcular`, el cálculo.
 - `/guia`: lecturas breves.
 
@@ -107,6 +107,16 @@ Con una cuenta (Google o correo y contraseña, desde Perfil o desde la bienvenid
 - Borrar los datos del equipo (Ajustes) cierra antes la sesión, para no borrar la nube. Eliminar la cuenta (Perfil) borra todo lo de la nube. Política en `/privacidad`.
 
 El build para Cloudflare (`npm run build:vinext`) requiere Node 22 (`nvm use`, ver `.nvmrc`).
+
+### Notificaciones (Web Push)
+
+Gratis, sin cuenta y sin servicios externos aparte de los de avisos de cada navegador (Google, Apple, Mozilla). En iPhone sólo funcionan con PULSO instalada en la pantalla de inicio (iOS 16.4+).
+
+- **Avisos:** hora de entrenar (a la hora elegida, si aún no entrenas y no cumples la meta semanal), racha en riesgo (domingo 18:00 si falta una sesión), registrar comidas (21:00, sólo si cuentas calorías y falta la once o la cena) y agua (11:00, 15:00 y 18:30 si vas bajo lo esperado). A lo más uno por pasada; nunca dos veces el mismo en el día. Lógica en `src/lib/reminders.ts` (con pruebas).
+- **Worker:** `src/worker.ts` envuelve el Worker de vinext: `/api/push/{subscribe,state,unsubscribe,test}` (sólo POST desde el mismo origen) y la tarea programada `*/15 * * * *` (`cloudflare.config.ts`). Código en `src/server/push.ts`.
+- **Datos:** D1 `pulso-push-db` (binding `PUSH_DB`; la tabla se crea sola). Por teléfono: suscripción, zona horaria, preferencias y un estado mínimo del día que envía `PushStateSync` (`src/lib/push.ts`): entrenó hoy, sesiones y meta, racha, si registró comidas y vasos de agua. Sin nombre, comidas ni peso.
+- **Claves VAPID:** la pública en `src/lib/push-config.ts`; la privada es el secreto `VAPID_PRIVATE_KEY` del Worker (`cf workers secrets update VAPID_PRIVATE_KEY --worker pulso`). Para probar en local va en `.dev.vars` (ignorado por git). Si se cambian las claves, todas las suscripciones dejan de servir y hay que activarlas de nuevo.
+- **En local:** `npm run dev:vinext` simula D1 y la tarea; se dispara con `POST http://localhost:3001/cdn-cgi/local/explorer/api/local/scheduled?worker=pulso` y cuerpo `{"cron":"*/15 * * * *"}`. Con `npm run dev` (Next) la API de avisos no existe.
 
 ## Limitaciones
 
