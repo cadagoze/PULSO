@@ -17,7 +17,7 @@ export { STORAGE_KEYS };
 export const defaultSettings: Settings = {
   name: "",
   unit: "kg",
-  theme: "system",
+  theme: "dark",
   weeklyGoal: 3,
   pausedWeeks: [],
   defaultRest: 90,

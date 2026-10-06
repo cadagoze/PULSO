@@ -16,7 +16,7 @@
 .prof-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
 .prof-hero-id { display: flex; flex-direction: column; gap: 10px; }
 .prof-hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.prof-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(46px, 14vw, 66px); font-weight: 600; letter-spacing: -.045em; line-height: .92; color: var(--ink); overflow-wrap: break-word; text-wrap: balance; }
+.prof-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(46px, 14vw, 66px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .92; color: var(--ink); overflow-wrap: break-word; text-wrap: balance; }
 .prof-goal { font-size: 16px; line-height: 1.4; color: var(--ink-2); max-width: 36ch; text-wrap: pretty; }
 .prof-goal b { color: var(--ink); font-weight: 600; }
 
@@ -24,8 +24,8 @@
 .prof-avatar { position: relative; display: grid; place-items: center; width: 96px; height: 96px; flex: none; border-radius: 50%; background: rgb(255 255 255 / 10%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 16%); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
 button.prof-avatar:active { transform: scale(.96); }
 .prof-avatar-photo { width: 100%; height: 100%; border-radius: 50%; background-size: cover; background-position: center; animation: prof-photo-in var(--motion-slow) var(--ease-standard) backwards; }
-.prof-avatar-initials { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 38px; font-weight: 600; letter-spacing: -.04em; line-height: 1; }
-.prof-avatar-badge { position: absolute; right: -2px; bottom: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--lime); color: var(--lime-ink); box-shadow: 0 0 0 3px var(--carbon-2); }
+.prof-avatar-initials { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 38px; font-weight: 600; letter-spacing: -.008em; line-height: 1; }
+.prof-avatar-badge { position: absolute; right: -2px; bottom: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 3px var(--carbon-2); }
 .prof-avatar-plain { width: 88px; height: 88px; background: var(--surface-2); box-shadow: none; }
 .prof-avatar-plain .prof-avatar-initials { font-size: 34px; }
 .prof-avatar-plain[aria-busy="true"] { animation: prof-shimmer 1.2s ease-in-out infinite; }
@@ -42,7 +42,7 @@ button.prof-avatar:active { transform: scale(.96); }
 .prof-plan { display: flex; flex-direction: column; gap: 22px; }
 .prof-plan-heading { display: flex; flex-direction: column; gap: 10px; }
 /* Más específico que `.card h2` del sistema. */
-.prof-plan .prof-plan-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(52px, 16vw, 80px); font-weight: 600; letter-spacing: -.05em; line-height: .86; overflow-wrap: break-word; }
+.prof-plan .prof-plan-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(52px, 16vw, 80px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .86; overflow-wrap: break-word; }
 .prof-plan .prof-plan-title.is-long { font-size: clamp(38px, 11vw, 60px); line-height: .9; }
 .prof-plan-tagline { font-size: 17px; line-height: 1.35; color: var(--ink-2); max-width: 32ch; }
 .prof-plan-facts { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
@@ -106,14 +106,14 @@ button.prof-avatar:active { transform: scale(.96); }
 .prof-plate { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; min-height: 92px; padding: 10px 2px 8px; border-radius: var(--radius-s); background: var(--surface-2); color: var(--ink-3); font-size: 12px; font-weight: 600; transition: background-color var(--motion-base) var(--ease-standard), color var(--motion-base), transform var(--motion-fast) var(--ease-standard); }
 .prof-plate:active { transform: scale(.94); }
 .prof-plate i { display: block; width: 12px; height: var(--plate, 32px); max-height: 56px; border-radius: 4px; background: var(--surface-3); transition: background-color var(--motion-base) var(--ease-standard); }
-.prof-plate[aria-pressed="true"] { background: var(--lime-soft); color: var(--ink); }
+.prof-plate[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
 .prof-plate[aria-pressed="true"] i { background: var(--ink); }
 
 /* Racha: el número en grande, la llama naranja sólo cuando hay racha. */
 .prof-streak { flex-direction: row; align-items: center; gap: 16px; padding: 18px; }
 .prof-streak-num { font-size: 56px; color: var(--ink); min-width: .7em; }
 .prof-streak-flame { flex: none; align-self: flex-start; color: var(--ink-3); }
-.prof-streak.active .prof-streak-flame { color: var(--orange); fill: color-mix(in srgb, var(--orange) 22%, transparent); }
+.prof-streak.active .prof-streak-flame { color: var(--gold); fill: color-mix(in srgb, var(--gold) 22%, transparent); }
 
 /* Datos. */
 .prof-persist .btn, .prof-persist .badge { flex: none; }
@@ -125,10 +125,10 @@ button.prof-avatar:active { transform: scale(.96); }
 .prof-about-body { display: flex; flex-direction: column; gap: 16px; padding: 24px 22px; border-radius: var(--radius-l); background: var(--surface-2); }
 .prof-about-mark { font-size: 40px; }
 .prof-about-lead { display: flex; flex-direction: column; gap: 4px; }
-.prof-about-tagline { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 600; letter-spacing: -.03em; line-height: 1.1; color: var(--ink); }
+.prof-about-tagline { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.1; color: var(--ink); }
 .prof-about-idea { font-size: 15px; color: var(--ink-2); }
 .prof-about-line { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); max-width: 62ch; }
-.prof-about-line svg { flex: none; margin-top: 3px; color: var(--lime-text); }
+.prof-about-line svg { flex: none; margin-top: 3px; color: var(--accent-text); }
 .prof-about-version { color: var(--ink-3); }
 
 /* ─── Movimiento ───────────────────────────────────────────────────────── */

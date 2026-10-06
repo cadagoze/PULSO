@@ -16,7 +16,7 @@
 .cnt-day .nmetric { gap: 10px; }
 .cnt-fraction .nmetric-label { display: flex; align-items: center; gap: 7px; }
 /* Meta cumplida: check que aparece con un pequeño rebote (después del check de la fila). */
-.cnt-goal { display: grid; place-items: center; width: 18px; height: 18px; flex: none; border-radius: 50%; background: var(--lime); color: var(--lime-ink); animation: pop var(--motion-base) var(--ease-spring) var(--motion-base) backwards; }
+.cnt-goal { display: grid; place-items: center; width: 18px; height: 18px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring) var(--motion-base) backwards; }
 .cnt-fraction.is-met .nmetric-label { color: var(--ink); }
 .cnt-day-line { max-width: 46ch; font-size: 14px; line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
 .cnt-day-line b { color: var(--ink); font-weight: 600; }
@@ -25,7 +25,7 @@
 .cnt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
 .cnt-row { position: relative; isolation: isolate; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 76px; padding: 16px 16px 16px 20px; text-align: left; transition: background-color var(--motion-fast); }
 /* El tinte lima suave es una capa que sólo cambia de opacidad. */
-.cnt-row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--lime-soft); opacity: 0; transition: opacity var(--motion-base) var(--ease-standard); }
+.cnt-row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--accent-soft); opacity: 0; transition: opacity var(--motion-base) var(--ease-standard); }
 .cnt-row.is-done::before { opacity: 1; }
 .cnt-list > li + li > .cnt-row::after { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 1px; background: var(--line); }
 @media (hover: hover) { .cnt-row:hover { background: var(--surface-2); } }
@@ -38,7 +38,7 @@
 .cnt-row-note { font-size: 13px; line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
 .cnt-row-cta { flex: none; }
 .cnt-check { position: relative; display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); color: var(--ink-2); }
-.cnt-check-fill { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: var(--lime); color: var(--lime-ink); }
+.cnt-check-fill { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: var(--accent); color: var(--accent-ink); }
 .cnt-row.is-fresh .cnt-check-fill { animation: pop var(--motion-base) var(--ease-spring) backwards; }
 /* Al registrar una comida, el check y el tinte esperan a que la hoja termine de bajar. */
 .cnt-meal.is-fresh .cnt-check-fill { animation-delay: var(--motion-base); }
@@ -48,7 +48,7 @@
 .cnt-idea { display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 24px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
 .cnt-idea > * { position: relative; z-index: 3; }
 .cnt-idea-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.cnt-idea-title { max-width: 22ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 23px; font-weight: 600; letter-spacing: -.03em; line-height: 1.08; text-wrap: balance; }
+.cnt-idea-title { max-width: 22ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 23px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.08; text-wrap: balance; }
 .cnt-idea-detail { max-width: 48ch; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
 
 /* ─── Comidas: equilibrio del día ──────────────────────────────────────── */
@@ -94,11 +94,11 @@ legend.cnt-legend { margin-bottom: 12px; }
 .cnt-read-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .cnt-read-title { font-size: 17px; font-weight: 600; letter-spacing: -.02em; line-height: 1.28; text-wrap: pretty; }
 .cnt-read-time { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 36px; }
-.cnt-read-time b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums lining-nums; letter-spacing: -.05em; line-height: .84; }
+.cnt-read-time b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums lining-nums; letter-spacing: -.008em; line-height: .84; }
 
 .cnt-quote { display: flex; flex-direction: column; gap: 14px; padding-top: 28px; border-top: 1px solid var(--line); }
 .cnt-quote-text { margin: 0; }
-.cnt-quote-text p { max-width: 19ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(26px, 7.4vw, 38px); font-weight: 600; letter-spacing: -.04em; line-height: 1.05; text-wrap: balance; }
+.cnt-quote-text p { max-width: 19ch; font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(26px, 7.4vw, 38px); font-weight: 600; letter-spacing: -.008em; line-height: 1.05; text-wrap: balance; }
 
 .cnt-sheet .sheet-head h2 { text-wrap: balance; }
 .cnt-reader { display: flex; flex-direction: column; gap: 18px; }

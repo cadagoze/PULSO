@@ -28,8 +28,8 @@ export function ProgressChart({ data, unit, metric }: { data: ChartPoint[]; unit
         <AreaChart data={data} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--lime-text)" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="var(--lime-text)" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--accent-text)" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="var(--accent-text)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} stroke="var(--line)" />
@@ -61,11 +61,11 @@ export function ProgressChart({ data, unit, metric }: { data: ChartPoint[]; unit
           <Area
             type="monotone"
             dataKey="value"
-            stroke="var(--lime-text)"
+            stroke="var(--accent-text)"
             strokeWidth={2.25}
             fill={`url(#${gradientId})`}
-            dot={{ r: 3.25, fill: "var(--surface)", stroke: "var(--lime-text)", strokeWidth: 2 }}
-            activeDot={{ r: 5.5, fill: "var(--lime-text)", stroke: "var(--surface)", strokeWidth: 2 }}
+            dot={{ r: 3.25, fill: "var(--surface)", stroke: "var(--accent-text)", strokeWidth: 2 }}
+            activeDot={{ r: 5.5, fill: "var(--accent-text)", stroke: "var(--surface)", strokeWidth: 2 }}
             isAnimationActive={false}
           />
         </AreaChart>

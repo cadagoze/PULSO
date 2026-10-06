@@ -12,7 +12,7 @@ export function WaterTracker({ glasses, goal, onChange, className }: { glasses: 
   return (
     <section className={cn("water", met && "is-met", className)} aria-label="Agua de hoy">
       <div className="water-head">
-        <span className={cn("icon-tile", met && "lime")} aria-hidden="true">{met ? <Check size={18} strokeWidth={2.6} /> : <GlassWater size={18} />}</span>
+        <span className={cn("icon-tile", met && "accent")} aria-hidden="true">{met ? <Check size={18} strokeWidth={2.6} /> : <GlassWater size={18} />}</span>
         <span className="grow" aria-live="polite">
           <strong><b className="num">{glasses}</b> de <span className="num">{goal.glasses}</span> vasos</strong>
           <small>{met ? "Meta de agua cumplida" : "Agua"} · <span className="num">{formatLiters(glasses)}</span> de <span className="num">{goal.liters.toLocaleString("es-CL")}</span> L</small>

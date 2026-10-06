@@ -59,13 +59,13 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ## Sistema visual
 
-PULSO combina funcionalidad limpia, fotografía editorial y tipografía con carácter: «Entrenamiento que se adapta a tu vida».
+PULSO tiene un estilo oscuro y desafiante: fotografía en blanco y negro, tipografía angosta en mayúsculas y un solo acento de fuego. «Tu salud en movimiento.»
 
-- **Color** (tokens en `src/app/globals.css`): marfil `#F5F3EC`, superficie blanca, carbón `#161816`, verde bosque `#1E3026` y lima `#B7F34A` como identidad; naranja `#FF6633` sólo como acento (rachas y récords). Modo oscuro completo; `.on-dark` aplica la paleta oscura a una zona (sesión activa, fotos, barra de navegación).
-- **Tipografía**: Archivo con eje de ancho para títulos y números protagonistas, Geist para la interfaz y Geist Mono para etiquetas editoriales.
+- **Color** (tokens en `src/app/globals.css`): oscuro por defecto (Ajustes permite el tema claro): negro carbón `#0a0a0a`, superficies `#141414`, acento naranja fuego `--accent` (`#ff5a1f`) para botones, avance y navegación, y dorado `--gold` sólo para rachas y récords. Las fotos editoriales se muestran en blanco y negro con un brillo cálido abajo. `npm test` verifica el contraste AA de los textos de acento y dorado.
+- **Tipografía**: Archivo angosto (eje de ancho al 76–78 %) y pesado, en mayúsculas para títulos y protagonista en números; Geist para la interfaz y Geist Mono para etiquetas editoriales.
 - **Componentes** (`src/components/ui`): `Button`, `SegmentedControl` (indicador que se desliza), `Sheet` (hoja inferior que se cierra deslizando), `NumberMetric`, `Metric`, `StatCard`, `Card`, `PhotoCard`, `RoutineCard`, `ProgressRing`, `WorkoutTimer`, `ToggleChip` y `Toast`; `ExerciseVisual` y `ExerciseCard` en `src/components/exercises`.
 - **Movimiento**: `--motion-fast` 140 ms, `--motion-base` 220 ms, `--motion-slow` 320 ms y la curva `--ease-standard`; sólo `transform` y `opacity`, y todo se desactiva con «reducir movimiento». Las animaciones de entrada usan `animation-fill-mode: backwards` (nunca `both`): una transformación que persiste rompe los elementos fijos como las hojas.
-- **Portada de Inicio** (`src/data/hero-photos.ts`): la foto cambia según la sesión del día (cardio, movilidad, gimnasio o casa; si hay dos, se alternan por día) y lleva una frase según tu progreso (`src/lib/motivation.ts`). Las fotos de cardio, gimnasio y movilidad son de StockSnap con licencia CC0 (uso libre, sin atribución).
+- **Portada de Inicio** (`src/data/hero-photos.ts`): la foto cambia según la sesión del día (cardio, movilidad, gimnasio o casa; si hay dos, se alternan por día) y lleva una frase según tu progreso (`src/lib/motivation.ts`). Las fotos son de StockSnap y rawpixel con licencia CC0 (uso libre, sin atribución).
 - **Textura** (grano, desenfoque, atmósfera) sólo en onboarding, portadas, estados especiales y fondos de foto. Las fotos viven en `public/images` en WebP.
 
 ## Ilustraciones de ejercicios

@@ -5,7 +5,7 @@
 - La frase principal es: Tu salud en movimiento.
 - El nombre del paquete, carpeta, repositorio y proyecto es pulso.
 - Mantener diseño mobile-first.
-- Mantener la paleta establecida.
+- Paleta (desde 2026-10-06, pedida por el dueño): oscuro por defecto, negro carbón, acento naranja fuego (#ff5a1f) y dorado sólo para rachas y récords. Fotos en blanco y negro. Títulos en Archivo angosto, pesado y en mayúsculas. Tono directo y desafiante en entrenamiento; neutro y sin presión en alimentación.
 - No utilizar plantillas genéricas.
 - Backend sólo para cuenta y sincronización: Firebase (Authentication + Firestore en Santiago). La app debe seguir funcionando sin conexión y sin cuenta, y Firebase se carga sólo al iniciar sesión.
 - Centralizar datos simulados.

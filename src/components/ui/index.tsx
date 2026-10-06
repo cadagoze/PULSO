@@ -61,11 +61,11 @@ export function SecondaryButton({ className, children, ...props }: ButtonHTMLAtt
 
 // ─── Progreso y métricas ──────────────────────────────────────────────────
 
-export function ProgressBar({ value, purple = false, tone, label }: { value: number; purple?: boolean; tone?: "lime" | "orange"; label?: string }) {
+export function ProgressBar({ value, purple = false, tone, label }: { value: number; purple?: boolean; tone?: "accent" | "gold"; label?: string }) {
   const safe = Math.max(0, Math.min(100, value));
   return (
     <div className="progress-track" role="progressbar" aria-label={label} aria-valuenow={Math.round(safe)} aria-valuemin={0} aria-valuemax={100}>
-      <span className={purple ? "purple" : tone === "orange" ? "orange" : undefined} style={{ "--value": safe / 100 } as CSSProperties} />
+      <span className={purple ? "purple" : tone === "gold" ? "gold" : undefined} style={{ "--value": safe / 100 } as CSSProperties} />
     </div>
   );
 }
@@ -110,8 +110,8 @@ export function MetaLine({ items, className }: { items: ReactNode[]; className?:
   return <p className={cn("meta-dots", className)}>{visible.map((item, index) => <span key={index}>{item}</span>)}</p>;
 }
 
-export function StatusBadge({ children, tone = "green" }: { children: ReactNode; tone?: "green" | "purple" | "muted" | "warn" | "danger" | "solid" | "orange" | "ink" }) {
-  const toneClass = { green: "", purple: "badge-violet", muted: "badge-muted", warn: "badge-warn", danger: "badge-danger", solid: "badge-solid", orange: "badge-orange", ink: "badge-ink" }[tone];
+export function StatusBadge({ children, tone = "green" }: { children: ReactNode; tone?: "green" | "purple" | "muted" | "warn" | "danger" | "solid" | "gold" | "ink" }) {
+  const toneClass = { green: "", purple: "badge-violet", muted: "badge-muted", warn: "badge-warn", danger: "badge-danger", solid: "badge-solid", gold: "badge-gold", ink: "badge-ink" }[tone];
   return <span className={cn("badge", toneClass)}>{children}</span>;
 }
 

@@ -13,9 +13,9 @@
 .cloud-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-3); object-fit: cover; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink); }
 .cloud-status { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
 .cloud-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
-.cloud-status.is-synced .cloud-dot { background: var(--lime-text); }
-.cloud-status.is-syncing .cloud-dot, .cloud-status.is-starting .cloud-dot { background: var(--lime-text); animation: cloud-pulse 1.2s ease-in-out infinite; }
-.cloud-status.is-offline .cloud-dot { background: var(--orange); }
+.cloud-status.is-synced .cloud-dot { background: var(--accent-text); }
+.cloud-status.is-syncing .cloud-dot, .cloud-status.is-starting .cloud-dot { background: var(--accent-text); animation: cloud-pulse 1.2s ease-in-out infinite; }
+.cloud-status.is-offline .cloud-dot { background: var(--gold); }
 .cloud-status.is-error { color: var(--danger); }
 .cloud-status.is-error .cloud-dot { background: var(--danger); }
 @keyframes cloud-pulse { 50% { opacity: .35; } }
@@ -32,7 +32,7 @@
 .cloud-form { display: flex; flex-direction: column; gap: 14px; }
 .cloud-hint { font-size: 12.5px; font-weight: 500; color: var(--ink-3); }
 .cloud-error { padding: 12px 14px; border-radius: var(--radius-s); background: var(--danger-soft); font-size: 13.5px; line-height: 1.4; color: var(--danger); }
-.cloud-notice { padding: 12px 14px; border-radius: var(--radius-s); background: var(--lime-soft); font-size: 13.5px; line-height: 1.4; color: var(--ink); }
+.cloud-notice { padding: 12px 14px; border-radius: var(--radius-s); background: var(--accent-soft); font-size: 13.5px; line-height: 1.4; color: var(--ink); }
 .cloud-link { align-self: center; min-height: 40px; padding: 0 8px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .cloud-link:disabled { color: var(--ink-3); }
 .cloud-privacy { font-size: 12px; line-height: 1.5; }
@@ -57,11 +57,11 @@
 .install-close { position: absolute; top: 12px; right: 12px; color: var(--ink-3); }
 .install-body { display: flex; flex-direction: column; gap: 18px; }
 .install-lead { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
-.install-cloud { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--radius); background: var(--lime-soft); }
+.install-cloud { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--radius); background: var(--accent-soft); }
 .install-cloud .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .install-cloud strong { font-size: 15px; font-weight: 600; }
 .install-cloud small { margin-bottom: 6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
-.install-cloud.is-done .install-step-icon { background: var(--lime); color: var(--lime-ink); }
+.install-cloud.is-done .install-step-icon { background: var(--accent); color: var(--accent-ink); }
 .install-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .install-step { display: flex; align-items: flex-start; gap: 12px; }
 .install-step .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }

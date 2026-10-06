@@ -42,9 +42,9 @@ function splitUnit(label: string): [string, string] {
   return at < 0 ? [label, ""] : [label.slice(0, at), label.slice(at + 1)];
 }
 
-function Figure({ label, value, unit, tone, index }: { label: string; value: ReactNode; unit?: string; tone?: "orange"; index: number }) {
+function Figure({ label, value, unit, tone, index }: { label: string; value: ReactNode; unit?: string; tone?: "gold"; index: number }) {
   return (
-    <div className={cn("ses-summary-figure rise", tone === "orange" && "is-orange")} style={{ "--i": index + 2 } as CSSProperties}>
+    <div className={cn("ses-summary-figure rise", tone === "gold" && "is-gold")} style={{ "--i": index + 2 } as CSSProperties}>
       <dt className="meta">{label}</dt>
       <dd><span className="num-display">{value}</span>{unit && <small>{unit}</small>}</dd>
     </div>
@@ -98,14 +98,14 @@ export function SessionSummary({ entry, workouts, settings }: { entry: WorkoutEn
           <span className="ses-summary-mark" aria-hidden="true"><Check size={30} strokeWidth={2.6} /></span>
           <p className="meta">Entrenamiento guardado · {formatLongDate(new Date(entry.completedAt))}</p>
           <h1 className="rise" style={{ "--i": 1 } as CSSProperties}>{entry.name ?? "Buen trabajo"}</h1>
-          <p className="ses-summary-sub">Bien hecho. Cada serie registrada suma a tu progreso.</p>
+          <p className="ses-summary-sub">Trabajo hecho. Cada serie suma.</p>
         </header>
 
         <dl className="ses-summary-stats">
           <Figure index={0} label="Duración" value={duration} unit={durationUnit} />
           <Figure index={1} label="Volumen" value={volume} unit={volumeUnit} />
           <Figure index={2} label="Series" value={entry.sets} />
-          <Figure index={3} label={prs.length === 1 ? "Récord" : "Récords"} value={prs.length} tone={prs.length ? "orange" : undefined} />
+          <Figure index={3} label={prs.length === 1 ? "Récord" : "Récords"} value={prs.length} tone={prs.length ? "gold" : undefined} />
         </dl>
 
         <div className="ses-summary-lines">

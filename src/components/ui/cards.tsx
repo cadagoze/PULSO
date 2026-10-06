@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 type Photo = { src: string; alt: string; position?: string };
 
 /** Superficie base. `carbon` aplica además la paleta oscura a su contenido. */
-export function Card({ tone = "default", padding = "m", className, children }: { tone?: "default" | "flat" | "carbon" | "forest" | "lime"; padding?: "m" | "l"; className?: string; children: ReactNode }) {
+export function Card({ tone = "default", padding = "m", className, children }: { tone?: "default" | "flat" | "carbon" | "forest" | "accent"; padding?: "m" | "l"; className?: string; children: ReactNode }) {
   return <div className={cn("card", tone !== "default" && `card-${tone}`, tone === "carbon" && "on-dark", padding === "l" && "card-l", className)}>{children}</div>;
 }
 

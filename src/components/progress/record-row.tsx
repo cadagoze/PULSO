@@ -12,11 +12,11 @@ import type { PersonalRecordHit } from "@/types";
 export function RecordRow({ pr, date, unit, badge = true }: { pr: PersonalRecordHit; date: string; unit: Unit; badge?: boolean }) {
   return (
     <Link href={`/ejercicios/${pr.exerciseId}`} className="list-row prog-record">
-      <span className="icon-tile orange" aria-hidden="true"><Trophy size={18} /></span>
+      <span className="icon-tile gold" aria-hidden="true"><Trophy size={18} /></span>
       <span className="grow">
         <strong>{exerciseName(pr.exerciseId)}</strong>
         <small className="prog-record-kind">
-          {badge && <StatusBadge tone="orange">Récord</StatusBadge>}
+          {badge && <StatusBadge tone="gold">Récord</StatusBadge>}
           <span>{recordKindLabels[pr.kind]} · {formatShortDate(date)}</span>
         </small>
       </span>

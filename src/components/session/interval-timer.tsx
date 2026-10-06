@@ -241,7 +241,7 @@ function Completion({ run, elapsedMs, onRepeat }: { run: Run; elapsedMs: number;
         </dl>
 
         {saved ? (
-          <p className="notice" role="status"><Check size={18} /><span>Guardado en tu historial. ¡Bien hecho!</span></p>
+          <p className="notice" role="status"><Check size={18} /><span>Guardado en tu historial. Trabajo hecho.</span></p>
         ) : rounds > 0 ? (
           <div className="ses-iv-save">
             <EffortPicker value={effort} onChange={setEffort} />

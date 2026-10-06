@@ -95,7 +95,7 @@ export function TrainHub() {
 
   return (
     <div className={cn("page train-page", draft && "has-resume")}>
-      <PageHeader meta={`Semana ${weekNumber(date)} · ${weekday.format(date)}`} title="Entrenar" subtitle="Entrenamiento que se adapta a tu vida." />
+      <PageHeader meta={`Semana ${weekNumber(date)} · ${weekday.format(date)}`} title="Entrenar" subtitle="Disciplina sobre motivación." />
       <PlacePicker />
       <TodayCard
         now={now}
@@ -147,7 +147,7 @@ export function TrainHub() {
 export function TrainSkeleton() {
   return (
     <div className="page train-page" aria-busy="true">
-      <PageHeader meta=" " title="Entrenar" subtitle="Entrenamiento que se adapta a tu vida." />
+      <PageHeader meta=" " title="Entrenar" subtitle="Disciplina sobre motivación." />
       <div className="train-place">
         <div className="train-skeleton train-skeleton-segmented" />
         <div className="train-skeleton train-skeleton-chips" />

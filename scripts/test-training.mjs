@@ -535,11 +535,29 @@ test('portada: foto según la sesión y frase según el progreso', () => {
   const wednesday = new Date(2026, 9, 7, 9);
   const day = (date) => ({ id: date, date, completedAt: `${date}T10:00:00.000Z`, durationMinutes: 30, exerciseCount: 4, sets: 12, mode: 'full' });
   const line = (dates, goal = 3) => motivation.heroLine({ workouts: dates.map(day), weeklyGoal: goal, minutes: 20, now: wednesday });
-  assert.equal(line([]), 'Tu primera sesión: 20 minutos y listo.');
-  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Semana cumplida. Lo de hoy suma extra.');
-  assert.equal(line(['2026-09-28']), 'Volver es lo más difícil. Hoy, sólo 20 minutos.');
-  assert.equal(line(['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06']), '1 semana seguida · te faltan 2 para mantener la racha.');
-  assert.equal(line(['2026-09-22', '2026-09-23', '2026-09-24', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06', '2026-10-07']), '2 semanas seguidas · te falta 1 sesión para mantener la racha.');
-  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta de la semana.');
-  assert.equal(line(['2026-10-05']), '20 minutos también cuentan.');
+  assert.equal(line([]), 'Tu primera sesión: 20 minutos. Empieza ahora.');
+  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Meta cumplida. Hoy vas por más.');
+  assert.equal(line(['2026-09-28']), 'Nadie lo hará por ti. Hoy, 20 minutos.');
+  assert.equal(line(['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06']), '1 semana seguida · no la cortes: te faltan 2.');
+  assert.equal(line(['2026-09-22', '2026-09-23', '2026-09-24', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06', '2026-10-07']), '2 semanas seguidas · no la cortes: te falta 1 sesión.');
+  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta. Hazla hoy.');
+  assert.equal(line(['2026-10-05']), '20 minutos. Sin excusas.');
+});
+
+test('paleta: contraste AA del acento y el dorado en ambos temas', () => {
+  const css = fs.readFileSync(path.join(root, 'src/app/globals.css'), 'utf8');
+  const light = css.slice(css.indexOf(':root {'), css.indexOf('@media (prefers-color-scheme: dark)'));
+  const dark = css.slice(css.indexOf(':root[data-theme="dark"], .on-dark {'));
+  const token = (block, name) => block.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i'))[1];
+  const lum = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  assert.ok(ratio(token(light, 'accent'), token(light, 'accent-ink')) >= 4.5, 'texto sobre el acento (claro)');
+  assert.ok(ratio(token(light, 'accent-text'), token(light, 'bg')) >= 4.5, 'texto de acento sobre el fondo (claro)');
+  assert.ok(ratio(token(light, 'gold-text'), token(light, 'bg')) >= 4.5, 'texto dorado sobre el fondo (claro)');
+  assert.ok(ratio(token(dark, 'accent-text'), token(dark, 'bg')) >= 4.5, 'texto de acento sobre el fondo (oscuro)');
+  assert.ok(ratio(token(dark, 'gold-text'), token(dark, 'bg')) >= 4.5, 'texto dorado sobre el fondo (oscuro)');
+  assert.ok(ratio(token(dark, 'ink-2'), token(dark, 'bg')) >= 4.5, 'texto secundario (oscuro)');
 });

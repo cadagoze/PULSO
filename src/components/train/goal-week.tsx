@@ -78,7 +78,7 @@ function Row({ icon, title, detail, done, target, unit, href }: { icon: ReactNod
   const met = counted && done >= target;
   const content = (
     <>
-      <span className={cn("icon-tile", met && "lime goal-week-met")} aria-hidden="true">{met ? <Check size={18} strokeWidth={2.6} /> : icon}</span>
+      <span className={cn("icon-tile", met && "accent goal-week-met")} aria-hidden="true">{met ? <Check size={18} strokeWidth={2.6} /> : icon}</span>
       <span className="grow">
         <strong>{title}</strong>
         <small>{detail}</small>

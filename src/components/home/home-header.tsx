@@ -14,7 +14,7 @@ function initials(name: string) {
     .join("");
 }
 
-/** Marca, fecha y saludo: «Hola, Carlos» con una frase según el día. */
+/** Marca, fecha y saludo: «Vamos, Carlos» con una frase según el día. */
 export function HomeHeader({ now, line }: { now: number; line: string }) {
   const [settings] = useSettings();
   const name = settings.name.trim();
@@ -31,7 +31,7 @@ export function HomeHeader({ now, line }: { now: number; line: string }) {
       </div>
       <div className="home-greeting">
         <p className="meta">{date || " "}</p>
-        <h1>Hola{name ? `, ${name.split(/\s+/)[0]}` : ""}</h1>
+        <h1>Vamos{name ? `, ${name.split(/\s+/)[0]}` : ""}</h1>
         <p className="home-line">{line}</p>
       </div>
     </header>

@@ -122,7 +122,7 @@ function WorkoutRow({ workout, unit, onOpen }: { workout: WorkoutEntry; unit: Un
         <small className="num"><span className="sr-only">{dayLabel(workout.date)} · </span>{details.join(" · ")}</small>
         {prs > 0 && (
           <span className="prog-workout-prs">
-            <StatusBadge tone="orange">
+            <StatusBadge tone="gold">
               <Trophy size={11} aria-hidden="true" />
               {prs === 1 ? "Récord" : `${prs} récords`}
             </StatusBadge>

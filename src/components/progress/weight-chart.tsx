@@ -95,7 +95,7 @@ export function WeightChart({ entries, unit }: { entries: WeightEntry[]; unit: U
             <Line
               type="monotone"
               dataKey="average"
-              stroke="var(--lime-text)"
+              stroke="var(--accent-text)"
               strokeWidth={2.5}
               dot={false}
               activeDot={false}
@@ -108,7 +108,7 @@ export function WeightChart({ entries, unit }: { entries: WeightEntry[]; unit: U
               dataKey="weight"
               stroke="transparent"
               dot={{ r: 4, fill: "var(--surface)", stroke: "var(--ink-3)", strokeWidth: 2 }}
-              activeDot={{ r: 5, fill: "var(--lime)", stroke: "var(--surface)", strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: "var(--accent)", stroke: "var(--surface)", strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </ComposedChart>

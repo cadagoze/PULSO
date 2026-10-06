@@ -220,7 +220,7 @@ export function SetBlock(props: SetBlockProps) {
           <p className="meta ses-block-heading">{heading}</p>
           {set.done && <span className="ses-done-badge" role="img" aria-label="Hecha"><Check size={14} strokeWidth={3} /></span>}
           {badge && kind !== "warmup" && <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>}
-          {isRecord && <StatusBadge tone="orange"><Trophy size={12} aria-hidden="true" />Récord</StatusBadge>}
+          {isRecord && <StatusBadge tone="gold"><Trophy size={12} aria-hidden="true" />Récord</StatusBadge>}
         </div>
         {record.unit === "reps" ? (
           <button

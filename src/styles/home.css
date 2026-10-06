@@ -10,7 +10,7 @@
 .home-avatar:active { transform: scale(.94); }
 .home-avatar-photo { width: 100%; height: 100%; border-radius: inherit; background-size: cover; background-position: center; }
 .home-greeting { display: flex; flex-direction: column; gap: 10px; }
-.home-greeting h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(42px, 12.5vw, 64px); font-weight: 600; letter-spacing: -.045em; line-height: .92; overflow-wrap: anywhere; }
+.home-greeting h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(42px, 12.5vw, 64px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .92; overflow-wrap: anywhere; }
 .home-line { font-size: 17px; color: var(--ink-2); line-height: 1.35; max-width: 34ch; }
 
 /* ─── Portada de la sesión ─────────────────────────────────────────────── */
@@ -19,8 +19,8 @@
 .home-hero-head { display: flex; flex-direction: column; gap: 8px; }
 .home-hero-meta { color: rgb(242 241 236 / 72%); }
 .home-hero-line { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; margin-bottom: 6px; padding: 7px 12px 7px 10px; border-radius: var(--radius-pill); background: rgb(13 15 14 / 42%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 13.5px; font-weight: 600; line-height: 1.3; color: #fff; text-wrap: balance; }
-.home-hero-line svg { flex: none; color: var(--lime); }
-.home-hero-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: 600; letter-spacing: -.04em; line-height: .98; color: #fff; text-wrap: balance; }
+.home-hero-line svg { flex: none; color: var(--accent); }
+.home-hero-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; color: #fff; text-wrap: balance; }
 .home-hero-note { font-size: 13.5px; color: rgb(242 241 236 / 78%); max-width: 40ch; }
 .home-hero-details { color: rgb(242 241 236 / 86%); font-size: 14.5px; }
 .home-hero-details b { color: #fff; font-weight: 600; }
@@ -30,7 +30,7 @@
 .home-hero-progress { display: flex; flex-direction: column; gap: 10px; color: rgb(242 241 236 / 86%); }
 .home-hero-progress .progress-track { background: rgb(255 255 255 / 18%); }
 .home-hero-skeleton { height: 58px; border-radius: var(--radius-pill); background: rgb(255 255 255 / 12%); animation: home-shimmer 1.4s ease-in-out infinite; }
-.home-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 var(--lime); animation: pulse 1.8s infinite; }
+.home-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.8s infinite; }
 
 /* ─── Semana ───────────────────────────────────────────────────────────── */
 .home-week { display: flex; flex-direction: column; gap: 18px; }
@@ -46,11 +46,11 @@
 .home-day.planned .home-day-dot { box-shadow: inset 0 0 0 1.5px var(--ink-2); background: transparent; border: 0; }
 .home-day.today .home-day-label { color: var(--ink); font-weight: 600; }
 .home-day.today .home-day-dot { background: var(--ink); color: var(--bg); box-shadow: none; }
-.home-day.done .home-day-dot { background: var(--lime); color: var(--lime-ink); box-shadow: none; animation: pop var(--motion-base) var(--ease-spring) backwards; }
+.home-day.done .home-day-dot { background: var(--accent); color: var(--accent-ink); box-shadow: none; animation: pop var(--motion-base) var(--ease-spring) backwards; }
 .home-streak { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 .home-streak b { color: var(--ink); font-weight: 600; }
 .home-streak svg { flex: none; margin-top: 1px; color: var(--ink-3); }
-.home-streak.active svg { color: var(--orange); fill: color-mix(in srgb, var(--orange) 22%, transparent); }
+.home-streak.active svg { color: var(--gold); fill: color-mix(in srgb, var(--gold) 22%, transparent); }
 
 /* ─── Preparación ──────────────────────────────────────────────────────── */
 .home-ready { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 14px 14px 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); text-align: left; }
@@ -60,8 +60,8 @@
 .home-ready .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .home-ready strong, .home-ready h2 { font-size: 15px; font-weight: 600; letter-spacing: -.01em; line-height: 1.3; }
 .home-ready small, .home-ready p { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
-.home-ready-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--lime); color: var(--lime-ink); }
-.home-ready-score { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 600; letter-spacing: -.04em; }
+.home-ready-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
+.home-ready-score { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 600; letter-spacing: -.008em; }
 .home-check { display: flex; flex-direction: column; gap: 18px; padding-bottom: 4px; }
 .home-check-intro { font-size: 14px; margin-top: -6px; }
 .home-q { display: flex; flex-direction: column; gap: 8px; }
@@ -108,7 +108,7 @@
 .home-fuel-number { display: flex; flex-direction: column; gap: 2px; }
 .home-fuel-number .num-display { font-size: clamp(52px, 15vw, 64px); line-height: .9; transition: color var(--motion-base); }
 .home-fuel-number > span:last-child { font-size: 13.5px; color: var(--ink-2); }
-.home-fuel-number.is-over .num-display { color: var(--orange-text); }
+.home-fuel-number.is-over .num-display { color: var(--gold-text); }
 .home-fuel-line { display: flex; flex-direction: column; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .home-fuel-line b { color: var(--ink); font-weight: 600; }
 .home-fuel-add { align-self: flex-start; margin-top: 6px; }

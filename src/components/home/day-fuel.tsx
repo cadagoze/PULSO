@@ -40,7 +40,7 @@ export function DayFuel({ now }: { now: number }) {
         )}
         {review.status === "ready" && review.due && (
           <Link href="/comidas#revision" className="home-fuel-review">
-            <span className="icon-tile lime" aria-hidden="true"><Scale size={17} /></span>
+            <span className="icon-tile accent" aria-hidden="true"><Scale size={17} /></span>
             <span className="grow"><strong>Tu revisión semanal está lista</strong><small>Ajusta tus calorías según tu peso real</small></span>
             <ChevronRight size={18} className="subtle" aria-hidden="true" />
           </Link>
@@ -68,7 +68,7 @@ function Calories({ kcal, protein, targetKcal, targetProtein }: { kcal: number; 
         </p>
         <ButtonLink href="/comidas?registrar=1" variant="secondary" size="s" className="home-fuel-add"><Plus size={16} />Registrar comida</ButtonLink>
       </div>
-      <ProgressRing value={percent} size={88} stroke={9} color={over ? "var(--orange)" : undefined} label={`${percent} % de tus calorías del día`}>
+      <ProgressRing value={percent} size={88} stroke={9} color={over ? "var(--gold)" : undefined} label={`${percent} % de tus calorías del día`}>
         <span className="home-fuel-percent num">{percent}<small>%</small></span>
       </ProgressRing>
     </div>

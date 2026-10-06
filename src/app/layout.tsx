@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   description: "Tu salud en movimiento.",
   applicationName: "PULSO",
-  appleWebApp: { capable: true, title: "PULSO", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "PULSO", statusBarStyle: "black" },
   formatDetection: { telephone: false },
 };
 
@@ -33,10 +33,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f3ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0f0e" },
-  ],
+  themeColor: "#0a0a0a",
 };
 
 /** Aplica el tema guardado antes de pintar, para evitar un destello de color. */
@@ -48,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geist.variable} ${geistMono.variable} ${archivo.variable}`} suppressHydrationWarning>
+    <html lang="es" data-theme="dark" className={`${geist.variable} ${geistMono.variable} ${archivo.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

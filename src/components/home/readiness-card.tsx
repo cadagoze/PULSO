@@ -39,9 +39,9 @@ const stressOptions: Array<{ value: Stress; label: string }> = [
 const MAX_ENTRIES = 90;
 
 export function readinessState(score: number) {
-  if (score >= 70) return { label: "Disponible", tone: "ready" as const, color: "var(--lime)" };
+  if (score >= 70) return { label: "Disponible", tone: "ready" as const, color: "var(--accent)" };
   if (score >= 40) return { label: "Moderada", tone: "moderate" as const, color: "var(--warning)" };
-  return { label: "En recuperación", tone: "recovery" as const, color: "var(--orange)" };
+  return { label: "En recuperación", tone: "recovery" as const, color: "var(--gold)" };
 }
 
 const advice: Record<ReadinessEntry["recommendation"], string> = {

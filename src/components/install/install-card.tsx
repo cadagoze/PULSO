@@ -30,7 +30,7 @@ export function InstallCard() {
     <>
       {visible && (
         <section className="install-card" aria-labelledby="install-card-title">
-          <span className="icon-tile lime" aria-hidden="true"><Smartphone size={19} /></span>
+          <span className="icon-tile accent" aria-hidden="true"><Smartphone size={19} /></span>
           <div className="grow">
             <strong id="install-card-title">Instala PULSO en tu teléfono</strong>
             <p>Se abre con un toque, a pantalla completa, y tus datos quedan más protegidos.</p>

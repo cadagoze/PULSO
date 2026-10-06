@@ -17,10 +17,10 @@ import type { ReadinessEntry } from "@/types";
 
 /** Frase bajo el saludo, según lo que toca hoy (el progreso de la semana va en la portada). */
 function homeLine({ inProgress, readiness }: { inProgress: boolean; readiness?: ReadinessEntry["recommendation"] }) {
-  if (inProgress) return "Tienes un entrenamiento a medias.";
-  if (readiness === "recovery") return "Hoy toca moverte suave y recuperar.";
-  if (readiness === "short") return "Hoy, una sesión más corta y bien hecha.";
-  return "Hoy es un buen día para entrenar.";
+  if (inProgress) return "Dejaste un entrenamiento a medias. Termínalo.";
+  if (readiness === "recovery") return "Hoy se recupera. Moverse suave también es disciplina.";
+  if (readiness === "short") return "Poco tiempo no es excusa: sesión corta y bien hecha.";
+  return "Sin excusas. Hoy se entrena.";
 }
 
 export default function Home() {

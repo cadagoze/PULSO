@@ -145,7 +145,7 @@ function Details({ records, minutes, place }: { records: ExerciseRecord[]; minut
 function Actions({ disabled, onStart, secondaryLabel }: { disabled: boolean; onStart: () => void; secondaryLabel: string }) {
   return (
     <div className="home-hero-actions">
-      <Button size="l" block disabled={disabled} onClick={onStart}><Play size={18} fill="currentColor" />Iniciar entrenamiento</Button>
+      <Button size="l" block disabled={disabled} onClick={onStart}><Play size={18} fill="currentColor" />Empezar ahora</Button>
       <ButtonLink href="/entrenar" variant="glass" size="l" className="home-hero-more" aria-label={secondaryLabel} title={secondaryLabel}>
         <SlidersHorizontal size={19} />
       </ButtonLink>

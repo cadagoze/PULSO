@@ -57,8 +57,8 @@ export interface MuscleMapProps {
 }
 
 function recoveryColor(value: number) {
-  if (value >= 85) return "var(--lime)";
-  if (value >= 60) return "color-mix(in srgb, var(--lime) 55%, var(--warning))";
+  if (value >= 85) return "var(--accent)";
+  if (value >= 60) return "color-mix(in srgb, var(--accent) 55%, var(--warning))";
   if (value >= 35) return "var(--warning)";
   return "var(--danger)";
 }
@@ -67,15 +67,15 @@ function fillFor(muscle: MuscleGroup | undefined, props: MuscleMapProps) {
   if (!muscle) return "var(--surface-3)";
   const { mode = "highlight", primary = [], secondary = [], values = {} } = props;
   if (mode === "highlight") {
-    if (primary.includes(muscle)) return "var(--lime-text)";
-    if (secondary.includes(muscle)) return "color-mix(in srgb, var(--lime) 70%, var(--map-base))";
+    if (primary.includes(muscle)) return "var(--accent-text)";
+    if (secondary.includes(muscle)) return "color-mix(in srgb, var(--accent) 70%, var(--map-base))";
     return "var(--map-base)";
   }
   const value = values[muscle];
   if (value === undefined) return "var(--map-base)";
   if (mode === "recovery") return recoveryColor(value);
   if (value <= 0) return "var(--map-base)";
-  return `color-mix(in srgb, var(--lime-text) ${Math.round(25 + Math.min(1, value) * 75)}%, var(--map-base))`;
+  return `color-mix(in srgb, var(--accent-text) ${Math.round(25 + Math.min(1, value) * 75)}%, var(--map-base))`;
 }
 
 function Figure({ shapes, props, title }: { shapes: Shape[]; props: MuscleMapProps; title: string }) {
@@ -109,7 +109,7 @@ export function MuscleMap(props: MuscleMapProps) {
 export function RecoveryLegend() {
   return (
     <div className="muscle-legend" aria-hidden="true">
-      <span><i style={{ background: "var(--lime)" }} />Recuperado</span>
+      <span><i style={{ background: "var(--accent)" }} />Recuperado</span>
       <span><i style={{ background: "var(--warning)" }} />Parcial</span>
       <span><i style={{ background: "var(--danger)" }} />Fatigado</span>
     </div>

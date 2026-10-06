@@ -1,19 +1,19 @@
 /**
- * Portadas de Inicio según la sesión del día. Fotos de StockSnap con licencia CC0 (uso libre, sin
- * atribución); la de casa es la editorial original. Donde hay dos, se alternan por día.
+ * Portadas de Inicio según la sesión del día, en blanco y negro con brillo de fuego (CSS). Fotos de
+ * StockSnap y rawpixel con licencia CC0 (uso libre, sin atribución). Donde hay dos, se alternan por día.
  */
 
 export interface HeroPhoto { src: string; alt: string; position?: string }
 export type HeroKind = "home" | "gym" | "cardio" | "mobility";
 
 const heroPhotos: Record<HeroKind, HeroPhoto[]> = {
-  home: [{ src: "/images/editorial/home-squat.webp", alt: "Persona haciendo una sentadilla en su sala, con luz natural", position: "66% 38%" }],
+  home: [{ src: "/images/editorial/hero-home-pushup.webp", alt: "Hombre con polerón haciendo flexiones en una escalera de piedra", position: "center 35%" }],
   gym: [
-    { src: "/images/editorial/hero-gym-kettlebell.webp", alt: "Hombre mayor sonriendo mientras levanta una pesa rusa", position: "center 22%" },
-    { src: "/images/editorial/hero-gym-squat.webp", alt: "Mujer haciendo una sentadilla con banda elástica al aire libre", position: "center top" },
+    { src: "/images/editorial/hero-gym-plate.webp", alt: "Primer plano de una barra cargada con discos", position: "center 40%" },
+    { src: "/images/editorial/hero-gym-back.webp", alt: "Mujer de espaldas, con la musculatura marcada, en un gimnasio oscuro", position: "62% 30%" },
   ],
-  cardio: [{ src: "/images/editorial/hero-cardio.webp", alt: "Hombre corriendo por un sendero entre árboles", position: "center 30%" }],
-  mobility: [{ src: "/images/editorial/hero-mobility-lake.webp", alt: "Mujer de espaldas estirando los brazos hacia el cielo frente a un lago", position: "center 18%" }],
+  cardio: [{ src: "/images/editorial/hero-cardio-run.webp", alt: "Hombre corriendo junto a un muro de piedra", position: "center 30%" }],
+  mobility: [{ src: "/images/editorial/hero-mobility-stretch.webp", alt: "Hombre estirando el cuádriceps en un sendero", position: "center 30%" }],
 };
 
 /** Tipo de portada: cardio e intervalos, movilidad, gimnasio o casa. */
