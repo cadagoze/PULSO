@@ -728,3 +728,39 @@ test('código de barras: producto de Open Food Facts a alimento', () => {
   assert.equal(barcode.foodFromOpenFoodFacts('1', { product_name: 'Sin datos', nutriments: {} }), null);
   assert.equal(barcode.foodFromOpenFoodFacts('1', { nutriments: { 'energy-kcal_100g': 100 } }), null);
 });
+
+const gapLib = load('src/lib/day-gap.ts');
+
+test('¿qué me falta hoy?: ideas que caben, con proteína y lo de siempre primero', () => {
+  const at = (h, m = 0) => new Date(2026, 9, 6, h, m);
+  const zero = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  const targets = { kcal: 2000, protein: 140 };
+  const morning = gapLib.dayGap({ targets, totals: zero, now: at(8), catalog: foods, history: [] });
+  assert.equal(morning.meal, 'desayuno');
+  assert.equal(morning.focus, 'protein');
+  assert.equal(morning.ideas.length, 3);
+  assert.equal(new Set(morning.ideas.map((idea) => idea.food.category)).size, 3, 'sin repetir categoría');
+  assert.ok(morning.ideas.every((idea) => idea.kcal <= 500 && idea.protein >= 6), 'caben en la parte del desayuno y aportan proteína');
+  const entry = (foodId, portions, meal = 'desayuno') => ({ id: foodId + meal + portions, date: '2026-10-05', meal, foodId, name: foodId, portion: '', portions, kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const history = [entry('queso-cottage', 1), entry('queso-cottage', 1), entry('queso-cottage', 1), ...Array.from({ length: 5 }, () => entry('cerveza', 1, 'cena'))];
+  const usual = gapLib.dayGap({ targets, totals: zero, now: at(8), catalog: foods, history });
+  const dairy = usual.ideas.find((idea) => idea.food.category === 'lacteos');
+  assert.equal(dairy.food.id, 'queso-cottage', 'lo que sueles comer primero');
+  assert.ok(dairy.usual);
+  const night = gapLib.dayGap({ targets, totals: { ...zero, kcal: 1400, protein: 140 }, now: at(20, 30), catalog: foods, history });
+  assert.equal(night.focus, 'energy');
+  assert.ok(night.ideas.length > 0 && night.ideas.every((idea) => idea.kcal <= 600 && !idea.food.alcohol), 'nunca alcohol');
+  assert.equal(gapLib.dayGap({ targets, totals: { ...zero, kcal: 1900, protein: 100 }, now: at(13), catalog: foods, history }), null, 'día casi cubierto: nada');
+  assert.equal(gapLib.dayGap({ targets, totals: { ...zero, kcal: 1850, protein: 135 }, now: at(13), catalog: foods, history }), null);
+  const lunch = (foodId, date = '2026-10-06') => ({ ...entry(foodId, 1, 'almuerzo'), id: foodId + date, date });
+  const atTea = gapLib.dayGap({ targets, totals: { ...zero, kcal: 900, protein: 60 }, now: at(17), catalog: foods, history: [lunch('pollo-pechuga', '2026-10-05'), entry('yogur-griego', 1, 'once'), { ...entry('huevo', 1, 'once'), date: '2026-10-06' }] });
+  assert.ok(!atTea.ideas.some((idea) => idea.food.id === 'pollo-pechuga'), 'lo del almuerzo no se sugiere en la once');
+  assert.ok(!atTea.ideas.some((idea) => idea.food.id === 'huevo'), 'lo ya registrado en esta comida hoy no se repite');
+  assert.ok(atTea.ideas.some((idea) => idea.food.id === 'yogur-griego' && idea.usual));
+  const late = gapLib.dayGap({ targets, totals: { ...zero, kcal: 1840, protein: 110 }, now: at(23, 30), catalog: foods, history: [entry('batido-proteina', 2, 'colacion')] });
+  const shake = late.ideas.find((idea) => idea.food.id === 'batido-proteina');
+  assert.equal(shake.portions, 0.5, 'la porción baja para caber');
+  for (const [meal, ids] of Object.entries(load('src/data/foods.ts').mealIdeas)) {
+    for (const id of ids) assert.ok(foods.some((food) => food.id === id), `${meal}: ${id} no existe`);
+  }
+});

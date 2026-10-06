@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, ChevronRight, Plus, Scale } from "lucide-react";
+import { Calculator, ChevronRight, Lightbulb, Plus, Scale } from "lucide-react";
 import { ButtonLink, ProgressRing } from "@/components/ui";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { isLogged } from "@/components/content/meal-log";
+import { foods } from "@/data/foods";
+import { dayGap, forMeal } from "@/lib/day-gap";
 import { formatKcal } from "@/lib/nutrition";
-import { useMeals } from "@/lib/store";
+import { useCustomFoods, useFoodLog, useMeals } from "@/lib/store";
 import { useNutritionDay, useWaterToday, useWeeklyReview } from "@/lib/use-nutrition";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +21,11 @@ export function DayFuel({ now }: { now: number }) {
   const water = useWaterToday(now);
   const [meals] = useMeals();
   const review = useWeeklyReview(now);
+  const [log] = useFoodLog();
+  const [customFoods] = useCustomFoods();
+  // Sólo la proteína pendiente: Inicio no invita a comer más calorías.
+  const gap = counting && targets ? dayGap({ targets, totals, now: new Date(now), catalog: [...customFoods, ...foods], history: log }) : null;
+  const proteinGap = gap?.focus === "protein" && gap.ideas.length ? gap : null;
 
   return (
     <section className="section home-fuel" aria-labelledby="home-fuel-title">
@@ -37,6 +44,13 @@ export function DayFuel({ now }: { now: number }) {
             <p><b>¿Cuánto deberías comer?</b> Calcula tus calorías y macros en un minuto.</p>
             <ButtonLink href="/comidas?calcular=1" variant="secondary" size="s"><Calculator size={16} />Calcular</ButtonLink>
           </div>
+        )}
+        {proteinGap && (
+          <Link href="/comidas#falta" className="home-fuel-review">
+            <span className="icon-tile accent" aria-hidden="true"><Lightbulb size={17} /></span>
+            <span className="grow"><strong>Te faltan <span className="num">{proteinGap.proteinLeft}</span> g de proteína</strong><small>Ideas para {forMeal[proteinGap.meal]}</small></span>
+            <ChevronRight size={18} className="subtle" aria-hidden="true" />
+          </Link>
         )}
         {review.status === "ready" && review.due && (
           <Link href="/comidas#revision" className="home-fuel-review">

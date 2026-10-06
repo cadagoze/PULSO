@@ -1,4 +1,4 @@
-import type { FoodCategory, FoodItem } from "@/types";
+import type { FoodCategory, FoodItem, MealSlot } from "@/types";
 
 export const foodCategoryLabels: Record<FoodCategory, string> = {
   panes: "Panes y cereales",
@@ -251,6 +251,18 @@ export const foods: FoodItem[] = [
   { id: "ave-palta", name: "Sándwich ave palta", portion: "1 unidad (250 g)", kcal: 520, protein: 30, carbs: 45, fat: 24, category: "platos" },
   { id: "chorrillana", name: "Chorrillana", portion: "1 porción (400 g)", kcal: 950, protein: 40, carbs: 70, fat: 55, category: "platos" },
 ];
+
+/**
+ * Ideas por comida para «¿Qué me falta hoy?», además de lo que sueles comer: opciones simples y
+ * comunes en Chile que calzan con cada momento del día.
+ */
+export const mealIdeas: Record<MealSlot, string[]> = {
+  desayuno: ["huevo", "yogur-griego", "yogur-proteina", "queso-cottage", "quesillo", "jamon-pavo", "avena-platano", "tostadas-palta", "batido-proteina", "leche-descremada", "platano", "pan-integral"],
+  almuerzo: ["pollo-pechuga", "pavo-pechuga", "merluza", "reineta", "salmon", "atun-agua", "jurel", "vacuno-magro", "lentejas", "porotos", "garbanzos", "tofu", "cazuela-ave", "ensalada-cesar", "arroz-integral", "ensalada-chilena"],
+  once: ["huevo", "yogur-griego", "yogur-proteina", "queso-cottage", "quesillo", "jamon-pavo", "pan-integral", "marraqueta", "palta", "sandwich-jamon-queso", "batido-proteina", "tostadas-palta"],
+  cena: ["pollo-pechuga", "merluza", "reineta", "salmon", "atun-agua", "huevo", "tortilla-verduras", "tofu", "ceviche", "cazuela-ave", "ensalada-surtida", "yogur-griego"],
+  colacion: ["yogur-griego", "yogur-proteina", "queso-cottage", "barra-proteina", "batido-proteina", "mani", "almendras", "huevo", "platano", "manzana", "frutillas"],
+};
 
 export function foodById(id: string) {
   return foods.find((food) => food.id === id);

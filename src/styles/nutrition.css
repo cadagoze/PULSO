@@ -95,6 +95,13 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-gram-chips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
 .nut-gram-chips .chip { justify-content: center; padding: 0 4px; }
 
+/* ─── ¿Qué me falta hoy? ───────────────────────────────────────────────── */
+.nut-gap { display: flex; flex-direction: column; gap: 8px; padding: 18px 18px 8px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.nut-gap-lead { font-size: 14.5px; line-height: 1.45; color: var(--ink-2); }
+.nut-gap-lead b { font-weight: 600; color: var(--ink); }
+.nut-gap-usual { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--ink-2); vertical-align: 1px; }
+.nut-gap-add { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); }
+
 /* ─── Código de barras ─────────────────────────────────────────────────── */
 .scan-frame { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-l); background: #050505; color: #f4f4f4; }
 .scan-frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

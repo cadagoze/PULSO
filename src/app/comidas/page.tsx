@@ -12,6 +12,7 @@ import { buildSummary, isLogged, type MealDetail } from "@/components/content/me
 import { MealRows } from "@/components/content/meal-rows";
 import { CalorieAdjust } from "@/components/nutrition/calorie-adjust";
 import { CalorieSummary } from "@/components/nutrition/calorie-summary";
+import { DayGapCard } from "@/components/nutrition/day-gap-card";
 import { EntryEditor } from "@/components/nutrition/entry-editor";
 import { FoodPicker } from "@/components/nutrition/food-picker";
 import { MealDiary } from "@/components/nutrition/meal-diary";
@@ -23,7 +24,9 @@ import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { WeeklyReviewCard } from "@/components/nutrition/weekly-review";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
+import { foods } from "@/data/foods";
 import { habits } from "@/data/mock-data";
+import { dayGap, type FoodIdea } from "@/lib/day-gap";
 import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
 import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSavedMeals, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
@@ -79,6 +82,7 @@ export default function NutritionPage() {
   const todayEntries = log.filter((entry) => entry.date === today);
   const yesterdayEntries = log.filter((entry) => entry.date === yesterday);
   const totals = entryTotals(todayEntries);
+  const gap = counting && targets ? dayGap({ targets, totals, now: new Date(now), catalog: [...customFoods, ...foods], history: log }) : null;
 
   const sheetMeal = sheet ? meals.find((meal) => meal.id === sheet.id) : undefined;
   const logged = meals.filter(isLogged).length;
@@ -158,16 +162,28 @@ export default function NutritionPage() {
     hideToast();
   }
 
-  function addFood(food: FoodItem, portions: number, grams?: number) {
-    if (!picker || !targets) return;
+  /** Registra un alimento en una comida de hoy y lo marca en el diario. */
+  function logFood(food: FoodItem, meal: MealSlot, { portions, grams, delay = 0 }: { portions: number; grams?: number; delay?: number }) {
+    if (!targets) return;
     const id = newId("comida");
-    const entry = entryFromFood(food, { id, date: today, meal: picker.meal, portions, grams });
+    const entry = entryFromFood(food, { id, date: today, meal, portions, grams });
     setLog((current) => pruneHistory([...current, entry], today));
-    setPickerOpen(false);
     setFresh(id);
-    const protein = totals.protein + food.protein * portions;
+    const protein = totals.protein + food.protein * entry.portions;
     const proteinMet = totals.protein < targets.protein && protein >= targets.protein;
-    showToast(proteinMet ? "Meta de proteína cumplida" : `${slotLabel(picker.meal)} · +${formatKcal(food.kcal * portions)} kcal`, { delay: 260 });
+    showToast(proteinMet ? "Meta de proteína cumplida" : `${slotLabel(meal)} · +${formatKcal(food.kcal * entry.portions)} kcal`, { delay });
+  }
+
+  function addFood(food: FoodItem, portions: number, grams?: number) {
+    if (!picker) return;
+    setPickerOpen(false);
+    logFood(food, picker.meal, { portions, grams, delay: 260 });
+  }
+
+  function addIdea(idea: FoodIdea) {
+    if (!gap) return;
+    hideToast();
+    logFood(idea.food, gap.meal, { portions: idea.portions });
   }
 
   /** Agrega de una vez los alimentos de una comida guardada (desde el diario o el buscador). */
@@ -294,6 +310,7 @@ export default function NutritionPage() {
             <MealRows meals={meals} fresh={fresh} onOpen={openMeal} />
           </section>
         )}
+        {gap && <DayGapCard gap={gap} onAdd={addIdea} />}
 
         <section id="habitos" className="cnt-section" aria-labelledby="cnt-habits-title">
           <div className="cnt-head">
