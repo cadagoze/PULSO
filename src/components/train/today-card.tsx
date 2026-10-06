@@ -14,6 +14,7 @@ import { useProgramActions } from "@/components/train/program-actions";
 import { locationLabels, targetLabel, topLoad } from "@/components/train/shared";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, TrainingDraft } from "@/types";
+import { useRestDay } from "@/lib/use-rest-day";
 
 const sourceLabels: Record<TodaySource, string> = { draft: "En curso", program: "Programa", custom: "A tu medida" };
 
@@ -145,6 +146,7 @@ function ListToggle({ open, onToggle, label }: { open: boolean; onToggle: () => 
 
 function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: { today: TodayPlan; place: string; easier: boolean; listOpen: boolean | null; onToggleList: () => void; onAdjust: () => void }) {
   const start = useStartWorkout();
+  const restDay = useRestDay();
   const total = today.records.length;
   const context = today.edited ? "Con tus cambios" : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
 
@@ -162,7 +164,7 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
 
   return (
     <>
-      <Head meta="Tu rutina de hoy" context={context} number={today.estimated} label="min" />
+      <Head meta={restDay ? "Hoy es descanso · opcional" : "Tu rutina de hoy"} context={context} number={today.estimated} label="min" />
       <Title details={[count(total, "ejercicio", "ejercicios"), place]} note={easier ? today.plan?.notes[0] : undefined}>
         {focusLabels[today.focus]}
       </Title>
@@ -189,6 +191,7 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
 }
 
 function ProgramBody({ active, place, easier, notify }: { active: ActiveProgram; place: string; easier: boolean; notify: (message: string) => void }) {
+  const restDay = useRestDay();
   const { startSession, restart } = useProgramActions();
   const { program, next, day, records, done, total, weekDone } = active;
   const href = `/entrenar/programas/${program.id}`;
@@ -216,7 +219,7 @@ function ProgramBody({ active, place, easier, notify }: { active: ActiveProgram;
 
   return (
     <>
-      <Head meta={`Semana ${next.week} · ${weekDone} de ${program.days.length}`} context={program.name} number={program.minutes} label="min" />
+      <Head meta={`${restDay ? "Hoy es descanso · " : ""}Semana ${next.week} · ${weekDone} de ${program.days.length}`} context={program.name} number={program.minutes} label="min" />
       <Title
         details={[count(records.length, "ejercicio", "ejercicios"), programPlace]}
         note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}

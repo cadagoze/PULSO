@@ -232,6 +232,8 @@ export interface Settings {
   unit: "kg" | "lb";
   theme: "system" | "light" | "dark";
   weeklyGoal: number;
+  /** Días fijos de entreno (0 = lunes … 6 = domingo). Vacío o sin valor: cualquier día. */
+  trainingDays?: number[];
   /** Semanas (lunes, AAAA-MM-DD) en que la racha está en pausa. */
   pausedWeeks: string[];
   defaultRest: number;

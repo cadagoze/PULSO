@@ -841,6 +841,10 @@ test('avisos: cuándo toca cada uno y cuándo no', () => {
   assert.equal(sunday.send.kind, 'streak');
   assert.match(sunday.send.body, /2 semanas seguidas/);
   assert.deepEqual(Array.from(sunday.skip), ['training'], 'el de entrenar se marca para no repetirlo');
+  // Días fijos: miércoles (2) no está en [0, 4] → sin aviso de entrenar; viernes sí.
+  assert.equal(due({ trainingDays: [0, 4] }).send, null, 'día de descanso: no se avisa');
+  assert.equal(reminders.dueReminders({ prefs, state: { ...state, date: '2026-10-09', trainingDays: [0, 4] }, sent: {}, timeZone: tz, now: at('2026-10-09', 19) }).send.kind, 'training');
+  assert.equal(due({ trainingDays: [] }).send.kind, 'training', 'sin días fijos, como siempre');
   assert.equal(reminders.parseTime('07:30'), 450);
   assert.equal(reminders.parseTime('03:00'), null);
   assert.equal(reminders.parseTime('19:75'), null);
@@ -877,4 +881,21 @@ test('nube: lo anotado en dos equipos no se duplica al unir', () => {
   assert.deepEqual(Array.from(sync.mergeCollection([workout('w9'), workout('w8', 35)], cloudWorkouts, workoutSpec).items, (item) => item.id).sort(), ['w1', 'w8']);
   assert.deepEqual(Array.from(sync.duplicateIds([food('a', 'avena'), food('b', 'avena'), food('c', 'avena', 2), food('d', 'avena')], sync.sameFood)), ['b', 'd'], 'se conserva el primero');
   assert.deepEqual(Array.from(sync.duplicateIds([workout('w1'), workout('w2', 41)], sync.sameWorkout)), []);
+});
+
+const trainingDays = load('src/lib/training-days.ts');
+
+test('días de entreno: descanso, próximo día y propuesta', () => {
+  const wednesday = new Date(2026, 9, 7, 10);
+  assert.equal(trainingDays.weekdayIndex(wednesday), 2);
+  assert.equal(trainingDays.isRestDay([0, 2, 4], wednesday), false);
+  assert.equal(trainingDays.isRestDay([0, 4], wednesday), true);
+  assert.equal(trainingDays.isRestDay([], wednesday), false, 'sin días fijos nunca es descanso');
+  assert.deepEqual({ ...trainingDays.nextTrainingDay([0, 2, 4], wednesday) }, { day: 4, ahead: 2, label: 'viernes' });
+  assert.equal(trainingDays.nextTrainingDay([3], wednesday).label, 'mañana');
+  assert.equal(trainingDays.nextTrainingDay([2], wednesday).ahead, 7, 'el mismo día de la próxima semana');
+  assert.equal(trainingDays.nextTrainingDay([], wednesday), null);
+  assert.deepEqual(Array.from(trainingDays.cleanDays([4, 0, 4, 9, -1, 2.5])), [0, 4]);
+  for (let goal = 1; goal <= 7; goal++) assert.equal(trainingDays.suggestedDays(goal).length, goal);
+  assert.equal(trainingDays.daysLabel([4, 0, 2]), 'L · X · V');
 });

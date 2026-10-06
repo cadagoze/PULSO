@@ -4,10 +4,11 @@ import Link from "@/components/ui/app-link";
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowRight, ClipboardCheck, HeartPulse, House, Building2, SlidersHorizontal } from "lucide-react";
-import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet, Stepper } from "@/components/ui";
+import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet } from "@/components/ui";
 import { durationOptions } from "@/lib/generator";
 import { nextProgramSession, programById, programTotalSessions } from "@/lib/programs";
 import { formatKcal } from "@/lib/nutrition";
+import { cleanDays, daysLabel } from "@/lib/training-days";
 import { usePreference, useProfile, useProgram, useSettings } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { useNutritionDay } from "@/lib/use-nutrition";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import type { TrainingLocation } from "@/types";
 import { careAreas, placeSummary, splitFocus } from "./profile-format";
 import { EquipmentChips } from "@/components/train/equipment-picker";
+import { TrainingDaysField } from "@/components/train/training-days";
 
 const locationOptions: Array<{ value: TrainingLocation; label: string }> = [
   { value: "home", label: "Casa" },
@@ -32,6 +34,7 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
   const changed = useRef(false);
 
   const days = settings.weeklyGoal;
+  const fixedDays = cleanDays(settings.trainingDays);
   const minutes = profile?.recommendation.sessionMinutes;
   const focus = profile ? splitFocus(profile.recommendation.focus) : null;
   const tagline = focus ? focus.rest : "Cinco preguntas breves y PULSO ajusta tiempos, ejercicios y zonas a cuidar.";
@@ -61,7 +64,7 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
           <MetaLine
             className="prof-plan-meta"
             items={[
-              <><b className="num">{days}</b> {days === 1 ? "día" : "días"} por semana</>,
+              fixedDays.length ? <><b>{daysLabel(fixedDays)}</b></> : <><b className="num">{days}</b> {days === 1 ? "día" : "días"} por semana</>,
               minutes !== undefined && <><b className="num">{minutes}</b> min</>,
             ]}
           />
@@ -117,14 +120,8 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
 /** Controles del plan: se guardan al momento, como el resto de ajustes. */
 function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone: () => void; onAssess: () => void }) {
   const [profile, setProfile] = useProfile();
-  const [settings, update] = useSettings();
   const [preference, setPreference] = usePreference();
   const areas = profile ? careAreas(profile) : [];
-
-  function setDays(weeklyGoal: number) {
-    update({ weeklyGoal });
-    onChange();
-  }
 
   function setMinutes(value: string) {
     const sessionMinutes = Number(value);
@@ -139,13 +136,7 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
 
   return (
     <div className="prof-form">
-      <div className="prof-field prof-field-inline">
-        <div className="prof-field-text">
-          <span className="prof-field-label">Días por semana</span>
-          <small>Tu objetivo semanal. Cada semana que lo cumples suma a tu racha.</small>
-        </div>
-        <Stepper value={settings.weeklyGoal} onChange={setDays} min={1} max={7} label="días por semana" />
-      </div>
+      <TrainingDaysField onChange={onChange} />
 
       {profile && (
         <div className="prof-field">

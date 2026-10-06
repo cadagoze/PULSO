@@ -2,21 +2,22 @@
 
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Flame, Pause, Play, SlidersHorizontal, Square } from "lucide-react";
+import { Flame, Pause, Play, SlidersHorizontal, Square, StretchHorizontal } from "lucide-react";
 import { DraftEndSheet, useDraftControls } from "@/components/session/draft-controls";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
 import { estimateMinutes, focusLabels, generateWorkout, todayGeneratorInput } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
-import { useStartWorkout } from "@/lib/session";
+import { useStartMobility, useStartWorkout } from "@/lib/session";
 import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { completedSets, totalSets } from "@/lib/training";
 import { heroKind, heroPhoto, type HeroPhoto } from "@/data/hero-photos";
 import { heroLine } from "@/lib/motivation";
 import { usePersonalization } from "@/lib/use-personalize";
 import { useLatestWeight } from "@/lib/use-nutrition";
-import { localDaySeed } from "@/lib/utils";
+import { isRestDay, nextTrainingDay } from "@/lib/training-days";
+import { localDateKey, localDaySeed } from "@/lib/utils";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
 const HOUR = 3_600_000;
@@ -41,6 +42,13 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const hourNow = Math.floor(now / HOUR) * HOUR;
   const place = preference.location === "gym" ? "Gimnasio" : "Casa";
   const easier = readiness && readiness !== "planned";
+  const startMobility = useStartMobility();
+  // Día de descanso (con días fijos y sin entrenar aún hoy): se propone movilidad y se puede entrenar igual.
+  const date = new Date(now);
+  const restDay = isRestDay(settings.trainingDays, date) && !workouts.some((workout) => workout.date === localDateKey(date));
+  const upcoming = nextTrainingDay(settings.trainingDays, date);
+  const restLine = upcoming ? `Hoy se recupera. ${upcoming.ahead === 1 ? "Mañana" : `El ${upcoming.label}`} se entrena.` : "Hoy se recupera.";
+  const rest = restDay ? () => void startMobility() : undefined;
 
   const programRecords = useMemo(
     () => (program && next ? programSessionRecords(program, next.week, next.day, workouts) : []),
@@ -74,9 +82,9 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const name = programSessionName(program, next.week, next.day);
     return (
       <HeroFrame
-        photo={heroPhoto(heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed, audience)}
-        line={motivation(program.minutes)}
-        tag={`Semana ${next.week} de ${program.weeks}`}
+        photo={heroPhoto(restDay ? "mobility" : heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed, audience)}
+        line={restDay ? restLine : motivation(program.minutes)}
+        tag={restDay ? "Día de descanso" : `Semana ${next.week} de ${program.weeks}`}
         meta={program.name}
         title={day ? `${day.name} · ${day.focus}` : name}
         note={easier ? "Tu chequeo sugiere bajar el ritmo: puedes quitar una serie por ejercicio." : undefined}
@@ -86,6 +94,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
           disabled={!programRecords.length}
           onStart={() => start({ name, records: programRecords, source: { type: "program", programId: program.id, week: next.week, day: next.day } })}
           secondaryLabel="Ver programa"
+          rest={rest}
         />
       </HeroFrame>
     );
@@ -102,9 +111,9 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const minutes = generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds);
   return (
     <HeroFrame
-      photo={heroPhoto(heroKind({ focus: generated.focus, location: preference.location }), seed, audience)}
-      line={motivation(minutes)}
-      tag="Tu sesión de hoy"
+      photo={heroPhoto(restDay ? "mobility" : heroKind({ focus: generated.focus, location: preference.location }), seed, audience)}
+      line={restDay ? restLine : motivation(minutes)}
+      tag={restDay ? "Día de descanso" : "Tu sesión de hoy"}
       meta={focusLabels[generated.focus]}
       title={generated.name}
       note={easier ? generated.notes[0] : undefined}
@@ -114,6 +123,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
         disabled={!generated.records.length}
         onStart={() => start({ name: generated.name, records: generated.records, restSeconds: generated.restSeconds, source: { type: "generated" } })}
         secondaryLabel="Personalizar"
+        rest={rest}
       />
     </HeroFrame>
   );
@@ -148,7 +158,15 @@ function Details({ records, minutes, place }: { records: ExerciseRecord[]; minut
   );
 }
 
-function Actions({ disabled, onStart, secondaryLabel }: { disabled: boolean; onStart: () => void; secondaryLabel: string }) {
+function Actions({ disabled, onStart, secondaryLabel, rest }: { disabled: boolean; onStart: () => void; secondaryLabel: string; rest?: () => void }) {
+  if (rest) {
+    return (
+      <div className="home-hero-actions home-hero-rest">
+        <Button size="l" block onClick={rest}><StretchHorizontal size={18} />Movilidad 10 min</Button>
+        <button type="button" className="home-hero-anyway" disabled={disabled} onClick={onStart}>o entrena igual</button>
+      </div>
+    );
+  }
   return (
     <div className="home-hero-actions">
       <Button size="l" block disabled={disabled} onClick={onStart}><Play size={18} fill="currentColor" />Empezar ahora</Button>

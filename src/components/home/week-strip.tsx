@@ -5,6 +5,7 @@ import { ArrowRight, Check, Flame } from "lucide-react";
 import { NumberMetric } from "@/components/ui";
 import { weekStreak } from "@/lib/analytics";
 import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
+import { cleanDays, nextTrainingDay } from "@/lib/training-days";
 import { cn, localDateKey, startOfCurrentWeek } from "@/lib/utils";
 
 const labels = ["L", "M", "M", "J", "V", "S", "D"];
@@ -19,11 +20,12 @@ function isoWeek(date: Date) {
   return Math.ceil(((day.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
 }
 
-function streakLine(streak: number, met: boolean, remaining: number, paused: boolean) {
+function streakLine(streak: number, met: boolean, remaining: number, paused: boolean, next: string | null) {
   if (paused) return "Semana en pausa: tu racha te espera.";
   if (met) return "Meta semanal cumplida.";
   const missing = remaining === 1 ? "Te falta 1 sesión" : `Te faltan ${remaining} sesiones`;
-  return streak === 0 ? `${missing} para empezar tu racha.` : `${missing} para sumar otra semana.`;
+  const line = streak === 0 ? `${missing} para empezar tu racha.` : `${missing} para sumar otra semana.`;
+  return next ? `${line} Próximo entreno: ${next}.` : line;
 }
 
 /** La semana como bloque editorial: sesiones hechas en grande, los siete días y la racha. */
@@ -31,7 +33,9 @@ export function WeekStrip({ now }: { now: number }) {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
   const [routines] = useRoutines();
-  const planned = new Set(routines[0]?.days ?? []);
+  // Tus días fijos de entreno; si no hay, los días de tu primera rutina.
+  const fixedDays = cleanDays(settings.trainingDays);
+  const planned = new Set(fixedDays.length ? fixedDays : routines[0]?.days ?? []);
   const date = new Date(now);
   const today = localDateKey(date);
   const start = startOfCurrentWeek(date);
@@ -39,6 +43,10 @@ export function WeekStrip({ now }: { now: number }) {
   const goal = Math.max(1, settings.weeklyGoal);
   const { streak, currentCount, currentMet, currentPaused } = weekStreak(workouts, goal, settings.pausedWeeks, date);
   const remaining = Math.max(0, goal - currentCount);
+  const trainedToday = doneDates.has(today);
+  const todayPlanned = fixedDays.includes((date.getDay() + 6) % 7);
+  const upcoming = nextTrainingDay(fixedDays, date);
+  const nextLabel = !fixedDays.length ? null : todayPlanned && !trainedToday ? "hoy" : upcoming?.label ?? null;
 
   const days = labels.map((short, index) => {
     const day = new Date(start);
@@ -71,7 +79,7 @@ export function WeekStrip({ now }: { now: number }) {
       </div>
       <p className={cn("home-streak", streak > 0 && "active")}>
         <Flame size={16} aria-hidden="true" />
-        <span><b>{streak > 0 ? `Racha de ${streak} ${streak === 1 ? "semana" : "semanas"}` : "Sin racha aún"}</b> · {streakLine(streak, currentMet, remaining, currentPaused)}</span>
+        <span><b>{streak > 0 ? `Racha de ${streak} ${streak === 1 ? "semana" : "semanas"}` : "Sin racha aún"}</b> · {streakLine(streak, currentMet, remaining, currentPaused, nextLabel)}</span>
       </p>
     </section>
   );

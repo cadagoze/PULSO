@@ -32,6 +32,8 @@ export interface PushState {
   loggedEvening: boolean;
   water: number;
   waterGoal: number;
+  /** Días fijos de entreno (0 = lunes); vacío o ausente: cualquier día. */
+  trainingDays?: number[];
 }
 
 export type ReminderKind = "training" | "streak" | "meals" | "water-1" | "water-2" | "water-3";
@@ -103,7 +105,9 @@ export function dueReminders({ prefs, state, sent, timeZone, now }: {
   const due: Reminder[] = [];
 
   const trainingAt = parseTime(prefs.trainingTime);
-  if (prefs.training && trainingAt !== null && inWindow(trainingAt) && pending("training") && !trainedToday && weekSessions < weekGoal) {
+  // Con días fijos, sólo esos días; sin ellos, cualquier día mientras no se cumpla la meta.
+  const trainingDay = !state?.trainingDays?.length || state.trainingDays.includes(clock.weekday);
+  if (prefs.training && trainingDay && trainingAt !== null && inWindow(trainingAt) && pending("training") && !trainedToday && weekSessions < weekGoal) {
     due.push({
       kind: "training",
       title: "Hora de entrenar",

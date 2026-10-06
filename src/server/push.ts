@@ -78,6 +78,7 @@ export function sanitizeState(value: unknown): PushState | null {
     loggedEvening: value.loggedEvening === true,
     water: count("water", 30),
     waterGoal: Math.max(1, count("waterGoal", 30)),
+    trainingDays: Array.isArray(value.trainingDays) ? [...new Set(value.trainingDays.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6))].sort((a, b) => a - b) : [],
   };
 }
 

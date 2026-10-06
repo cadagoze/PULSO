@@ -90,8 +90,8 @@ export function RoutineEditor({ open, routine, isNew, onClose, onSave }: { open:
             <legend>Días que la entrenas</legend>
             <div className="train-day-toggles">
               {dayLetters.map((letter, index) => (
-                <button key={index} type="button" aria-pressed={form.days.includes(index)} aria-label={dayNames[index]} onClick={() => toggleDay(index)}>
-                  {letter}
+                <button key={index} type="button" aria-pressed={form.days.includes(index)} onClick={() => toggleDay(index)}>
+                  <span aria-hidden="true">{letter}</span><span className="sr-only">{dayNames[index]}</span>
                 </button>
               ))}
             </div>

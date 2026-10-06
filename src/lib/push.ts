@@ -5,6 +5,7 @@ import { weekRange, weekStreak } from "@/lib/analytics";
 import { waterGoal } from "@/lib/nutrition";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
 import { defaultPushPrefs, type PushPrefs, type PushState } from "@/lib/reminders";
+import { cleanDays } from "@/lib/training-days";
 import { useFoodLog, useNutritionProfile, useSettings, useWater, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { useLatestWeight } from "@/lib/use-nutrition";
@@ -140,8 +141,9 @@ export function usePushState(): PushState | null {
       loggedEvening: todayFood.some((entry) => entry.meal === "once" || entry.meal === "cena" || entry.meal === "colacion"),
       water: water.find((entry) => entry.date === today)?.glasses ?? 0,
       waterGoal: waterGoal(weight).glasses,
+      trainingDays: cleanDays(settings.trainingDays),
     };
-  }, [foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.weeklyGoal, water, weight, workouts]);
+  }, [foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.trainingDays, settings.weeklyGoal, water, weight, workouts]);
 }
 
 /**

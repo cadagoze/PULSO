@@ -8,6 +8,7 @@ import { formatKcal, goalFromAssessment, goalLabels } from "@/lib/nutrition";
 import { useNutritionProfile, useProfile, useWorkouts } from "@/lib/store";
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { cn } from "@/lib/utils";
+import { TrainingDaysRow } from "@/components/train/training-days";
 
 const routineNotes = {
   lose: "Tu rutina de hoy ya viene con descansos más cortos para este objetivo.",
@@ -57,6 +58,7 @@ export function GoalWeek({ now, bare = false }: { now: number; bare?: boolean })
           <span className="meta">{goalLabels[goal]}</span>
         </div>
       )}
+      {bare && <TrainingDaysRow />}
       <p className="train-section-line">{guide.headline}</p>
 
       <div className="list">
