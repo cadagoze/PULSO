@@ -8,11 +8,12 @@ import { Button } from "@/components/ui";
 import { SignInSheet } from "@/components/cloud/sign-in-sheet";
 import { cn } from "@/lib/utils";
 
-const photo = { src: "/images/editorial/home-squat.webp", alt: "Persona haciendo una sentadilla en su sala, con luz natural" };
+// Pesas sobre el piso de un gimnasio en penumbra (rawpixel, CC0). El muro y la luz de la ventana son CSS.
+const floor = { src: "/images/editorial/splash-floor.webp", alt: "" };
 
 /**
- * Portada de bienvenida: fotografía a sangre con grano, la idea de marca en grande y el botón para empezar
- * (o entrar con una cuenta existente para traer tus datos).
+ * Portada de bienvenida: gimnasio en penumbra con luz entrando por la ventana, la frase de marca en
+ * mayúsculas angostas y el botón para empezar (o entrar con una cuenta para traer tus datos).
  * Al empezar se desvanece sobre la primera pregunta, que ya está debajo.
  */
 export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: number; leaving: boolean; onStart: () => void; onLeft: () => void }) {
@@ -27,27 +28,35 @@ export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: n
   }
 
   return (
-    <section className={cn("onb-splash photo grain on-dark", leaving && "is-leaving")} aria-labelledby="onb-splash-title" inert={leaving} onAnimationEnd={onAnimationEnd}>
-      <Image src={photo.src} alt={photo.alt} fill sizes="100vw" preload loading="eager" className="photo-img onb-splash-photo" />
-      <div className="onb-splash-content photo-content">
+    <section className={cn("onb-splash grain on-dark", leaving && "is-leaving")} aria-labelledby="onb-splash-title" inert={leaving} onAnimationEnd={onAnimationEnd}>
+      <div className="onb-splash-scene" aria-hidden="true">
+        <span className="onb-splash-window" />
+        <span className="onb-splash-beams" />
+        <Image src={floor.src} alt={floor.alt} fill sizes="100vw" preload loading="eager" className="onb-splash-floor" />
+      </div>
+      <div className="onb-splash-content">
         <header className="onb-splash-top">
           <span className="wordmark">PULSO<span>.</span></span>
-          <span className="meta">Tu salud en movimiento.</span>
         </header>
-        <div className="onb-splash-body">
-          <p className="meta rise" style={{ "--i": 2 } as CSSProperties}>Evaluación inicial · 2 min</p>
-          <h1 id="onb-splash-title" ref={titleRef} tabIndex={-1} className="onb-splash-title rise" style={{ "--i": 3 } as CSSProperties}>Entrenamiento que se adapta a tu vida.</h1>
-          <p className="onb-splash-lead rise" style={{ "--i": 5 } as CSSProperties}>Responde {steps} preguntas y armamos tu primer plan, para casa o gimnasio.</p>
-          <div className="onb-splash-cta rise" style={{ "--i": 7 } as CSSProperties}>
-            <Button size="l" block onClick={onStart}>
-              Empezar
-              <ArrowRight size={18} />
-            </Button>
-            <p className="onb-splash-note">
-              <Lock size={13} aria-hidden="true" />
-              <span>Sin cuenta obligatoria. ¿Ya usas PULSO? <button type="button" className="onb-splash-signin" onClick={() => setSignIn(true)}>Inicia sesión</button></span>
-            </p>
-          </div>
+        <div className="onb-splash-center">
+          <p className="onb-splash-kicker rise" style={{ "--i": 2 } as CSSProperties}>Constancia</p>
+          <span className="onb-splash-rule rise" style={{ "--i": 2 } as CSSProperties} aria-hidden="true" />
+          <h1 id="onb-splash-title" ref={titleRef} tabIndex={-1} className="onb-splash-title rise" style={{ "--i": 3 } as CSSProperties}>
+            <span>Tu salud</span> <span className="onb-splash-accent">en movimiento</span>
+          </h1>
+          <span className="onb-splash-rule rise" style={{ "--i": 4 } as CSSProperties} aria-hidden="true" />
+          <p className="onb-splash-kicker rise" style={{ "--i": 4 } as CSSProperties}>Entrena · Come bien · Avanza</p>
+        </div>
+        <div className="onb-splash-cta rise" style={{ "--i": 6 } as CSSProperties}>
+          <p className="onb-splash-lead">{steps} preguntas · 2 minutos · tu primer plan, para casa o gimnasio.</p>
+          <Button size="l" block onClick={onStart}>
+            Empezar
+            <ArrowRight size={18} />
+          </Button>
+          <p className="onb-splash-note">
+            <Lock size={13} aria-hidden="true" />
+            <span>Sin cuenta obligatoria. ¿Ya usas PULSO? <button type="button" className="onb-splash-signin" onClick={() => setSignIn(true)}>Inicia sesión</button></span>
+          </p>
         </div>
       </div>
       <SignInSheet open={signIn} onClose={() => setSignIn(false)} />

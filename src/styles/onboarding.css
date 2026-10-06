@@ -80,21 +80,35 @@
 .onb-back { flex: none; padding: 0 22px; }
 .onb-next { flex: 1; }
 
-/* ─── Portada ──────────────────────────────────────────────────────────── */
-.onb-splash { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; }
-.onb-splash::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgb(13 15 14 / 55%) 0%, rgb(13 15 14 / 0%) 18%, rgb(13 15 14 / 0%) 36%, rgb(13 15 14 / 70%) 60%, rgb(13 15 14 / 95%) 100%); }
-.onb-splash.grain::before { opacity: .3; }
-.onb-splash-photo { object-position: 68% 38%; animation: onb-settle 1.6s var(--ease-standard) backwards; }
-.onb-splash-content { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; width: min(100%, 1180px); min-height: 0; margin: 0 auto; overflow-y: auto; padding: calc(var(--safe-t) + 20px) var(--gutter) calc(var(--safe-b) + 22px); }
-.onb-splash-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.onb-splash-top .meta { color: rgb(242 241 236 / 76%); text-align: right; }
-.onb-splash-body { display: flex; flex-direction: column; gap: 16px; max-width: 600px; }
-.onb-splash-body > .meta { color: var(--lime); }
-.onb-splash-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(40px, 11.4vw, 84px); font-weight: 600; letter-spacing: -.045em; line-height: .94; text-wrap: balance; color: #fff; }
-.onb-splash-lead { max-width: 34ch; font-size: 16px; line-height: 1.45; color: rgb(242 241 236 / 80%); }
-.onb-splash-cta { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
-.onb-splash-note { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12.5px; line-height: 1.4; color: rgb(242 241 236 / 68%); text-align: center; }
+/* ─── Portada: gimnasio en penumbra, luz de ventana y la frase de marca ── */
+.onb-splash { --onb-accent: var(--lime); position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; overflow: hidden; background: #0a0a0a; color: #fff; }
+.onb-splash.grain::before { opacity: .22; }
+.onb-splash-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+/* Muro: luz difusa que entra desde la ventana (derecha). */
+.onb-splash-scene::before { content: ""; position: absolute; inset: 0; background: radial-gradient(70% 45% at 100% 34%, rgb(255 255 255 / 16%), transparent 70%), radial-gradient(90% 60% at 30% 100%, rgb(255 255 255 / 5%), transparent 70%), linear-gradient(180deg, #0c0c0c, #050505); }
+.onb-splash-window { position: absolute; top: 12%; right: 0; width: 4.5%; min-width: 14px; height: 60%; background: repeating-linear-gradient(180deg, rgb(255 255 255 / 0%) 0 1.5%, rgb(255 255 255 / 55%) 1.5% 24%, rgb(255 255 255 / 0%) 24% 25%), linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(255 255 255 / 25%)); background-blend-mode: multiply; filter: blur(.6px); box-shadow: 0 0 90px 30px rgb(255 255 255 / 9%); opacity: .55; }
+/* Rayos de luz en diagonal, del vano de la ventana hacia el piso. */
+.onb-splash-beams { position: absolute; inset: -10% -20% -10% 0; background:
+  linear-gradient(122deg, transparent 33%, rgb(255 255 255 / 14%) 38%, rgb(255 255 255 / 5%) 44%, transparent 46%),
+  linear-gradient(122deg, transparent 49%, rgb(255 255 255 / 11%) 53%, rgb(255 255 255 / 4%) 58%, transparent 60%),
+  linear-gradient(122deg, transparent 62%, rgb(255 255 255 / 8%) 65%, transparent 70%);
+  filter: blur(10px); mix-blend-mode: screen; animation: onb-beams 9s ease-in-out infinite alternate; }
+.onb-splash-floor { top: auto !important; height: 46% !important; object-fit: cover; object-position: center 70%; filter: grayscale(1) contrast(1.25) brightness(.62); -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%); mask-image: linear-gradient(to bottom, transparent, #000 45%); animation: onb-settle 1.6s var(--ease-standard) backwards; }
+.onb-splash-content { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 28px; width: min(100%, 1180px); min-height: 0; margin: 0 auto; overflow-y: auto; padding: calc(var(--safe-t) + 20px) var(--gutter) calc(var(--safe-b) + 22px); }
+.onb-splash-top { display: flex; align-items: center; justify-content: center; }
+.onb-splash-top .wordmark span { color: var(--onb-accent); }
+.onb-splash-center { display: flex; flex-direction: column; align-items: center; gap: 18px; margin: auto 0; text-align: center; }
+.onb-splash-kicker { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: .3em; line-height: 1.6; text-transform: uppercase; color: rgb(255 255 255 / 72%); }
+.onb-splash-rule { width: 26px; height: 1.5px; background: rgb(255 255 255 / 55%); }
+.onb-splash-title { display: flex; flex-direction: column; font-family: var(--font-display); font-stretch: 72%; font-size: clamp(36px, 10.8vw, 88px); font-weight: 700; letter-spacing: .045em; line-height: 1; text-transform: uppercase; color: #fff; }
+.onb-splash-accent { color: var(--onb-accent); }
+.onb-splash-lead { font-size: 14px; line-height: 1.45; color: rgb(255 255 255 / 70%); text-align: center; text-wrap: balance; }
+.onb-splash-cta { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 440px; margin: 0 auto; }
+.onb-splash-cta .btn { background: var(--onb-accent); }
+.onb-splash-note { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12.5px; line-height: 1.4; color: rgb(255 255 255 / 64%); text-align: center; }
 .onb-splash-note svg { flex: none; }
+@keyframes onb-beams { from { opacity: .75; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .onb-splash-beams { animation: none; } }
 .onb-splash.is-leaving { animation: onb-splash-out var(--motion-slow) var(--ease-exit) forwards; pointer-events: none; }
 
 /* ─── Tu plan ──────────────────────────────────────────────────────────── */
@@ -136,9 +150,6 @@
 @keyframes onb-settle { from { transform: scale(1.08); } }
 @keyframes onb-splash-out { to { opacity: 0; transform: scale(1.02); } }
 
-@media (min-width: 600px) {
-  .onb-splash-cta { max-width: 420px; }
-}
 
 /* ─── Escritorio: pliego editorial ─────────────────────────────────────── */
 @media (min-width: 1024px) {
@@ -162,12 +173,9 @@
   /* El aviso queda debajo del fondo sólido, no asomado tras los botones. */
   .onb-actions { margin: 0; padding: 32px 0 32px; background: linear-gradient(to bottom, transparent, var(--bg) 26px); }
 
-  .onb-splash::after { background: linear-gradient(90deg, rgb(13 15 14 / 88%) 0%, rgb(13 15 14 / 62%) 34%, rgb(13 15 14 / 0%) 62%), linear-gradient(180deg, rgb(13 15 14 / 45%) 0%, rgb(13 15 14 / 0%) 24%, rgb(13 15 14 / 0%) 62%, rgb(13 15 14 / 72%) 100%); }
-  .onb-splash-photo { object-position: 70% 40%; }
   .onb-splash-content { padding: 36px var(--gutter) 48px; }
-  .onb-splash-cta { flex-direction: row; align-items: center; gap: 22px; max-width: none; }
-  .onb-splash-cta .btn { width: auto; min-width: 240px; }
-  .onb-splash-note { justify-content: flex-start; text-align: left; }
+  .onb-splash-window { width: 5%; }
+  .onb-splash-floor { left: 15% !important; width: 70% !important; height: 40% !important; }
 
   .onb-result .onb-top { width: min(100%, 1180px); }
   .onb-result-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: clamp(48px, 7vw, 112px); align-items: center; width: min(100%, 1180px); min-height: calc(100% - var(--safe-t) - 58px); padding: 32px 0 48px; }
