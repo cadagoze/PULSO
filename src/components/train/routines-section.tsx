@@ -10,6 +10,7 @@ import { exerciseById, newId } from "@/lib/training";
 import { cn } from "@/lib/utils";
 import { dayLetters, dayNames } from "@/components/train/shared";
 import type { TrainingRoutine } from "@/types";
+import { confirmAction } from "@/lib/confirm";
 
 export type Routine = TrainingRoutine & { id: string };
 
@@ -27,8 +28,8 @@ export function RoutinesSection({ onCreate, onEdit, notify }: { onCreate: () => 
     notify("Rutina duplicada");
   }
 
-  function remove(routine: Routine) {
-    if (!window.confirm(`¿Eliminar "${routine.name}"? Esta acción no se puede deshacer.`)) return;
+  async function remove(routine: Routine) {
+    if (!(await confirmAction({ title: "¿Eliminar rutina?", message: `«${routine.name}». Esta acción no se puede deshacer.`, confirmLabel: "Eliminar", danger: true }))) return;
     setRoutines((current) => current.filter((item) => item.id !== routine.id));
     notify("Rutina eliminada");
   }

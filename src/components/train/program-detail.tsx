@@ -71,19 +71,19 @@ export function ProgramDetail({ programId }: { programId: string }) {
                   Continuar · S{next.week} D{next.day}
                 </Button>
               ) : (
-                <Button size="l" onClick={() => { if (restart(program)) toast.show("Programa reiniciado"); }}>
+                <Button size="l" onClick={async () => { if (await restart(program)) toast.show("Programa reiniciado"); }}>
                   <RotateCcw size={18} />
                   Repetir el programa
                 </Button>
               )}
               <div className="train-actions-secondary">
                 {next && (
-                  <Button variant="secondary" onClick={() => { if (restart(program)) toast.show("Programa reiniciado"); }}>
+                  <Button variant="secondary" onClick={async () => { if (await restart(program)) toast.show("Programa reiniciado"); }}>
                     <RotateCcw size={16} />
                     Reiniciar
                   </Button>
                 )}
-                <Button variant="ghost" onClick={() => { if (abandon(program)) toast.show("Programa abandonado"); }}>
+                <Button variant="ghost" onClick={async () => { if (await abandon(program)) toast.show("Programa abandonado"); }}>
                   <X size={16} />
                   Abandonar
                 </Button>
@@ -92,7 +92,7 @@ export function ProgramDetail({ programId }: { programId: string }) {
           </section>
         ) : (
           <div className="train-actions">
-            <Button size="l" onClick={() => { if (begin(program)) toast.show("Programa activado: tu primera sesión te espera"); }}>
+            <Button size="l" onClick={async () => { if (await begin(program)) toast.show("Programa activado: tu primera sesión te espera"); }}>
               <Play size={18} fill="currentColor" />
               Comenzar programa
             </Button>

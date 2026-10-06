@@ -118,7 +118,7 @@ export function MeasurementsSection() {
       )}
 
       <Sheet open={open} onClose={() => setOpen(false)} eyebrow="Nuevo registro" title="Registrar medidas" className="prog-form-sheet">
-        <p className="subtle prog-sheet-help">Completa solo las que quieras seguir, en centímetros.</p>
+        <p className="subtle prog-sheet-help">Completa sólo las que quieras seguir, en centímetros.</p>
         <div className="prog-measure-fields">
           {fields.map((field) => (
             <label key={field.key} className="field">

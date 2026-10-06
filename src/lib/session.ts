@@ -6,6 +6,7 @@ import { primeAudio } from "@/lib/feedback";
 import { useDraft, usePreference, useSettings } from "@/lib/store";
 import { newId } from "@/lib/training";
 import type { ExerciseRecord, TrainingDraft, TrainingPreference, WorkoutSource } from "@/types";
+import { confirmAction } from "@/lib/confirm";
 
 export interface StartWorkoutInput {
   name: string;
@@ -37,8 +38,8 @@ export function useStartWorkout() {
   const [draft, setDraft] = useDraft();
   const [preference] = usePreference();
   const [settings] = useSettings();
-  return useCallback((input: StartWorkoutInput) => {
-    if (draft && !window.confirm(`Tienes "${draft.name}" en curso. ¿Quieres descartarlo y comenzar "${input.name}"?`)) {
+  return useCallback(async (input: StartWorkoutInput) => {
+    if (draft && !(await confirmAction({ title: "Ya tienes un entrenamiento en curso", message: `Si comienzas «${input.name}», se descarta «${draft.name}».`, confirmLabel: "Descartar y comenzar", cancelLabel: "Volver al que tengo", danger: true }))) {
       router.push("/entrenar/sesion");
       return;
     }

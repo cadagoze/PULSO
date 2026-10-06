@@ -202,7 +202,7 @@ function ProgramBody({ active, place, easier, notify }: { active: ActiveProgram;
           Programa completado
         </Title>
         <div className="train-hero-actions">
-          <Button size="l" onClick={() => { if (restart(program)) notify("Programa reiniciado"); }}>
+          <Button size="l" onClick={async () => { if (await restart(program)) notify("Programa reiniciado"); }}>
             <RotateCcw size={18} />
             Reiniciar programa
           </Button>

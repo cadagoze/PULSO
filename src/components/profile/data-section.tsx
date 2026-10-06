@@ -13,6 +13,7 @@ import { DuplicatesRow } from "./duplicates";
 import { SettingsGroup } from "./settings-group";
 import { hasCloudSession } from "@/lib/cloud/status";
 import { cloudActions } from "@/lib/cloud/use-cloud";
+import { confirmAction } from "@/lib/confirm";
 
 type PersistStatus = "checking" | "unsupported" | "persisted" | "idle" | "denied";
 
@@ -92,7 +93,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
     if (!file) return;
     try {
       const { data, keys } = parseBackup(await file.text(), Object.values(STORAGE_KEYS));
-      const ok = window.confirm(`Se reemplazarán ${keys.length} conjuntos de datos de este dispositivo por los del respaldo. Lo que no esté en el respaldo se conserva. ¿Continuar?`);
+      const ok = await confirmAction({ title: "¿Importar respaldo?", message: `Se reemplazarán ${keys.length} conjuntos de datos de este dispositivo por los del respaldo. Lo que no esté en el respaldo se conserva.`, confirmLabel: "Importar" });
       if (!ok) return;
       const imported = writeAllData(data);
       setError(null);

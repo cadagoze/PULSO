@@ -10,6 +10,7 @@ import { CloudBoot } from "@/components/cloud/cloud-boot";
 import { captureInstallPrompt } from "@/lib/install";
 import { PushStateSync } from "@/lib/push";
 import { usePersonalization } from "@/lib/use-personalize";
+import { ConfirmHost } from "@/components/ui/confirm-host";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <OfflineSupport />
       <CloudBoot />
       <PushStateSync />
+      <ConfirmHost />
     </div>
   );
 }

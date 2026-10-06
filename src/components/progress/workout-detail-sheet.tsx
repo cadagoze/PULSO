@@ -11,6 +11,7 @@ import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { toDisplayWeight } from "@/lib/utils";
 import type { ExerciseRecord, SetRecord, WorkoutEntry } from "@/types";
+import { confirmAction } from "@/lib/confirm";
 
 const effortLabels = ["", "Muy suave", "Suave", "Moderado", "Duro", "Máximo"];
 
@@ -43,9 +44,9 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
     showToast(`Guardada en tus rutinas · ${name}`);
   }
 
-  function remove() {
+  async function remove() {
     if (!workout) return;
-    if (!window.confirm(`¿Eliminar "${name}" del ${longDayLabel(workout.date)}? No se puede deshacer.`)) return;
+    if (!(await confirmAction({ title: "¿Eliminar entrenamiento?", message: `«${name}» del ${longDayLabel(workout.date)}. No se puede deshacer.`, confirmLabel: "Eliminar", danger: true }))) return;
     setWorkouts((current) => current.filter((item) => item.id !== workout.id));
     onClose();
   }

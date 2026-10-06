@@ -33,6 +33,7 @@ import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, n
 import type { Effort } from "./session-utils";
 import { useCountdownCues } from "./use-countdown-cues";
 import { clearFinishRequest, finishRequestPending } from "@/components/session/draft-controls";
+import { confirmAction } from "@/lib/confirm";
 
 type SetCountdown = { recordIndex: number; setIndex: number; until: number };
 type Picker = { mode: "add" } | { mode: "replace"; index: number };
@@ -355,9 +356,9 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setFocus(null);
   }
 
-  function deleteExercise(position: number) {
+  async function deleteExercise(position: number) {
     const exercise = exerciseById(draft.records[position]?.exerciseId ?? -1);
-    if (!window.confirm(`¿Eliminar ${exercise?.name ?? "este ejercicio"} de la sesión?`)) return;
+    if (!(await confirmAction({ title: "¿Quitar ejercicio?", message: `${exercise?.name ?? "Este ejercicio"} sale de la sesión de hoy.`, confirmLabel: "Quitar", danger: true }))) return;
     patch((current) => ({ ...current, records: normalizeGroups(current.records.filter((_, item) => item !== position)) }));
     setCurrent((value) => (value > position ? value - 1 : value));
     setCountdown(null);
@@ -367,8 +368,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     closeMenu();
   }
 
-  function discard() {
-    if (!window.confirm("¿Descartar este entrenamiento? Se perderán las series sin guardar. Tu historial no cambia.")) return;
+  async function discard() {
+    if (!(await confirmAction({ title: "¿Descartar entrenamiento?", message: "Se perderán las series sin guardar. Tu historial no cambia.", confirmLabel: "Descartar", danger: true }))) return;
     setDraft(null);
   }
 

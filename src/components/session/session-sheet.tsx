@@ -94,7 +94,7 @@ export function SessionSheet({ open, onClose, draft, current, done, total, volum
           onChange={(event) => onNotes(event.target.value)}
         />
       </label>
-      <p className="subtle ses-small">Se guarda solo en este dispositivo mientras entrenas.</p>
+      <p className="subtle ses-small">Se guarda sólo en este dispositivo mientras entrenas.</p>
 
       <div className="ses-plan-actions">
         <button type="button" className={cn("btn btn-block", done > 0 && done === total ? "btn-primary" : "btn-secondary")} onClick={onFinish}>
