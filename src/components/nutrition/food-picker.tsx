@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, ChevronRight, PenLine, Plus, Search, X, Zap } from "lucide-react";
+import { ArrowLeft, Bookmark, ChevronRight, PenLine, Plus, Search, Trash2, X, Zap } from "lucide-react";
 import { Button, MetaLine, NumberMetric, Stepper } from "@/components/ui";
 import { foodCategoryLabels, foods } from "@/data/foods";
-import { formatKcal } from "@/lib/nutrition";
+import { entryTotals, formatKcal } from "@/lib/nutrition";
 import { cn, normalizeText } from "@/lib/utils";
-import type { FoodCategory, FoodEntry, FoodItem } from "@/types";
+import type { FoodCategory, FoodEntry, FoodItem, SavedMeal } from "@/types";
 
 type View = "list" | "detail" | "custom" | "quick";
 const categories = Object.keys(foodCategoryLabels) as FoodCategory[];
@@ -17,18 +17,24 @@ const parse = (value: string) => Number(value.trim().replace(",", ".") || 0);
  * luego las porciones con calorías y macros en vivo. También permite crear alimentos propios
  * y anotar calorías rápidas.
  */
-export function FoodPicker({ mealLabel, customFoods, recent, onPick, onCreate }: {
+export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPortions, onPick, onCreate, onPickSaved, onDeleteSaved }: {
   mealLabel: string;
   customFoods: FoodItem[];
   recent: FoodEntry[];
+  savedMeals: SavedMeal[];
+  /** Última porción usada de cada alimento (se propone al elegirlo). */
+  usualPortions: Record<string, number>;
   onPick: (food: FoodItem, portions: number) => void;
   onCreate: (food: FoodItem, portions: number) => void;
+  onPickSaved: (saved: SavedMeal) => void;
+  onDeleteSaved: (id: string) => void;
 }) {
   const [view, setView] = useState<View>("list");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<FoodCategory | null>(null);
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [portions, setPortions] = useState(1);
+  const [editingSaved, setEditingSaved] = useState(false);
 
   const catalog = useMemo(() => [...customFoods, ...foods], [customFoods]);
   const results = useMemo(() => {
@@ -40,7 +46,7 @@ export function FoodPicker({ mealLabel, customFoods, recent, onPick, onCreate }:
 
   function choose(food: FoodItem) {
     setSelected(food);
-    setPortions(1);
+    setPortions(usualPortions[food.id] ?? 1);
     setView("detail");
   }
 
@@ -54,7 +60,7 @@ export function FoodPicker({ mealLabel, customFoods, recent, onPick, onCreate }:
           <p className="muted">Porción: {selected.portion}</p>
         </div>
         <div className="nut-portions">
-          <span className="nut-label">Porciones</span>
+          <span className="nut-label">Porciones{usualPortions[selected.id] !== undefined && <small> · como la última vez</small>}</span>
           <Stepper value={portions} onChange={setPortions} min={0.5} max={10} step={0.5} label="porciones" format={(value) => value.toLocaleString("es-CL")} />
         </div>
         <div className="nut-detail-values">
@@ -84,6 +90,32 @@ export function FoodPicker({ mealLabel, customFoods, recent, onPick, onCreate }:
         ))}
       </div>
 
+      {!query.trim() && !category && savedMeals.length > 0 && (
+        <section className="nut-results">
+          <div className="nut-results-head">
+            <h4 className="meta">Tus comidas</h4>
+            <button type="button" className="link-button" onClick={() => setEditingSaved((value) => !value)}>{editingSaved ? "Listo" : "Editar"}</button>
+          </div>
+          <ul className="nut-food-list">
+            {savedMeals.map((saved) => (
+              <li key={saved.id} className="nut-saved-row">
+                <button type="button" className="nut-food" disabled={editingSaved} onClick={() => onPickSaved(saved)}>
+                  <span className="nut-saved-icon" aria-hidden="true"><Bookmark size={15} /></span>
+                  <span className="grow">
+                    <span className="nut-item-name">{saved.name}</span>
+                    <small>{saved.items.length} {saved.items.length === 1 ? "alimento" : "alimentos"} · {saved.items.map((item) => item.name).join(", ")}</small>
+                  </span>
+                  <span className="num nut-item-kcal">{formatKcal(entryTotals(saved.items).kcal)}</span>
+                  {!editingSaved && <Plus size={16} className="subtle" aria-hidden="true" />}
+                </button>
+                {editingSaved && (
+                  <button type="button" className="btn-icon small nut-saved-delete" onClick={() => onDeleteSaved(saved.id)} aria-label={`Eliminar ${saved.name}`}><Trash2 size={16} /></button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {showRecent && (
         <section className="nut-results">
           <h4 className="meta">Recientes</h4>

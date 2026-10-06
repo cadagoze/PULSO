@@ -17,20 +17,21 @@ import { FoodPicker } from "@/components/nutrition/food-picker";
 import { MealDiary } from "@/components/nutrition/meal-diary";
 import { NutritionPlan } from "@/components/nutrition/nutrition-plan";
 import { NutritionSetup } from "@/components/nutrition/nutrition-setup";
+import { SaveMealForm } from "@/components/nutrition/save-meal-form";
 import { SetupPrompt } from "@/components/nutrition/setup-prompt";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { WeeklyReviewCard } from "@/components/nutrition/weekly-review";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
 import { Toast, useToast } from "@/components/ui/toast";
 import { habits } from "@/data/mock-data";
-import { activityLevels, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, suggestedNutritionProfile } from "@/lib/nutrition";
-import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
+import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualPortions } from "@/lib/nutrition";
+import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSavedMeals, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { useLatestWeight, useWaterToday, useWeeklyReview } from "@/lib/use-nutrition";
 import { checkInPatch } from "@/lib/weekly-review";
 import { formatLongDate, formatShortDate, localDateKey } from "@/lib/utils";
-import type { FoodEntry, FoodItem, MealSlot, NutritionProfile } from "@/types";
+import type { FoodEntry, FoodItem, MealSlot, NutritionProfile, SavedMeal } from "@/types";
 
 /** Comida abierta en la hoja. Se conserva al cerrar para que el contenido no desaparezca mientras baja. */
 type SheetState = { id: string; editing: boolean; token: number };
@@ -45,6 +46,7 @@ export default function NutritionPage() {
   const [profile, setProfile] = useNutritionProfile();
   const [log, setLog] = useFoodLog();
   const [customFoods, setCustomFoods] = useCustomFoods();
+  const [savedMeals, setSavedMeals] = useSavedMeals();
   const [, setWeights] = useWeights();
   const latestWeight = useLatestWeight();
   const water = useWaterToday(now);
@@ -63,6 +65,8 @@ export default function NutritionPage() {
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [adjust, setAdjust] = useState({ open: false, token: 0 });
+  const [saving, setSaving] = useState<{ meal: MealSlot; token: number } | null>(null);
+  const [savingOpen, setSavingOpen] = useState(false);
   // Última fila marcada en esta visita: sólo ella anima su check (las que ya venían hechas no).
   const [fresh, setFresh] = useState<string | null>(null);
 
@@ -166,6 +170,36 @@ export default function NutritionPage() {
     showToast(proteinMet ? "Meta de proteína cumplida" : `${slotLabel(picker.meal)} · +${formatKcal(food.kcal * portions)} kcal`, { delay: 260 });
   }
 
+  /** Agrega de una vez los alimentos de una comida guardada (desde el diario o el buscador). */
+  function addSavedMeal(meal: MealSlot, saved: SavedMeal) {
+    if (!targets) return;
+    const entries = entriesFromSavedMeal(saved, { date: today, meal, newId: () => newId("comida") });
+    if (!entries.length) return;
+    setLog((current) => pruneHistory([...current, ...entries], today));
+    setPickerOpen(false);
+    setFresh(entries[0].id);
+    const added = entryTotals(entries);
+    const proteinMet = totals.protein < targets.protein && totals.protein + added.protein >= targets.protein;
+    showToast(proteinMet ? "Meta de proteína cumplida" : `${saved.name} · +${formatKcal(added.kcal)} kcal`, { delay: 260 });
+  }
+
+  function openSaveMeal(meal: MealSlot) {
+    setSaving({ meal, token: Date.now() });
+    setSavingOpen(true);
+    hideToast();
+  }
+
+  function storeSavedMeal(name: string) {
+    if (!saving) return;
+    const entries = todayEntries.filter((entry) => entry.meal === saving.meal);
+    if (!entries.length) return;
+    const existing = savedMeals.find((item) => item.name.toLowerCase() === name.toLowerCase());
+    const meal = savedMealFromEntries(entries, { id: existing?.id ?? newId("guardada"), name, meal: saving.meal });
+    setSavedMeals((current) => [meal, ...current.filter((item) => item.id !== meal.id)].slice(0, 30));
+    setSavingOpen(false);
+    showToast(`Guardada · ${meal.name}`, { delay: 260 });
+  }
+
   function createFood(food: FoodItem, portions: number) {
     if (food.id !== "rapido") setCustomFoods((current) => [food, ...current].slice(0, 200));
     addFood(food, portions);
@@ -244,7 +278,7 @@ export default function NutritionPage() {
               <h2 id="nut-meals-title" className="meta">Comidas</h2>
               <span className="cnt-hint">Toca un alimento para editarlo</span>
             </div>
-            <MealDiary entries={todayEntries} yesterday={yesterdayEntries} fresh={fresh} onAdd={openPicker} onEdit={openEntry} onRepeat={repeatMeal} />
+            <MealDiary entries={todayEntries} yesterday={yesterdayEntries} saved={savedMeals} fresh={fresh} onAdd={openPicker} onEdit={openEntry} onRepeat={repeatMeal} onSave={openSaveMeal} onUseSaved={addSavedMeal} />
           </section>
         ) : (
           <section className="cnt-section" aria-labelledby="cnt-meals-title">
@@ -309,7 +343,32 @@ export default function NutritionPage() {
       </Sheet>
 
       <Sheet open={pickerOpen} onClose={() => setPickerOpen(false)} eyebrow="Registrar alimento" title={picker ? slotLabel(picker.meal) : undefined} className="nut-picker-sheet">
-        {picker && <FoodPicker key={picker.token} mealLabel={slotLabel(picker.meal)} customFoods={customFoods} recent={recentFoods(log)} onPick={addFood} onCreate={createFood} />}
+        {picker && (
+          <FoodPicker
+            key={picker.token}
+            mealLabel={slotLabel(picker.meal)}
+            customFoods={customFoods}
+            recent={recentFoods(log)}
+            savedMeals={savedMealsFor(savedMeals, picker.meal)}
+            usualPortions={usualPortions(log)}
+            onPick={addFood}
+            onCreate={createFood}
+            onPickSaved={(saved) => addSavedMeal(picker.meal, saved)}
+            onDeleteSaved={(id) => setSavedMeals((current) => current.filter((item) => item.id !== id))}
+          />
+        )}
+      </Sheet>
+
+      <Sheet open={savingOpen} onClose={() => setSavingOpen(false)} eyebrow={saving ? slotLabel(saving.meal) : undefined} title="Guardar comida">
+        {saving && (
+          <SaveMealForm
+            key={saving.token}
+            entries={todayEntries.filter((entry) => entry.meal === saving.meal)}
+            defaultName={`Mi ${slotLabel(saving.meal).toLowerCase()}`}
+            existingNames={savedMeals.map((item) => item.name)}
+            onSave={storeSavedMeal}
+          />
+        )}
       </Sheet>
 
       <Sheet open={editorOpen} onClose={() => setEditorOpen(false)} eyebrow={editing ? slotLabel(editing.meal) : undefined} title="Editar alimento">

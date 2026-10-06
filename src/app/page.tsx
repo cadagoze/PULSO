@@ -5,6 +5,7 @@ import { useNutritionDay } from "@/lib/use-nutrition";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
 import { DayFuel } from "@/components/home/day-fuel";
 import { HomeDigest } from "@/components/home/home-digest";
+import { InstallCard } from "@/components/install/install-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { QuickActions } from "@/components/home/quick-actions";
 import { ReadinessCard } from "@/components/home/readiness-card";
@@ -51,6 +52,7 @@ export default function Home() {
       </div>
       <div className="home-side">
         {!counting && <DayFuel now={now} />}
+        <InstallCard />
         <WeekStrip now={now} />
         <ReadinessCard today={today} now={now} />
         <QuickActions />

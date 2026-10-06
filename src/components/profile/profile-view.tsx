@@ -6,6 +6,8 @@ import { bestWeekStreak, weekStreak } from "@/lib/analytics";
 import { useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { CloudAccount } from "@/components/cloud/cloud-account";
+import { InstallSheet } from "@/components/install/install-sheet";
+import { useInstallState } from "@/lib/install";
 import { PlanSection } from "./plan-section";
 import { profilePhoto } from "./photo";
 import { ProfileEditor } from "./profile-editor";
@@ -25,6 +27,8 @@ export function ProfileView() {
   const [editing, setEditing] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [assessing, setAssessing] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const install = useInstallState();
 
   const bestStreak = useMemo(() => {
     if (!now) return 0;
@@ -64,7 +68,7 @@ export function ProfileView() {
       <div className="prof-side">
         <CloudAccount onToast={show} />
         <PlanSection onAssess={() => setAssessing(true)} onToast={show} />
-        <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} />
+        <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} onInstall={install.ready && !install.standalone ? () => setInstalling(true) : undefined} />
       </div>
 
       <ProfileEditor key={editorKey} open={editing} onClose={() => setEditing(false)} name={settings.name} photo={photo} onSave={saveProfile} />
@@ -78,6 +82,7 @@ export function ProfileView() {
           onCancel={() => setAssessing(false)}
         />
       )}
+      <InstallSheet open={installing} onClose={() => setInstalling(false)} platform={install.platform} canPrompt={install.canPrompt} onDone={show} />
       <Toast toast={toast} />
     </div>
   );

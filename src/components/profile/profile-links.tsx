@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Utensils } from "lucide-react";
+import { BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Smartphone, Utensils } from "lucide-react";
 
 function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -18,7 +18,7 @@ function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; deta
 }
 
 /** Accesos ligeros bajo el plan: ajustes, nutrición, guía, evaluación y respaldo. */
-export function ProfileLinks({ hasProfile, onAssess }: { hasProfile: boolean; onAssess: () => void }) {
+export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: boolean; onAssess: () => void; onInstall?: () => void }) {
   return (
     <section className="prof-links rise" style={{ "--i": 2 } as CSSProperties} aria-labelledby="prof-links-title">
       <h2 id="prof-links-title" className="meta">Ajustes y más</h2>
@@ -39,6 +39,11 @@ export function ProfileLinks({ hasProfile, onAssess }: { hasProfile: boolean; on
             detail="Toma unos dos minutos. Tus entrenamientos se conservan."
           />
         </button>
+        {onInstall && (
+          <button type="button" className="list-row" onClick={onInstall}>
+            <RowBody icon={<Smartphone size={19} />} title="Instalar en tu teléfono" detail="Ábrela con un toque desde tu pantalla de inicio." />
+          </button>
+        )}
         <Link href="/ajustes#datos" className="list-row">
           <RowBody icon={<DatabaseBackup size={19} />} title="Respaldo de datos" detail="Exporta o importa todo lo que has registrado." />
         </Link>

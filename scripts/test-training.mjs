@@ -500,3 +500,18 @@ test('revisión semanal: decisiones y límites', () => {
   const many = { ...profile, checkIns: Array.from({ length: 12 }, (_, index) => ({ date: `2026-01-${String(index + 1).padStart(2, '0')}`, fromKcal: 1, toKcal: 1, observedKgWeek: 0, plannedKgWeek: 0, applied: false })) };
   assert.equal(review.checkInPatch(many, onTrack, false, today).checkIns.length, 12);
 });
+
+test('comidas guardadas: guardar, repetir y porción habitual', () => {
+  const entry = (id, foodId, portions, meal = 'desayuno', date = '2026-10-05') => ({ id, date, meal, foodId, name: foodId, portion: '1 porción', portions, kcal: 100, protein: 10, carbs: 10, fat: 2 });
+  const saved = nutrition.savedMealFromEntries([entry('a', 'avena', 1), entry('b', 'platano', 1.5)], { id: 's1', name: '  Mi desayuno  ', meal: 'desayuno', now: new Date(2026, 9, 5) });
+  assert.equal(saved.name, 'Mi desayuno');
+  assert.deepEqual(Object.keys(saved.items[0]).sort(), ['carbs', 'fat', 'foodId', 'kcal', 'name', 'portion', 'portions', 'protein']);
+  assert.equal(nutrition.entryTotals(saved.items).kcal, 250);
+  let n = 0;
+  const copies = nutrition.entriesFromSavedMeal(saved, { date: '2026-10-06', meal: 'once', newId: () => `n${++n}` });
+  assert.deepEqual(Array.from(copies, (item) => [item.id, item.date, item.meal, item.portions]), [['n1', '2026-10-06', 'once', 1], ['n2', '2026-10-06', 'once', 1.5]]);
+  const other = { ...saved, id: 's2', meal: 'cena', updatedAt: '2026-10-07T00:00:00.000Z' };
+  assert.deepEqual(Array.from(nutrition.savedMealsFor([other, saved], 'desayuno'), (item) => item.id), ['s1', 's2']);
+  const usual = nutrition.usualPortions([entry('x', 'arroz', 1), entry('y', 'arroz', 1.5), entry('z', 'rapido', 3)]);
+  assert.deepEqual({ ...usual }, { arroz: 1.5 });
+});

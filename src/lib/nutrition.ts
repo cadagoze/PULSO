@@ -1,4 +1,4 @@
-import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, Sex } from "@/types";
+import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, SavedMeal, SavedMealItem, Sex } from "@/types";
 
 /** Nivel de actividad diaria (incluye el entrenamiento) y su factor sobre el metabolismo basal. */
 export const activityLevels: Array<{ value: ActivityLevel; label: string; detail: string; factor: number }> = [
@@ -146,7 +146,7 @@ export function mealSlotAt(date: Date): MealSlot {
 export interface Totals { kcal: number; protein: number; carbs: number; fat: number }
 
 /** Suma de calorías y macros (cada registro guarda valores por porción y cuántas porciones). */
-export function entryTotals(entries: FoodEntry[]): Totals {
+export function entryTotals(entries: Array<Pick<FoodEntry, "kcal" | "protein" | "carbs" | "fat" | "portions">>): Totals {
   return entries.reduce<Totals>((sum, entry) => ({
     kcal: sum.kcal + entry.kcal * entry.portions,
     protein: sum.protein + entry.protein * entry.portions,
@@ -198,6 +198,32 @@ export function recentFoods(entries: FoodEntry[], limit = 8) {
     if (recent.length >= limit) break;
   }
   return recent;
+}
+
+/** Última porción usada de cada alimento: se propone al volver a elegirlo. */
+export function usualPortions(entries: FoodEntry[]) {
+  const portions: Record<string, number> = {};
+  for (const entry of entries) if (entry.foodId !== "rapido") portions[entry.foodId] = entry.portions;
+  return portions;
+}
+
+// ─── Comidas guardadas ─────────────────────────────────────────────────────
+
+const toItem = ({ foodId, name, portion, portions, kcal, protein, carbs, fat }: SavedMealItem): SavedMealItem => ({ foodId, name, portion, portions, kcal, protein, carbs, fat });
+
+/** Guarda lo registrado en una comida para repetirlo con un toque. */
+export function savedMealFromEntries(entries: FoodEntry[], { id, name, meal, now = new Date() }: { id: string; name: string; meal: MealSlot; now?: Date }): SavedMeal {
+  return { id, name: name.trim().slice(0, 40) || "Mi comida", meal, items: entries.map(toItem), updatedAt: now.toISOString() };
+}
+
+/** Registros nuevos a partir de una comida guardada. */
+export function entriesFromSavedMeal(saved: SavedMeal, { date, meal, newId }: { date: string; meal: MealSlot; newId: () => string }): FoodEntry[] {
+  return saved.items.map((item) => ({ ...toItem(item), id: newId(), date, meal }));
+}
+
+/** Comidas guardadas para una comida del día: primero las guardadas ahí. */
+export function savedMealsFor(saved: SavedMeal[], meal: MealSlot) {
+  return [...saved].sort((a, b) => Number(b.meal === meal) - Number(a.meal === meal) || b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export const formatKcal = (value: number) => Math.round(value).toLocaleString("es-CL");

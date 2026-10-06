@@ -348,6 +348,19 @@ export interface FoodEntry {
   fat: number;
 }
 
+/** Alimento dentro de una comida guardada (valores por porción y cuántas porciones). */
+export type SavedMealItem = Pick<FoodEntry, "foodId" | "name" | "portion" | "portions" | "kcal" | "protein" | "carbs" | "fat">;
+
+/** Comida guardada para registrarla con un toque (p. ej. «Mi desayuno»). */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  /** Comida donde se guardó; se ofrece primero ahí. */
+  meal: MealSlot;
+  items: SavedMealItem[];
+  updatedAt: string;
+}
+
 /** Vasos de agua (250 ml) bebidos en un día. */
 export interface WaterEntry {
   date: string;

@@ -162,3 +162,25 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-review-dots span { width: 28px; height: 6px; border-radius: var(--radius-pill); background: var(--surface-3); }
 .nut-review-dots span.is-done { background: var(--lime); }
 .nut-review-tip { font-size: 12.5px; }
+
+/* ─── Comidas guardadas ────────────────────────────────────────────────── */
+.nut-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.nut-quick .nut-repeat { margin-top: 0; }
+.nut-repeat.is-saved { background: var(--lime-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lime-text) 30%, transparent); }
+.nut-save { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 2px; padding: 0 10px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background-color var(--motion-fast), color var(--motion-fast); }
+@media (hover: hover) { .nut-save:hover { background: var(--surface-2); color: var(--ink); } }
+.nut-save:active { background: var(--surface-2); }
+.nut-saved-note { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 2px; padding: 0 10px; font-size: 13px; color: var(--ink-3); }
+.nut-saved-note svg { color: var(--lime-text); }
+.nut-results-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.nut-results-head .link-button { font-size: 13px; }
+.nut-saved-row { display: flex; align-items: center; gap: 4px; }
+.nut-saved-row .nut-food:disabled { opacity: .55; }
+.nut-saved-icon { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 10px; background: var(--lime-soft); color: var(--lime-text); }
+.nut-saved-row small { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.nut-saved-delete { flex: none; color: var(--danger); }
+.nut-save-form { display: flex; flex-direction: column; gap: 16px; }
+.nut-save-items { list-style: none; margin: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; border-radius: var(--radius); background: var(--surface-2); font-size: 14px; }
+.nut-save-items li { display: flex; justify-content: space-between; gap: 12px; }
+.nut-save-items li span:first-child { min-width: 0; }
+.nut-save-total { padding-top: 8px; box-shadow: inset 0 1px 0 var(--line); font-weight: 600; }

@@ -45,7 +45,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 - `/progreso`: Semana, Mes o Año: entrenamientos, volumen y tiempo total primero; gráfico, consistencia, mejores marcas, peso y músculos (trabajo y recuperación); historial, récords, cuerpo, logros y exportación.
 - `/perfil`: foto, nombre, objetivo, cifras y Mi plan actual.
 - `/ajustes`: apariencia, entrenamiento, racha, respaldo de datos y acerca de.
-- `/comidas`: Nutrición. Cálculo de calorías y macros según tu objetivo, contador de agua, diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de unos 145 alimentos chilenos por porción casera, alimentos propios y calorías rápidas; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos. Desde Inicio, `?registrar` abre el registro de la comida de esa hora y `?calcular`, el cálculo.
+- `/comidas`: Nutrición. Cálculo de calorías y macros según tu objetivo, contador de agua, comidas guardadas para repetir con un toque (y la porción de la última vez), diario por comida (desayuno, almuerzo, once, cena y colaciones) con buscador de unos 145 alimentos chilenos por porción casera, alimentos propios y calorías rápidas; o un modo sin contar (comidas por saciedad). Hábitos del día en ambos modos. Desde Inicio, `?registrar` abre el registro de la comida de esa hora y `?calcular`, el cálculo.
 - `/guia`: lecturas breves.
 
 ## Estructura
@@ -88,7 +88,7 @@ Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas 
 
 ## Datos
 
-Todo se guarda primero en el almacenamiento local del navegador: PULSO funciona sin conexión y sin cuenta. Desde Ajustes puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos) y funciona sin conexión: el service worker (`public/sw.js`) guarda las pantallas principales, los programas y las fichas de ejercicio (lista en `/precache.json`). Sólo se activa en producción; si cambias su lógica, sube `VERSION` en `public/sw.js`.
+Todo se guarda primero en el almacenamiento local del navegador: PULSO funciona sin conexión y sin cuenta. Desde Ajustes puedes exportar e importar un respaldo JSON, exportar tus entrenamientos en CSV y pedir almacenamiento persistente. PULSO se puede instalar como aplicación (manifest e íconos incluidos; Inicio y Perfil guían la instalación: botón directo en Android y pasos en iPhone, donde la app instalada no comparte datos con Safari y por eso primero se guardan en la nube) y funciona sin conexión: el service worker (`public/sw.js`) guarda las pantallas principales, los programas y las fichas de ejercicio (lista en `/precache.json`). Sólo se activa en producción; si cambias su lógica, sube `VERSION` en `public/sw.js`.
 
 ### Cuenta y sincronización (Firebase)
 

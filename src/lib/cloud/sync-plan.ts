@@ -29,7 +29,7 @@ export const collectionSpecs: CollectionSpec[] = [
   { kind: "collection", key: STORAGE_KEYS.measurements, name: "measurements", id: byDate },
 ];
 
-const docNames: StorageKeyName[] = ["profile", "settings", "preference", "nutrition", "program", "routines", "routine", "favorites", "customFoods", "habits", "meals"];
+const docNames: StorageKeyName[] = ["profile", "settings", "preference", "nutrition", "program", "routines", "routine", "favorites", "customFoods", "savedMeals", "habits", "meals"];
 export const docSpecs: DocSpec[] = docNames.map((name) => ({ kind: "doc", key: STORAGE_KEYS[name], name }));
 
 export const cloudSpecs: CloudSpec[] = [...collectionSpecs, ...docSpecs];

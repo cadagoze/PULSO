@@ -7,11 +7,15 @@ import { OfflineSupport } from "@/components/layout/offline-support";
 import { useSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { CloudBoot } from "@/components/cloud/cloud-boot";
+import { captureInstallPrompt } from "@/lib/install";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const focus = focusRoutes.some((route) => pathname.startsWith(route));
   const [settings] = useSettings();
+
+  // El aviso de instalación del navegador llega una sola vez: se escucha desde que abre la app.
+  useEffect(() => { captureInstallPrompt(); }, []);
 
   useEffect(() => {
     const root = document.documentElement;
