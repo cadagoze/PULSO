@@ -3,6 +3,7 @@
 import { useNow } from "@/lib/use-now";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
 import { DayFuel } from "@/components/home/day-fuel";
+import { FirstWeek } from "@/components/home/first-week";
 import { InstallCard } from "@/components/install/install-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { ReadinessCard } from "@/components/home/readiness-card";
@@ -40,7 +41,10 @@ export default function Home() {
     <div className="page home">
       <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), readiness: todayEntry?.recommendation })} />
       {/* Lo primero al abrir: calorías, alimentación y agua; después, el entrenamiento de hoy. */}
-      <div className="home-fuel-slot"><DayFuel now={now} /></div>
+      <div className="home-fuel-slot">
+        <FirstWeek />
+        <DayFuel now={now} />
+      </div>
       <div className="home-hero-slot">
         <TodayHero now={now} readiness={todayEntry?.recommendation} />
       </div>

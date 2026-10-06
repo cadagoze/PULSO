@@ -5,18 +5,21 @@ import { Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { Toast, useToast } from "@/components/ui/toast";
 import { InstallSheet } from "@/components/install/install-sheet";
+import { useFirstWeekState } from "@/components/home/first-week";
 import { dismissInstall, promptInstall, useInstallState } from "@/lib/install";
 
 /**
  * Invitación en Inicio a instalar PULSO en el teléfono. No aparece si ya está instalada, si la
- * cerraste (vuelve en 30 días) ni en el computador salvo que el navegador ofrezca instalar.
+ * cerraste (vuelve en 30 días), mientras la guía de la primera semana está visible (ahí es un paso)
+ * ni en el computador salvo que el navegador ofrezca instalar.
  */
 export function InstallCard() {
   const state = useInstallState();
+  const [firstWeek] = useFirstWeekState();
   const { toast, show: onToast } = useToast();
   const [open, setOpen] = useState(false);
   const mobile = state.platform !== "desktop";
-  const visible = state.ready && !state.standalone && !state.dismissed && (mobile || state.canPrompt);
+  const visible = state.ready && !state.standalone && !state.dismissed && firstWeek.dismissed && (mobile || state.canPrompt);
 
   async function primary() {
     if (state.platform !== "ios" && state.canPrompt) {

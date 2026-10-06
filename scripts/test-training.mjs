@@ -846,3 +846,18 @@ test('avisos: cuándo toca cada uno y cuándo no', () => {
   assert.equal(reminders.parseTime('19:75'), null);
   assert.ok(reminders.validTimeZone('Europe/Madrid') && !reminders.validTimeZone('Marte/Base'));
 });
+
+const firstWeek = load('src/lib/first-week.ts');
+
+test('primera semana: pasos según el equipo y lo ya hecho', () => {
+  const base = { hasPlan: false, hasWorkout: false, hasMeal: false, platform: 'android', standalone: false, push: 'ready', pushEnabled: false };
+  const ids = (input) => Array.from(firstWeek.firstWeekSteps(input), (step) => step.id);
+  assert.deepEqual(ids(base), ['plan', 'workout', 'meal', 'install', 'push']);
+  assert.deepEqual(ids({ ...base, platform: 'desktop' }), ['plan', 'workout', 'meal', 'push'], 'en el computador no se pide instalar');
+  assert.deepEqual(ids({ ...base, push: 'unsupported' }), ['plan', 'workout', 'meal', 'install'], 'sin avisos en el navegador, no se piden');
+  const iphone = firstWeek.firstWeekSteps({ ...base, platform: 'ios', push: 'needs-install' });
+  assert.match(iphone.find((step) => step.id === 'push').detail, /instálala primero/);
+  const done = firstWeek.firstWeekSteps({ ...base, hasPlan: true, hasWorkout: true, standalone: true, pushEnabled: true });
+  assert.deepEqual(Array.from(done.filter((step) => !step.done), (step) => step.id), ['meal']);
+  assert.equal(firstWeek.firstWeekSteps({ ...base, push: 'denied', pushEnabled: true }).find((step) => step.id === 'push').done, false, 'bloqueados después de activarlos: pendiente');
+});

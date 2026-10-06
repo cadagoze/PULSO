@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { weekRange, weekStreak } from "@/lib/analytics";
 import { waterGoal } from "@/lib/nutrition";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
@@ -37,6 +37,16 @@ export function pushSupport(): PushSupport {
   return "ready";
 }
 
+// El permiso puede cambiar fuera de la app: se vuelve a leer al volver a la pestaña.
+function onVisibility(onChange: () => void) {
+  document.addEventListener("visibilitychange", onChange);
+  return () => document.removeEventListener("visibilitychange", onChange);
+}
+
+export function usePushSupport() {
+  return useSyncExternalStore(onVisibility, pushSupport, () => "unsupported" as PushSupport);
+}
+
 const timeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function keyBytes(base64: string) {
@@ -67,6 +77,17 @@ export async function enablePush(prefs: PushPrefs, state: PushState | null): Pro
   } catch {
     return { ok: false, reason: "error" };
   }
+}
+
+/** Activar los avisos con las preferencias guardadas (desde Ajustes o la guía de Inicio). */
+export function useActivatePush() {
+  const [push, setPush] = usePushSettings();
+  const state = usePushState();
+  return async () => {
+    const result = await enablePush(push.prefs, state);
+    if (result.ok) setPush((current) => ({ ...current, enabled: true, endpoint: result.endpoint }));
+    return result;
+  };
 }
 
 /** Anula la suscripción en el teléfono y la borra del servidor. */

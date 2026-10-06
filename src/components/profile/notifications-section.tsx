@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { BellRing } from "lucide-react";
 import { Button, Switch } from "@/components/ui";
 import { InstallSheet } from "@/components/install/install-sheet";
 import { useInstallState } from "@/lib/install";
-import { disablePush, enablePush, pushSupport, sendTestPush, usePushSettings, usePushState, type PushSupport } from "@/lib/push";
+import { disablePush, sendTestPush, useActivatePush, usePushSettings, usePushSupport, type PushSupport } from "@/lib/push";
 import type { PushPrefs } from "@/lib/reminders";
 import { useNutritionProfile } from "@/lib/store";
 import { SettingRow, SettingsGroup } from "./settings-group";
@@ -22,22 +22,16 @@ const supportHelp: Record<Exclude<PushSupport, "ready">, string> = {
   unsupported: "Este navegador no permite avisos. Prueba con Chrome, Edge, Firefox o Safari actualizado.",
 };
 
-// El permiso puede cambiar fuera de la app: se vuelve a leer al volver a la pestaña.
-function subscribe(onChange: () => void) {
-  document.addEventListener("visibilitychange", onChange);
-  return () => document.removeEventListener("visibilitychange", onChange);
-}
-
 /**
  * Avisos: activar en este teléfono y elegir cuáles (hora de entrenar, racha, comidas y agua). Cada uno
  * sólo llega cuando sirve: si ya entrenaste, registraste o tomaste agua, no se envía.
  */
 export function NotificationsSection({ order, onToast }: { order?: number; onToast: (message: string) => void }) {
   const [push, setPush] = usePushSettings();
-  const state = usePushState();
+  const activate = useActivatePush();
   const [nutrition] = useNutritionProfile();
   const install = useInstallState();
-  const support = useSyncExternalStore(subscribe, pushSupport, () => "unsupported" as PushSupport);
+  const support = usePushSupport();
   const [busy, setBusy] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const counting = nutrition?.mode === "count";
@@ -46,9 +40,8 @@ export function NotificationsSection({ order, onToast }: { order?: number; onToa
   async function toggle(on: boolean) {
     setBusy(true);
     if (on) {
-      const result = await enablePush(push.prefs, state);
+      const result = await activate();
       if (result.ok) {
-        setPush((current) => ({ ...current, enabled: true, endpoint: result.endpoint }));
         onToast("Avisos activados");
       } else {
         onToast(result.reason === "denied" ? "Sin permiso para avisos" : "No se pudieron activar. Intenta de nuevo");
