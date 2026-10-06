@@ -13,16 +13,29 @@ type Item = Record<string, unknown>;
 
 export type CloudCollection = "workouts" | "foodLog" | "weights" | "water" | "readiness" | "measurements";
 
-export interface CollectionSpec { kind: "collection"; key: string; name: CloudCollection; id: (item: Item) => string }
+export interface CollectionSpec {
+  kind: "collection";
+  key: string;
+  name: CloudCollection;
+  id: (item: Item) => string;
+  /** Huella del contenido (sin el id): reconoce el mismo registro anotado por separado en dos equipos. */
+  same?: (item: Item) => string;
+}
 export interface DocSpec { kind: "doc"; key: string; name: StorageKeyName }
 export type CloudSpec = CollectionSpec | DocSpec;
 
 const byId = (item: Item) => String(item.id ?? "");
 const byDate = (item: Item) => String(item.date ?? "");
+const num = (value: unknown) => (typeof value === "number" ? Math.round(value * 100) / 100 : "");
+
+/** Mismo alimento, en la misma comida del mismo día y con la misma cantidad. */
+export const sameFood = (item: Item) => [item.date, item.meal, item.foodId, num(item.portions), num(item.grams)].join("|");
+/** Mismo entrenamiento: día, nombre, duración, series, ejercicios y volumen iguales. */
+export const sameWorkout = (item: Item) => [item.date, item.name ?? "", num(item.durationMinutes), num(item.sets), num(item.exerciseCount), Math.round(Number(item.volume ?? 0))].join("|");
 
 export const collectionSpecs: CollectionSpec[] = [
-  { kind: "collection", key: STORAGE_KEYS.workouts, name: "workouts", id: byId },
-  { kind: "collection", key: STORAGE_KEYS.foodLog, name: "foodLog", id: byId },
+  { kind: "collection", key: STORAGE_KEYS.workouts, name: "workouts", id: byId, same: sameWorkout },
+  { kind: "collection", key: STORAGE_KEYS.foodLog, name: "foodLog", id: byId, same: sameFood },
   { kind: "collection", key: STORAGE_KEYS.weights, name: "weights", id: byDate },
   { kind: "collection", key: STORAGE_KEYS.water, name: "water", id: byDate },
   { kind: "collection", key: STORAGE_KEYS.readiness, name: "readiness", id: byDate },
@@ -87,7 +100,24 @@ export interface RemoteRecord { json: string; deleted: boolean }
  */
 export function mergeCollection(local: Item[], remote: Map<string, RemoteRecord>, spec: CollectionSpec) {
   const merged = new Map<string, Item>();
-  for (const item of local) merged.set(cloudId(spec.id(item)), item);
+  // Lo anotado aquí que ya está en la nube con otro id (mismo contenido) no se suma: se queda el de la
+  // nube. Se cuentan las copias para no quitar de más (dos huevos anotados aparte siguen siendo dos).
+  const inCloud = new Map<string, number>();
+  if (spec.same) {
+    for (const record of remote.values()) {
+      const value = record.deleted ? null : parseRecord(record.json);
+      if (value) inCloud.set(spec.same(value), (inCloud.get(spec.same(value)) ?? 0) + 1);
+    }
+  }
+  for (const item of local) {
+    const id = cloudId(spec.id(item));
+    const same = spec.same && !remote.has(id) ? spec.same(item) : null;
+    if (same && (inCloud.get(same) ?? 0) > 0) {
+      inCloud.set(same, (inCloud.get(same) ?? 0) - 1);
+      continue;
+    }
+    merged.set(id, item);
+  }
   const shadow: Record<string, string> = {};
   for (const [id, record] of remote) {
     if (record.deleted) {
@@ -139,4 +169,19 @@ export function parseJson(json: string): { ok: true; value: unknown } | { ok: fa
   } catch {
     return { ok: false };
   }
+}
+
+/**
+ * Copias repetidas de un historial (mismo contenido, otro id): devuelve los ids de las que sobran,
+ * conservando la primera de cada una.
+ */
+export function duplicateIds(items: readonly object[], same: (item: Item) => string) {
+  const seen = new Set<string>();
+  const extra: string[] = [];
+  for (const item of items as Item[]) {
+    const key = same(item);
+    if (seen.has(key)) extra.push(String(item.id ?? ""));
+    else seen.add(key);
+  }
+  return extra;
 }

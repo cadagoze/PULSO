@@ -9,6 +9,7 @@ import { STORAGE_KEYS, clearAllData, readAllData, writeAllData } from "@/lib/sto
 import type { WorkoutEntry } from "@/types";
 import { backupVersion, downloadFile, fileStamp, parseBackup, workoutsCsv } from "./data-export";
 import type { BackupEnvelope } from "./data-export";
+import { DuplicatesRow } from "./duplicates";
 import { SettingsGroup } from "./settings-group";
 import { hasCloudSession } from "@/lib/cloud/status";
 import { cloudActions } from "@/lib/cloud/use-cloud";
@@ -138,6 +139,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
         <button type="button" className="list-row" onClick={exportCsv}>
           <RowText icon={<FileSpreadsheet size={19} />} title="Exportar entrenamientos" detail="Serie por serie en .csv, listo para una planilla." />
         </button>
+        <DuplicatesRow onToast={onToast} />
         <div className="list-row prof-persist">
           <RowText icon={persist === "persisted" ? <ShieldCheck size={19} /> : <HardDriveDownload size={19} />} title="Proteger mis datos" detail={persistCopy[persist]} live />
           {persist === "persisted" ? (

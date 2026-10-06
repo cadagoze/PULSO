@@ -9,6 +9,7 @@ import { hasCloudSession, type CloudStatus } from "@/lib/cloud/status";
 import { cloudActions, useCloudStatus } from "@/lib/cloud/use-cloud";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { DuplicatesNotice } from "@/components/profile/duplicates";
 
 const clock = new Intl.DateTimeFormat("es-CL", { hour: "2-digit", minute: "2-digit" });
 
@@ -66,6 +67,7 @@ export function CloudAccount({ onToast }: { onToast: (message: string) => void }
             <span className="cloud-dot" aria-hidden="true" />
             {syncLine(status, now)}
           </p>
+          <DuplicatesNotice />
           <div className="cloud-actions">
             <Button variant="secondary" size="s" disabled={busy} onClick={() => void signOut()}><LogOut size={16} />Cerrar sesión</Button>
             <Button variant="ghost" size="s" className="cloud-danger" disabled={busy} onClick={() => setRemoving(true)}><Trash2 size={16} />Eliminar cuenta</Button>

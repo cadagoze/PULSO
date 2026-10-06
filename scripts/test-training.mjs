@@ -861,3 +861,20 @@ test('primera semana: pasos según el equipo y lo ya hecho', () => {
   assert.deepEqual(Array.from(done.filter((step) => !step.done), (step) => step.id), ['meal']);
   assert.equal(firstWeek.firstWeekSteps({ ...base, push: 'denied', pushEnabled: true }).find((step) => step.id === 'push').done, false, 'bloqueados después de activarlos: pendiente');
 });
+
+test('nube: lo anotado en dos equipos no se duplica al unir', () => {
+  const foodSpec = sync.collectionSpecs.find((spec) => spec.name === 'foodLog');
+  const food = (id, foodId, portions = 1, meal = 'desayuno') => ({ id, date: '2026-10-06', meal, foodId, name: foodId, portion: '', portions, kcal: 100, protein: 5, carbs: 10, fat: 2 });
+  const remote = new Map([['c1', { json: JSON.stringify(food('c1', 'avena')), deleted: false }], ['c2', { json: JSON.stringify(food('c2', 'huevo')), deleted: false }]]);
+  const local = [food('l1', 'avena'), food('l2', 'huevo'), food('l3', 'huevo'), food('l4', 'avena', 2), food('l5', 'avena', 1, 'once')];
+  const merged = sync.mergeCollection(local, remote, foodSpec);
+  assert.deepEqual(Array.from(merged.items, (item) => item.id).sort(), ['c1', 'c2', 'l3', 'l4', 'l5'], 'una avena y un huevo ya estaban; el segundo huevo, otra porción y otra comida se conservan');
+  const same = sync.mergeCollection([food('c1', 'avena')], remote, foodSpec);
+  assert.equal(same.items.length, 2, 'mismo id: gana la nube como siempre');
+  const workoutSpec = sync.collectionSpecs.find((spec) => spec.name === 'workouts');
+  const workout = (id, minutes = 40) => ({ id, name: 'Fuerza', date: '2026-10-06', completedAt: `2026-10-06T2${id.length}:00:00Z`, durationMinutes: minutes, sets: 9, exerciseCount: 3, volume: 1200 });
+  const cloudWorkouts = new Map([['w1', { json: JSON.stringify(workout('w1')), deleted: false }]]);
+  assert.deepEqual(Array.from(sync.mergeCollection([workout('w9'), workout('w8', 35)], cloudWorkouts, workoutSpec).items, (item) => item.id).sort(), ['w1', 'w8']);
+  assert.deepEqual(Array.from(sync.duplicateIds([food('a', 'avena'), food('b', 'avena'), food('c', 'avena', 2), food('d', 'avena')], sync.sameFood)), ['b', 'd'], 'se conserva el primero');
+  assert.deepEqual(Array.from(sync.duplicateIds([workout('w1'), workout('w2', 41)], sync.sameWorkout)), []);
+});
