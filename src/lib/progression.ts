@@ -148,7 +148,7 @@ export interface Suggestion {
  * llegan al tope con al menos 1 repetición en reserva, sube la carga y vuelve a la parte baja del rango.
  */
 export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel = "kg", toDisplay: (kg: number) => number = (kg) => kg): Suggestion {
-  const [low, high] = exercise.range;
+  const [low, high] = last?.range ?? exercise.range;
   const sets = last ? workingDone(last) : [];
   if (!sets.length) {
     return {

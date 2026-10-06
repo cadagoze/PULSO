@@ -63,6 +63,8 @@ export interface TrainingPreference {
   equipment: TrainingEquipment[];
   /** Lo que hay en tu gimnasio; sin valor, un gimnasio completo. */
   gymEquipment?: TrainingEquipment[];
+  /** Pesos que tienes en casa, en kg (por mancuerna, kettlebell…; en barra y set unible, el máximo total). */
+  loads?: Partial<Record<TrainingEquipment, number[]>>;
 }
 
 // ─── Registro de entrenamiento ───────────────────────────────────────────────
@@ -87,6 +89,8 @@ export interface ExerciseRecord {
   note?: string;
   /** Ejercicios con el mismo grupo se alternan como superserie. */
   group?: string;
+  /** Rango objetivo adaptado (p. ej. más repeticiones si tus pesas son livianas); sin valor, el del ejercicio. */
+  range?: [number, number];
 }
 
 export interface TrainingRoutine {

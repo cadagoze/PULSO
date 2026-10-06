@@ -111,7 +111,7 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
                     index={index}
                     meta={(
                       <span className="train-ex-meta">
-                        <span className="num train-ex-target">{targetLabel(exercise, record.sets.length)}</span>
+                        <span className="num train-ex-target">{targetLabel(exercise, record.sets.length, record.range)}</span>
                         {exercise.increment > 0 && (
                           <button
                             key={kg}

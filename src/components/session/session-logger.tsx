@@ -220,7 +220,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
       const lastSet = record.sets[record.sets.length - 1];
       const copy: SetRecord = lastSet
         ? { value: lastSet.value, load: lastSet.load, done: false, kind: lastSet.kind === "warmup" ? "normal" : lastSet.kind ?? "normal" }
-        : { value: exerciseById(record.exerciseId)?.range[0] ?? 10, load: 0, done: false, kind: "normal" };
+        : { value: record.range?.[0] ?? exerciseById(record.exerciseId)?.range[0] ?? 10, load: 0, done: false, kind: "normal" };
       return { ...record, sets: [...record.sets, copy] };
     });
   }, [updateRecord]);

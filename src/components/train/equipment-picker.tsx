@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
 import { Button, SegmentedControl, Sheet, ToggleChip } from "@/components/ui";
 import { placeOptions } from "@/components/train/shared";
-import { equipmentById, equipmentCategoryLabels, equipmentFor, fullGym, type EquipmentCategory } from "@/data/equipment";
-import { usePreference } from "@/lib/store";
+import { equipmentById, equipmentCategoryLabels, equipmentFor, fullGym, type EquipmentCategory, type EquipmentItem } from "@/data/equipment";
+import { usePreference, useSettings } from "@/lib/store";
+import { formatNumber, toDisplayWeight } from "@/lib/utils";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
 
 const categories = Object.keys(equipmentCategoryLabels) as EquipmentCategory[];
@@ -74,20 +75,55 @@ export function EquipmentList({ place }: { place: TrainingLocation }) {
           <section key={category} className="equip-group" aria-label={equipmentCategoryLabels[category]}>
             <h3 className="meta">{equipmentCategoryLabels[category]}</h3>
             <div className="equip-list">
-              {group.map((item) => (
-                <button key={item.id} type="button" className="equip-row" aria-pressed={selected.includes(item.id)} onClick={() => toggle(item.id)}>
-                  <span className="grow">
-                    <strong>{item.label}</strong>
-                    <small>{item.detail}</small>
-                  </span>
-                  <span className="equip-check" aria-hidden="true" />
-                </button>
-              ))}
+              {group.map((item) => {
+                const pressed = selected.includes(item.id);
+                return (
+                  <Fragment key={item.id}>
+                    <button type="button" className="equip-row" aria-pressed={pressed} onClick={() => toggle(item.id)}>
+                      <span className="grow">
+                        <strong>{item.label}</strong>
+                        <small>{item.detail}</small>
+                      </span>
+                      <span className="equip-check" aria-hidden="true" />
+                    </button>
+                    {place === "home" && pressed && item.loads && <LoadPicker item={item} />}
+                  </Fragment>
+                );
+              })}
             </div>
           </section>
         );
       })}
     </>
+  );
+}
+
+/**
+ * Pesos de un equipo que tienes en casa: cada mancuerna o kettlebell que tengas, o el máximo total
+ * en barra y set unible. Con eso la rutina elige cargas, repeticiones y series.
+ */
+function LoadPicker({ item }: { item: EquipmentItem }) {
+  const [preference, setPreference] = usePreference();
+  const [settings] = useSettings();
+  const config = item.loads;
+  if (!config) return null;
+  const values = preference.loads?.[item.id] ?? [];
+  const label = (kg: number) => `${formatNumber(toDisplayWeight(kg, settings.unit))}${config.mode === "max" && kg === config.options.at(-1) ? "+" : ""} ${settings.unit}`;
+
+  function choose(kg: number) {
+    const next = config?.mode === "max" ? (values.includes(kg) ? [] : [kg]) : values.includes(kg) ? values.filter((value) => value !== kg) : [...values, kg].sort((a, b) => a - b);
+    setPreference((current) => ({ ...current, loads: { ...current.loads, [item.id]: next } }));
+  }
+
+  return (
+    <div className="equip-loads">
+      <p><strong>{config.mode === "max" ? "¿Hasta cuánto armas?" : "¿Qué pesos tienes?"}</strong> {config.hint}{config.mode === "each" ? " · marca todos" : ""}</p>
+      <div className="equip-load-chips" role="group" aria-label={`Pesos de ${item.label}`}>
+        {config.options.map((kg) => (
+          <button key={kg} type="button" className="chip num" aria-pressed={values.includes(kg)} onClick={() => choose(kg)}>{label(kg)}</button>
+        ))}
+      </div>
+    </div>
   );
 }
 

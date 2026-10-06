@@ -4,6 +4,7 @@ import { lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
 import { capabilitiesOf, fullGym } from "@/data/equipment";
+import { availableLoads, fitLoad, loadCapability, nearestLoad, startingLoad, unfit } from "@/lib/loads";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
@@ -39,6 +40,8 @@ export interface GeneratorInput {
   /** Cambia la selección entre días (o al pedir otra variante). */
   seed?: number;
   exclude?: number[];
+  /** Peso corporal (kg) para sugerir cargas iniciales con tus pesas. */
+  bodyKg?: number;
 }
 
 export interface GeneratedWorkout {
@@ -106,6 +109,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   const level = input.level ?? 1;
   const limitations = input.limitations ?? [];
   const equipment = availableEquipment(input.preference);
+  const loads = availableLoads(input.preference);
   const seed = input.seed ?? 0;
   const recovery = input.recovery;
   const notes: string[] = [];
@@ -126,8 +130,23 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
 
   const chosen: Exercise[] = [];
   const skippedForRecovery = new Set<string>();
+  // Carga ideal de cada ejercicio: la de tu historial o una sugerencia inicial según tu peso y nivel.
+  const idealLoad = (exercise: Exercise) => {
+    const last = input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined;
+    const top = last ? Math.max(0, ...last.sets.filter((set) => set.done).map((set) => set.load)) : 0;
+    return top > 0 ? top : startingLoad(exercise, input.bodyKg, level);
+  };
+  // Con tus pesas marcadas, se evitan ejercicios para los que son demasiado livianas o pesadas.
+  const loadFits = (exercise: Exercise) => {
+    const capability = loads ? loadCapability(exercise, equipment) : undefined;
+    const available = capability ? loads?.[capability] : undefined;
+    if (!available?.length) return true;
+    const target = idealLoad(exercise);
+    return !unfit(target / nearestLoad(target, available));
+  };
   const usable = exercises.filter((exercise) =>
     isAvailable(exercise, equipment)
+    && loadFits(exercise)
     && !(exercise.stresses ?? []).some((area) => limitations.includes(area))
     && exercise.level <= Math.min(3, level + (input.readiness === "recovery" ? 0 : 1))
     && !(input.exclude ?? []).includes(exercise.id));
@@ -159,15 +178,32 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   if (skippedForRecovery.size) notes.push("Algunos músculos siguen recuperándose del último entrenamiento; la selección los deja descansar.");
 
   const restSeconds = Math.round(chosen.reduce((sum, exercise) => sum + restFor(exercise, goal, focus), 0) / Math.max(1, chosen.length) / 15) * 15 || 60;
-  const records = chosen.map((exercise) => {
-    const sets = Math.max(2, Math.min(5, exercise.sets + setDelta + (goal === "strength" && level > 1 && exercise.pattern !== "core" ? 1 : 0) - (input.minutes <= 10 ? 1 : 0)));
-    return {
+  let adaptedReps = false;
+  let suggestedLoads = false;
+  const records: ExerciseRecord[] = chosen.map((exercise) => {
+    const count = Math.max(2, Math.min(5, exercise.sets + setDelta + (goal === "strength" && level > 1 && exercise.pattern !== "core" ? 1 : 0) - (input.minutes <= 10 ? 1 : 0)));
+    const record: ExerciseRecord = {
       exerciseId: exercise.id,
       unit: exercise.unit,
-      sets: progressedSets(exercise, sets, input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined),
+      sets: progressedSets(exercise, count, input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined),
       restSeconds: restFor(exercise, goal, focus),
     };
+    // Ajuste a tus pesas: carga más cercana a la ideal y repeticiones (o una serie más) para compensar.
+    const capability = loads ? loadCapability(exercise, equipment) : undefined;
+    const available = capability ? loads?.[capability] : undefined;
+    if (!available?.length) return record;
+    const fresh = record.sets.every((set) => set.load === 0);
+    const fit = fitLoad(exercise, fresh ? startingLoad(exercise, input.bodyKg, level) : record.sets[0].load, available);
+    if (fresh) suggestedLoads = true;
+    if (fit.adapted) adaptedReps = true;
+    const [low, high] = fit.range;
+    record.sets = record.sets.map((set) => ({ ...set, load: fit.load, value: fresh ? low : Math.min(high, Math.max(low, set.value)) }));
+    if (fit.adapted) record.range = fit.range;
+    if (fit.extraSet && record.sets.length < 5) record.sets.push({ ...record.sets[record.sets.length - 1] });
+    return record;
   });
+  if (adaptedReps) notes.push("Ajustamos repeticiones y series a las pesas que tienes: con peso liviano, más repeticiones y bajada lenta.");
+  if (suggestedLoads) notes.push("Las cargas son una sugerencia inicial según tu peso y nivel: ajústalas si te sobran o faltan repeticiones.");
 
   // Ajusta la sesión al tiempo disponible: primero quita series de los últimos ejercicios, luego ejercicios.
   const budget = input.minutes * 1.1;
@@ -239,7 +275,7 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0 }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0, bodyKg }: {
   profile: ProfileForToday;
   nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
@@ -250,6 +286,7 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
   minutes?: number;
   focus?: WorkoutFocus;
   variant?: number;
+  bodyKg?: number | null;
 }): GeneratorInput {
   return {
     preference,
@@ -262,5 +299,6 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
     recovery,
     workouts,
     seed: localDaySeed(now) + variant,
+    bodyKg: bodyKg ?? undefined,
   };
 }

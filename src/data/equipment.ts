@@ -19,6 +19,8 @@ export interface EquipmentItem {
   base: TrainingLocation[];
   /** No cambia la rutina (p. ej. la colchoneta): sólo completa tu lista. */
   comfort?: boolean;
+  /** Pesos que se pueden marcar (kg). «each»: cada uno que tengas; «max»: el máximo total que armas. */
+  loads?: { mode: "each" | "max"; options: number[]; hint: string };
 }
 
 export const equipmentCategoryLabels: Record<EquipmentCategory, string> = {
@@ -32,13 +34,13 @@ const both: TrainingLocation[] = ["home", "gym"];
 
 export const equipmentCatalog: EquipmentItem[] = [
   // Pesas (orden y lista base según lo que más se compra para la casa: Mercado Libre, Amazon y CyberDay, 2025)
-  { id: "dumbbells", label: "Mancuernas", detail: "Fijas o ajustables", category: "pesas", places: both, provides: ["dumbbells"], base: both },
-  { id: "dumbbell-set", label: "Set de mancuernas con barra unible", detail: "Kit de 20–30 kg que se arma como barra", category: "pesas", places: ["home"], provides: ["dumbbells", "barbell"], base: [] },
-  { id: "load-bag", label: "Bidones o mochila con peso", detail: "Sirven como mancuernas livianas", category: "pesas", places: ["home"], provides: ["dumbbells"], base: ["home"] },
-  { id: "kettlebell", label: "Kettlebell", detail: "Pesa rusa", category: "pesas", places: both, provides: ["kettlebell"], base: ["home"] },
-  { id: "ankle-weights", label: "Tobilleras con peso", detail: "De 1 a 3 kg por pierna", category: "pesas", places: both, provides: ["ankle-weights"], base: [] },
-  { id: "barbell", label: "Barra y discos", detail: "Con rack o soportes", category: "pesas", places: both, provides: ["barbell"], base: ["gym"] },
-  { id: "medicine-ball", label: "Balón medicinal", detail: "Para lanzamientos", category: "pesas", places: both, provides: ["medicine-ball"], base: [] },
+  { id: "dumbbells", label: "Mancuernas", detail: "Fijas o ajustables", category: "pesas", places: both, provides: ["dumbbells"], base: both, loads: { mode: "each", options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22.5, 25, 30], hint: "Peso de cada mancuerna" } },
+  { id: "dumbbell-set", label: "Set de mancuernas con barra unible", detail: "Kit de 20–30 kg que se arma como barra", category: "pesas", places: ["home"], provides: ["dumbbells", "barbell"], base: [], loads: { mode: "max", options: [10, 15, 20, 25, 30, 40, 50], hint: "Peso total del kit" } },
+  { id: "load-bag", label: "Bidones o mochila con peso", detail: "Sirven como mancuernas livianas", category: "pesas", places: ["home"], provides: ["dumbbells"], base: ["home"], loads: { mode: "each", options: [2, 4, 5, 8, 10, 15], hint: "Un bidón de 5 L pesa unos 5 kg" } },
+  { id: "kettlebell", label: "Kettlebell", detail: "Pesa rusa", category: "pesas", places: both, provides: ["kettlebell"], base: ["home"], loads: { mode: "each", options: [4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 32], hint: "Peso de cada kettlebell" } },
+  { id: "ankle-weights", label: "Tobilleras con peso", detail: "De 1 a 3 kg por pierna", category: "pesas", places: both, provides: ["ankle-weights"], base: [], loads: { mode: "each", options: [0.5, 1, 1.5, 2, 2.5, 3, 5], hint: "Peso de cada tobillera" } },
+  { id: "barbell", label: "Barra y discos", detail: "Con rack o soportes", category: "pesas", places: both, provides: ["barbell"], base: ["gym"], loads: { mode: "max", options: [20, 30, 40, 50, 60, 70, 80, 100, 120, 150], hint: "Lo máximo que armas con barra y discos" } },
+  { id: "medicine-ball", label: "Balón medicinal", detail: "Para lanzamientos", category: "pesas", places: both, provides: ["medicine-ball"], base: [], loads: { mode: "each", options: [2, 3, 4, 5, 6, 8, 10], hint: "Peso de cada balón" } },
   // Accesorios
   { id: "bands", label: "Bandas elásticas", detail: "Largas, de tela o látex", category: "accesorios", places: both, provides: ["bands"], base: ["home"] },
   { id: "mini-band", label: "Minibandas", detail: "Ligas cortas para piernas", category: "accesorios", places: both, provides: ["mini-band"], base: [] },

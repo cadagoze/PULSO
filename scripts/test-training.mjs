@@ -636,3 +636,47 @@ test('equipamiento: casa, gimnasio completo y gimnasio ajustado', () => {
   assert.ok(multigym.has('cable') && multigym.has('press-machines'), 'el multigimnasio habilita poleas y press');
   assert.equal(generator.availableEquipment({ location: 'home', equipment: ['mat'] }).size, 0, 'la colchoneta no cambia la rutina');
 });
+
+const loadsLib = load('src/lib/loads.ts');
+
+test('pesos: disponibles en casa, set unible, barra y gimnasio', () => {
+  assert.equal(loadsLib.availableLoads({ location: 'gym', equipment: [], loads: { dumbbells: [10] } }), null, 'en el gimnasio no se ajusta');
+  assert.equal(loadsLib.availableLoads({ location: 'home', equipment: ['dumbbells'] }), null, 'sin pesos marcados, como antes');
+  const home = loadsLib.availableLoads({ location: 'home', equipment: ['dumbbells', 'load-bag', 'kettlebell'], loads: { dumbbells: [4, 8], 'load-bag': [5], kettlebell: [12] } });
+  assert.deepEqual([...home.dumbbells], [4, 5, 8]);
+  assert.deepEqual([...home.kettlebell], [12]);
+  const kit = loadsLib.availableLoads({ location: 'home', equipment: ['dumbbell-set'], loads: { 'dumbbell-set': [20] } });
+  assert.equal(Math.max(...kit.dumbbells), 10, 'set de 20 kg: hasta 10 kg por mancuerna');
+  assert.equal(Math.max(...kit.barbell), 20);
+});
+
+test('pesos: ajuste de carga, repeticiones y series', () => {
+  const goblet = exercises.find((exercise) => exercise.id === 10);
+  assert.equal(loadsLib.startingLoad(goblet, 80, 2), 13);
+  const light = loadsLib.fitLoad(goblet, 13, [4, 6]);
+  assert.equal(light.load, 6);
+  assert.ok(light.range[0] > goblet.range[0] && light.range[1] <= 25, `más repeticiones: ${light.range}`);
+  assert.equal(light.extraSet, true);
+  const heavy = loadsLib.fitLoad(goblet, 8, [14]);
+  assert.ok(heavy.range[1] < goblet.range[1] && heavy.range[0] >= 4, `menos repeticiones: ${heavy.range}`);
+  const exact = loadsLib.fitLoad(goblet, 10, [8, 10, 12]);
+  assert.equal(exact.adapted, false);
+  assert.equal(exact.load, 10);
+  assert.ok(loadsLib.unfit(30 / 10) && loadsLib.unfit(2 / 15) && !loadsLib.unfit(1));
+});
+
+test('pesos: el generador adapta la rutina a las pesas de casa', () => {
+  const base = { minutes: 30, focus: 'upper', goal: 'strength', level: 2, seed: 3, bodyKg: 80, workouts: [] };
+  const heavyOnly = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'], loads: { dumbbells: [20] } } });
+  assert.ok(!heavyOnly.records.some((record) => record.exerciseId === 47), 'sin elevaciones laterales con sólo mancuernas de 20 kg');
+  const lightOnly = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'], loads: { dumbbells: [3] } } });
+  const loaded = lightOnly.records.filter((record) => record.sets.some((set) => set.load > 0));
+  assert.ok(loaded.length > 0, 'usa las mancuernas livianas en algún ejercicio');
+  for (const record of loaded) {
+    assert.ok(record.sets.every((set) => set.load === 3), 'carga igual a la que tienes');
+    const exercise = exercises.find((item) => item.id === record.exerciseId);
+    if (record.range) assert.ok(record.range[0] >= exercise.range[0], 'peso liviano: no menos repeticiones');
+  }
+  const unknown = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'] } });
+  assert.ok(unknown.records.every((record) => record.sets.every((set) => set.load === 0) && !record.range), 'sin pesos marcados, la rutina queda como antes');
+});

@@ -120,7 +120,7 @@ export function LoadSheet({ open, onClose, exercise, record, workouts, onChange 
             </button>
           </div>
           <p className="train-load-caption num">
-            {display > 0 ? `En las ${record.sets.length} series · ${targetLabel(exercise, record.sets.length)}` : "Sin carga definida: elige una para tus series"}
+            {display > 0 ? `En las ${record.sets.length} series · ${targetLabel(exercise, record.sets.length, record.range)}` : "Sin carga definida: elige una para tus series"}
           </p>
           {suggestion && (
             <div className="notice">

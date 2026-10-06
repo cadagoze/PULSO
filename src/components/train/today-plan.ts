@@ -10,6 +10,7 @@ import { useNutritionProfile, usePreference, useProfile, useProgram, useReadines
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
+import { useLatestWeight } from "@/lib/use-nutrition";
 
 const HOUR = 3_600_000;
 
@@ -34,6 +35,7 @@ export function recordForExercise(exercise: Exercise, workouts: WorkoutEntry[], 
 export function useTodayPlan(now: number) {
   const [profile] = useProfile();
   const [nutrition] = useNutritionProfile();
+  const bodyKg = useLatestWeight();
   const [workouts] = useWorkouts();
   const [readinessEntries] = useReadiness();
   const [preference] = usePreference();
@@ -57,11 +59,11 @@ export function useTodayPlan(now: number) {
   // Mismas entradas que la portada de Inicio (ver todayGeneratorInput); aquí se pueden ajustar.
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant }));
-  }, [hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant, bodyKg }));
+  }, [bodyKg, hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
+  const planKey = [preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 

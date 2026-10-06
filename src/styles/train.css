@@ -393,7 +393,8 @@
 .train-session li:last-child { box-shadow: none; }
 .train-session-index { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
 .train-session-name { overflow: hidden; font-size: 15px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
-.train-session-target { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.train-session-target { font-size: 13.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.train-session-load { color: var(--accent-text); }
 .train-session li.train-session-more { display: block; padding: 8px 0 2px 32px; font-size: 13px; color: var(--ink-2); }
 .train-session-more span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .train-session-more .link-button { font-size: 13px; }
@@ -417,3 +418,9 @@
 .train-panel { display: flex; flex-direction: column; gap: 14px; padding-top: 6px; scroll-margin-top: 24px; }
 @media (min-width: 720px) { .train-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @keyframes train-plate-in { from { opacity: 0; transform: scale(.86); } }
+.equip-loads { display: flex; flex-direction: column; gap: 10px; padding: 4px 16px 16px; }
+.equip-loads p { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+.equip-loads p strong { font-weight: 600; color: var(--ink); }
+.equip-load-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.equip-load-chips .chip { min-height: 36px; padding: 0 12px; font-size: 13px; }
+.equip-load-chips .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }

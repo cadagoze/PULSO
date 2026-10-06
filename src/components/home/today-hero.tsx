@@ -15,6 +15,7 @@ import { completedSets, totalSets } from "@/lib/training";
 import { heroKind, heroPhoto, type HeroPhoto } from "@/data/hero-photos";
 import { heroLine } from "@/lib/motivation";
 import { usePersonalization } from "@/lib/use-personalize";
+import { useLatestWeight } from "@/lib/use-nutrition";
 import { localDaySeed } from "@/lib/utils";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
@@ -27,6 +28,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const [workouts] = useWorkouts();
   const [profile] = useProfile();
   const [nutrition] = useNutritionProfile();
+  const bodyKg = useLatestWeight();
   const [preference] = usePreference();
   const [settings] = useSettings();
   const start = useStartWorkout();
@@ -49,8 +51,8 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const generated = useMemo(() => {
     if (hourNow === 0) return null;
     const recovery = muscleRecovery(workouts, hourNow);
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness, recovery, now }));
-  }, [hourNow, now, nutrition?.goal, preference, profile, readiness, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness, recovery, now, bodyKg }));
+  }, [bodyKg, hourNow, now, nutrition?.goal, preference, profile, readiness, workouts]);
 
   if (draft) {
     const done = completedSets(draft.records);

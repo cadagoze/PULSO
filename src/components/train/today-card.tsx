@@ -7,11 +7,11 @@ import { Card } from "@/components/ui/cards";
 import { focusLabels } from "@/lib/generator";
 import { programSessionName } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
-import { useDraft, usePreference } from "@/lib/store";
+import { useDraft, usePreference, useSettings } from "@/lib/store";
 import { completedSets, durationSeconds, exerciseById, totalSets } from "@/lib/training";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
 import { useProgramActions } from "@/components/train/program-actions";
-import { locationLabels, targetLabel } from "@/components/train/shared";
+import { locationLabels, targetLabel, topLoad } from "@/components/train/shared";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, TrainingDraft } from "@/types";
 
@@ -104,6 +104,7 @@ const SESSION_ROWS = 4;
  * hasta cuatro para que «Empezar» quede a la vista; el resto, en «+N más».
  */
 function SessionList({ records, ranges, onMore }: { records: ExerciseRecord[]; ranges?: Array<[number, number] | undefined>; onMore?: () => void }) {
+  const [settings] = useSettings();
   const rows = records
     .map((record, index) => ({ record, exercise: exerciseById(record.exerciseId), range: ranges?.[index] }))
     .filter((row): row is { record: ExerciseRecord; exercise: Exercise; range: [number, number] | undefined } => Boolean(row.exercise));
@@ -116,7 +117,10 @@ function SessionList({ records, ranges, onMore }: { records: ExerciseRecord[]; r
         <li key={`${exercise.id}-${index}`} style={{ "--i": index } as CSSProperties}>
           <span className="num train-session-index">{index + 1}</span>
           <span className="train-session-name">{exercise.name}</span>
-          <span className="num train-session-target">{targetLabel(exercise, record.sets.length, range)}</span>
+          <span className="num train-session-target">
+            {targetLabel(exercise, record.sets.length, range ?? record.range)}
+            {topLoad(record) > 0 && <span className="train-session-load"> · {formatNumber(toDisplayWeight(topLoad(record), settings.unit))} {settings.unit}</span>}
+          </span>
         </li>
       ))}
       {rest > 0 && (
