@@ -88,6 +88,9 @@
   .home-header { grid-area: header; }
   .home-hero-slot { grid-area: hero; position: sticky; top: 24px; }
   .home-side { grid-area: side; }
+  /* Con la nutrición arriba (si cuentas calorías), va bajo el saludo, en la misma columna. */
+  .home:has(> .home-fuel-slot) { grid-template-areas: "hero header" "hero fuel" "hero side"; grid-template-rows: auto auto 1fr; }
+  .home-fuel-slot { grid-area: fuel; }
   .home-hero { aspect-ratio: auto; height: calc(100dvh - var(--nav-h) - var(--nav-gap) - 88px); min-height: 480px; max-height: 820px; }
   .home-skeleton-hero { grid-area: hero; }
 }
