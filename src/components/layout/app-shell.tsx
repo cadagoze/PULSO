@@ -8,6 +8,7 @@ import { useSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { CloudBoot } from "@/components/cloud/cloud-boot";
 import { captureInstallPrompt } from "@/lib/install";
+import { usePersonalization } from "@/lib/use-personalize";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,11 +18,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // El aviso de instalación del navegador llega una sola vez: se escucha desde que abre la app.
   useEffect(() => { captureInstallPrompt(); }, []);
 
+  const { accent } = usePersonalization();
+
   useEffect(() => {
     const root = document.documentElement;
     if (settings.theme === "system") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", settings.theme);
   }, [settings.theme]);
+
+  // Color de acento (fuego por defecto): cambia los tokens --accent en todo el documento.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (accent === "fire") root.removeAttribute("data-accent");
+    else root.setAttribute("data-accent", accent);
+  }, [accent]);
 
   return (
     <div className="app-shell">

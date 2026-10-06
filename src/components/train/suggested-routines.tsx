@@ -11,6 +11,7 @@ import { usePreference, useProgram } from "@/lib/store";
 import { locationLabels, pad2 } from "@/components/train/shared";
 import { orderPrograms, programPhoto } from "@/components/train/program-covers";
 import type { Program, ProgramProgress } from "@/types";
+import { usePersonalization } from "@/lib/use-personalize";
 
 /**
  * Programas como portadas grandes en carrusel: foto editorial para los de casa, portada tipográfica
@@ -47,7 +48,8 @@ export function SuggestedRoutines({ onCreate }: { onCreate: () => void }) {
 }
 
 function ProgramCover({ program, progress, index }: { program: Program; progress: ProgramProgress | null; index: number }) {
-  const photo = programPhoto(program);
+  const { audience } = usePersonalization();
+  const photo = programPhoto(program, audience);
   const total = programTotalSessions(program);
   const done = progress?.completed.length ?? 0;
   const next = progress ? nextProgramSession(program, progress) : null;

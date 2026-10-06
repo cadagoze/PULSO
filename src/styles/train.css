@@ -28,7 +28,7 @@
 .train-hero { position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 20px; overflow: hidden; overflow: clip; padding: 20px 20px 14px; }
 /* Profundidad sutil detrás del número (no es textura: la tarjeta sigue limpia). */
 /* Dentro de los bordes de la tarjeta: si sobresaliera, la tarjeta se podría desplazar al enfocar algo. */
-.train-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(70% 46% at 92% 4%, rgb(255 95 36 / 9%), transparent 72%); pointer-events: none; }
+.train-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(70% 46% at 92% 4%, rgb(var(--accent-rgb) / 9%), transparent 72%); pointer-events: none; }
 .train-hero-switch { align-self: flex-start; max-width: 100%; background: rgb(255 255 255 / 7%); }
 .train-hero-switch .segmented-indicator { background: rgb(255 255 255 / 15%); box-shadow: none; }
 .train-hero-switch button { padding: 0 14px; font-size: 13px; }

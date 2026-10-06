@@ -31,7 +31,7 @@ export function NameStep({ value, onChange, onSubmit }: { value: string; onChang
         enterKeyHint="next"
         maxLength={40}
       />
-      <p className="onb-note"><Lock size={14} aria-hidden="true" />Tus datos se guardan sólo en este dispositivo.</p>
+      <p className="onb-note"><Lock size={14} aria-hidden="true" />Tus datos quedan en este dispositivo y, si creas una cuenta, en la nube.</p>
     </form>
   );
 }
@@ -122,6 +122,17 @@ export function ChoiceStepView({ step, selected, custom, onToggle, onCustom }: {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Cómo te identificas: una opción a la vez (elige fotos y color; se cambia en Ajustes). */
+export function SexStep<T extends string>({ options, value, onChange }: { options: Array<{ value: T; label: string; detail: string; icon: ReactNode }>; value: T | null; onChange: (value: T) => void }) {
+  return (
+    <div className="onb-options" role="group" aria-labelledby="onb-step-title">
+      {options.map((option, index) => (
+        <OptionCard key={option.value} index={index} round selected={value === option.value} label={option.label} detail={option.detail} icon={option.icon} onClick={() => onChange(option.value)} />
+      ))}
     </div>
   );
 }

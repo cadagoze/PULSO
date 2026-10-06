@@ -227,6 +227,10 @@ export interface Settings {
   autoRest: boolean;
   barWeight: number;
   plates: number[];
+  /** Color de acento elegido; sin valor, automático según cómo te identificas. */
+  accent?: "fire" | "magenta" | "violet" | "lime" | "electric";
+  /** Fotos de portadas y programas: según tu perfil, mujeres, hombres o mixtas. */
+  photos?: "auto" | "female" | "male" | "mixed";
 }
 
 export interface IntervalPreset {

@@ -561,3 +561,43 @@ test('paleta: contraste AA del acento y el dorado en ambos temas', () => {
   assert.ok(ratio(token(dark, 'gold-text'), token(dark, 'bg')) >= 4.5, 'texto dorado sobre el fondo (oscuro)');
   assert.ok(ratio(token(dark, 'ink-2'), token(dark, 'bg')) >= 4.5, 'texto secundario (oscuro)');
 });
+
+const personalize = load('src/lib/personalize.ts');
+
+test('personalización: fotos y color según cómo te identificas, con elección manual', () => {
+  assert.equal(personalize.identityFrom('female', 'male'), 'female');
+  assert.equal(personalize.identityFrom(undefined, 'male'), 'male');
+  assert.equal(personalize.identityFrom(), 'unspecified');
+  assert.equal(personalize.audienceFor('auto', 'female'), 'female');
+  assert.equal(personalize.audienceFor(undefined, 'unspecified'), 'mixed');
+  assert.equal(personalize.audienceFor('male', 'female'), 'male');
+  assert.equal(personalize.accentFor(undefined, 'female'), 'magenta');
+  assert.equal(personalize.accentFor(undefined, 'male'), 'fire');
+  assert.equal(personalize.accentFor('lime', 'female'), 'lime');
+  const sets = { female: ['f1', 'f2'], male: ['m1'] };
+  assert.equal(personalize.pickPhoto(sets, 'female', 1), 'f2');
+  assert.equal(personalize.pickPhoto(sets, 'male', 5), 'm1');
+  assert.deepEqual([0, 1].map((seed) => personalize.pickPhoto(sets, 'mixed', seed)), ['m1', 'f1']);
+  for (const photo of hero.allHeroPhotos) assert.ok(fs.existsSync(path.join(root, 'public', photo.src)), `falta ${photo.src}`);
+  for (const kind of ['home', 'gym', 'cardio', 'mobility']) {
+    assert.match(hero.heroPhoto(kind, 0, 'female').alt, /Mujer/);
+  }
+});
+
+test('colores de acento: contraste AA en claro y oscuro', () => {
+  const css = fs.readFileSync(path.join(root, 'src/styles/accents.css'), 'utf8');
+  const lum = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const read = (rule, name) => rule.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i'))[1];
+  for (const name of personalize.accentOptions.map((option) => option.value).filter((value) => value !== 'fire')) {
+    const light = css.match(new RegExp(`:root\\[data-accent="${name}"\\]:not\\(\\[data-theme="dark"\\]\\) \\{([^}]+)\\}`))[1];
+    const dark = css.match(new RegExp(`:root\\[data-accent="${name}"\\]\\[data-theme="dark"\\][^{]*\\{([^}]+)\\}`))[1];
+    assert.ok(ratio(read(light, 'accent'), read(light, 'accent-ink')) >= 4.5, `${name}: texto sobre el acento (claro)`);
+    assert.ok(ratio(read(light, 'accent-text'), '#f5f3ec') >= 4.5, `${name}: texto de acento (claro)`);
+    assert.ok(ratio(read(dark, 'accent'), read(dark, 'accent-ink')) >= 4.5, `${name}: texto sobre el acento (oscuro)`);
+    assert.ok(ratio(read(dark, 'accent-text'), '#0a0a0a') >= 4.5, `${name}: texto de acento (oscuro)`);
+  }
+});

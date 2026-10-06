@@ -11,10 +11,12 @@ import { DataSection } from "./data-section";
 import { StreakSection } from "./streak-section";
 import { Toast, useToast } from "@/components/ui/toast";
 import { TrainingSection } from "./training-section";
+import { usePersonalization } from "@/lib/use-personalize";
 
 /** Ajustes: apariencia, entrenamiento, racha, datos y acerca de, en grupos editoriales. */
 export function SettingsView() {
   const [settings, update] = useSettings();
+  const { identity } = usePersonalization();
   const [workouts] = useWorkouts();
   const now = useNow();
   const ready = now !== 0;
@@ -47,11 +49,11 @@ export function SettingsView() {
 
   return (
     <div className="page prof-settings">
-      <PageHeader backHref="/perfil" meta="Perfil" title="Ajustes" subtitle="Tus preferencias y tus datos viven en este dispositivo." />
+      <PageHeader backHref="/perfil" meta="Perfil" title="Ajustes" subtitle="Apariencia, entrenamiento, racha y tus datos." />
       {ready ? (
         <div className="prof-settings-grid">
           <div className="prof-settings-col">
-            <AppearanceSection theme={settings.theme} onChange={(theme) => update({ theme })} order={0} />
+            <AppearanceSection settings={settings} identity={identity} update={update} order={0} />
             <TrainingSection settings={settings} update={update} order={1} />
           </div>
           <div className="prof-settings-col">

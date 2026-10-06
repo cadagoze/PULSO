@@ -1,0 +1,22 @@
+/* PULSO — Colores de acento alternativos (Ajustes → Apariencia). Fuego es el de globals.css.
+   Claro, oscuro explícito, oscuro del sistema y zonas .on-dark. `npm test` verifica el contraste. */
+
+/* magenta */
+:root[data-accent="magenta"]:not([data-theme="dark"]) { --accent: #ff2e88; --accent-bright: #ff5aa2; --accent-ink: #1f0613; --accent-soft: #ffe1ee; --accent-text: #b0105a; --accent-rgb: 255 46 136; }
+@media (prefers-color-scheme: dark) { :root[data-accent="magenta"]:not([data-theme="light"]) { --accent: #ff3d92; --accent-bright: #ff66aa; --accent-ink: #1f0613; --accent-soft: rgb(255 61 146 / 14%); --accent-text: #ff6aa8; --accent-rgb: 255 61 146; } }
+:root[data-accent="magenta"][data-theme="dark"], :root[data-accent="magenta"] .on-dark { --accent: #ff3d92; --accent-bright: #ff66aa; --accent-ink: #1f0613; --accent-soft: rgb(255 61 146 / 14%); --accent-text: #ff6aa8; --accent-rgb: 255 61 146; }
+
+/* violet */
+:root[data-accent="violet"]:not([data-theme="dark"]) { --accent: #9b6bff; --accent-bright: #b08aff; --accent-ink: #12062a; --accent-soft: #ece4ff; --accent-text: #5b2fc9; --accent-rgb: 155 107 255; }
+@media (prefers-color-scheme: dark) { :root[data-accent="violet"]:not([data-theme="light"]) { --accent: #a47aff; --accent-bright: #b994ff; --accent-ink: #12062a; --accent-soft: rgb(164 122 255 / 14%); --accent-text: #b896ff; --accent-rgb: 164 122 255; } }
+:root[data-accent="violet"][data-theme="dark"], :root[data-accent="violet"] .on-dark { --accent: #a47aff; --accent-bright: #b994ff; --accent-ink: #12062a; --accent-soft: rgb(164 122 255 / 14%); --accent-text: #b896ff; --accent-rgb: 164 122 255; }
+
+/* lime */
+:root[data-accent="lime"]:not([data-theme="dark"]) { --accent: #b7f34a; --accent-bright: #c9ff68; --accent-ink: #142019; --accent-soft: #edf6d8; --accent-text: #4d7316; --accent-rgb: 183 243 74; }
+@media (prefers-color-scheme: dark) { :root[data-accent="lime"]:not([data-theme="light"]) { --accent: #c9ff68; --accent-bright: #d8ff8f; --accent-ink: #142019; --accent-soft: rgb(201 255 104 / 14%); --accent-text: #c9ff68; --accent-rgb: 201 255 104; } }
+:root[data-accent="lime"][data-theme="dark"], :root[data-accent="lime"] .on-dark { --accent: #c9ff68; --accent-bright: #d8ff8f; --accent-ink: #142019; --accent-soft: rgb(201 255 104 / 14%); --accent-text: #c9ff68; --accent-rgb: 201 255 104; }
+
+/* electric */
+:root[data-accent="electric"]:not([data-theme="dark"]) { --accent: #2fb8ff; --accent-bright: #5cc8ff; --accent-ink: #031522; --accent-soft: #dcf2ff; --accent-text: #0a6aa8; --accent-rgb: 47 184 255; }
+@media (prefers-color-scheme: dark) { :root[data-accent="electric"]:not([data-theme="light"]) { --accent: #38bdff; --accent-bright: #66ccff; --accent-ink: #031522; --accent-soft: rgb(56 189 255 / 14%); --accent-text: #5cc8ff; --accent-rgb: 56 189 255; } }
+:root[data-accent="electric"][data-theme="dark"], :root[data-accent="electric"] .on-dark { --accent: #38bdff; --accent-bright: #66ccff; --accent-ink: #031522; --accent-soft: rgb(56 189 255 / 14%); --accent-text: #5cc8ff; --accent-rgb: 56 189 255; }

@@ -12,17 +12,20 @@ import {
   BatteryLow,
   Building2,
   CircleCheck,
+  CircleDashed,
   Clock3,
   Dumbbell,
   Flame,
   Footprints,
   Hourglass,
   House,
+  Mars,
   PersonStanding,
   Repeat,
   Scale,
   Timer,
   Utensils,
+  Venus,
   X,
   Zap,
 } from "lucide-react";
@@ -31,7 +34,7 @@ import { usePreference, useSettings } from "@/lib/store";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
 import { AssessmentResult } from "./assessment-result";
 import { AssessmentSplash } from "./assessment-splash";
-import { ChoiceStepView, LocationStep, NameStep } from "./assessment-steps";
+import { ChoiceStepView, LocationStep, NameStep, SexStep } from "./assessment-steps";
 
 type Goal = "strength" | "weight" | "energy" | "habits";
 type Activity = "sedentary" | "walking" | "some" | "regular";
@@ -54,6 +57,8 @@ export interface AssessmentProfile extends AssessmentAnswers {
   createdAt: string;
   /** Nombre con el que PULSO te saluda (opcional). */
   name?: string;
+  /** Cómo te identificas: elige las fotos y el color de la app (se cambia en Ajustes). */
+  sex?: "female" | "male" | "unspecified";
   location?: TrainingLocation;
   equipment?: TrainingEquipment[];
   recommendation: {
@@ -85,7 +90,7 @@ export interface ChoiceStep {
 }
 
 interface SpecialStep {
-  kind: "name" | "location";
+  kind: "name" | "sex" | "location";
   eyebrow: string;
   title: string;
   description: string;
@@ -101,6 +106,12 @@ const flow: FlowStep[] = [
     eyebrow: "Para empezar",
     title: "¿Cómo te llamamos?",
     description: "Así personalizamos tus saludos. Puedes dejarlo en blanco.",
+  },
+  {
+    kind: "sex",
+    eyebrow: "Para ti",
+    title: "¿Cómo te identificas?",
+    description: "Elegimos las fotos y el color de la app para ti. Puedes cambiarlo cuando quieras en Ajustes.",
   },
   {
     kind: "multi",
@@ -193,13 +204,22 @@ const emptyAnswers: AssessmentAnswers = {
   customAnswers: { goals: "", activities: "", times: "", limitations: "", barriers: "" },
 };
 
+type Sex = NonNullable<AssessmentProfile["sex"]>;
+
 interface Extras {
   name: string;
+  sex: Sex | null;
   location: TrainingLocation | null;
   equipment: TrainingEquipment[];
 }
 
-const emptyExtras: Extras = { name: "", location: null, equipment: [] };
+const emptyExtras: Extras = { name: "", sex: null, location: null, equipment: [] };
+
+const sexOptions: Array<{ value: Sex; label: string; detail: string; icon: ReactNode }> = [
+  { value: "female", label: "Mujer", detail: "Fotos de mujeres y color magenta", icon: <Venus size={iconSize} /> },
+  { value: "male", label: "Hombre", detail: "Fotos de hombres y color fuego", icon: <Mars size={iconSize} /> },
+  { value: "unspecified", label: "Prefiero no decir", detail: "Fotos de ambos y color fuego", icon: <CircleDashed size={iconSize} /> },
+];
 
 /** Foto del panel editorial de escritorio (las preguntas en móvil van sin foto, limpias). */
 const sidePhoto = "/images/editorial/brisk-march-start.webp";
@@ -231,7 +251,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
 
   const canContinue = step.kind === "multi"
     ? (answers[step.key] as SelectionValue[]).length > 0 || answers.customAnswers[step.key].trim().length > 0
-    : step.kind === "name" || extras.location !== null;
+    : step.kind === "name" || (step.kind === "sex" ? extras.sex !== null : extras.location !== null);
   const canGoBack = stepIndex > 0 || !onCancel;
 
   // La pantalla de evaluación tapa la página: sin desplazamiento detrás mientras está abierta.
@@ -240,6 +260,19 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = overflow; };
   }, []);
+
+  // Vista previa del color automático mientras se responde (si no hay uno elegido en Ajustes).
+  useEffect(() => {
+    if (settings.accent || !extras.sex) return;
+    const root = document.documentElement;
+    const previous = root.getAttribute("data-accent");
+    if (extras.sex === "female") root.setAttribute("data-accent", "magenta");
+    else root.removeAttribute("data-accent");
+    return () => {
+      if (previous) root.setAttribute("data-accent", previous);
+      else root.removeAttribute("data-accent");
+    };
+  }, [extras.sex, settings.accent]);
 
   // Cada pregunta nueva recibe el foco en su título (lectores de pantalla y teclado).
   useEffect(() => {
@@ -368,6 +401,10 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
               />
             )}
 
+            {step.kind === "sex" && (
+              <SexStep options={sexOptions} value={extras.sex} onChange={(sex) => setExtras((current) => ({ ...current, sex }))} />
+            )}
+
             {step.kind === "location" && (
               <LocationStep
                 options={locationOptions}
@@ -480,6 +517,7 @@ function buildProfile(answers: AssessmentAnswers, extras: Extras = emptyExtras):
     ...answers,
     createdAt: new Date().toISOString(),
     ...(name ? { name } : {}),
+    ...(extras.sex ? { sex: extras.sex } : {}),
     location: extras.location ?? "home",
     equipment: extras.location === "gym" ? [] : extras.equipment,
     recommendation: {

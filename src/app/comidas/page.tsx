@@ -334,7 +334,7 @@ export default function NutritionPage() {
         {setup.token > 0 && (
           <NutritionSetup
             key={setup.token}
-            initial={profile ?? suggestedNutritionProfile({ activities: assessment?.activities, goals: assessment?.goals }, new Date(now))}
+            initial={profile ?? suggestedNutritionProfile({ activities: assessment?.activities, goals: assessment?.goals, sex: assessment?.sex }, new Date(now))}
             weightKg={latestWeight}
             unit={settings.unit}
             onSave={saveSetup}

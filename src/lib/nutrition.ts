@@ -117,10 +117,10 @@ export function goalFromAssessment(goals: string[] = []): NutritionGoal {
   return goals[0] === "weight" ? "lose" : "maintain";
 }
 
-export function suggestedNutritionProfile({ activities = [], goals = [] }: { activities?: string[]; goals?: string[] }, now = new Date()): NutritionProfile {
+export function suggestedNutritionProfile({ activities = [], goals = [], sex }: { activities?: string[]; goals?: string[]; sex?: string }, now = new Date()): NutritionProfile {
   const activity: ActivityLevel = activities.includes("regular") ? "moderate" : activities.includes("some") || activities.includes("walking") ? "light" : "sedentary";
   const goal = goalFromAssessment(goals);
-  return { sex: "female", birthYear: now.getFullYear() - 35, heightCm: 165, activity, goal, adjustment: defaultAdjustment(goal), special: "none", mode: "count", updatedAt: now.toISOString() };
+  return { sex: sex === "male" ? "male" : "female", birthYear: now.getFullYear() - 35, heightCm: sex === "male" ? 175 : 163, activity, goal, adjustment: defaultAdjustment(goal), special: "none", mode: "count", updatedAt: now.toISOString() };
 }
 
 // ─── Registro de alimentos ─────────────────────────────────────────────────

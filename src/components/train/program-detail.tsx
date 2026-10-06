@@ -16,6 +16,7 @@ import { programPhoto } from "@/components/train/program-covers";
 import { locationLabels, pad2, rangeText, restText } from "@/components/train/shared";
 import { Toast, useToast } from "@/components/ui/toast";
 import type { Program, ProgramDay } from "@/types";
+import { usePersonalization } from "@/lib/use-personalize";
 
 /** Detalle de un programa: portada editorial, avance y acciones, y la estructura semana a semana. */
 export function ProgramDetail({ programId }: { programId: string }) {
@@ -148,7 +149,8 @@ export function ProgramDetail({ programId }: { programId: string }) {
 
 /** Portada: foto editorial (programas de casa) o portada tipográfica sobre atmósfera con grano. */
 function Cover({ program, active, week }: { program: Program; active: boolean; week: number }) {
-  const photo = programPhoto(program);
+  const { audience } = usePersonalization();
+  const photo = programPhoto(program, audience);
   return (
     <section className={cn("train-cover on-dark", photo ? "photo photo-shade grain" : "atmosphere grain")} aria-labelledby="train-cover-title">
       {photo && (

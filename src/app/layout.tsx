@@ -12,6 +12,7 @@ import "@/styles/profile.css";
 import "@/styles/content.css";
 import "@/styles/nutrition.css";
 import "@/styles/cloud.css";
+import "@/styles/accents.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
@@ -37,7 +38,8 @@ export const viewport: Viewport = {
 };
 
 /** Aplica el tema guardado antes de pintar, para evitar un destello de color. */
-const themeScript = `try{var s=JSON.parse(localStorage.getItem("pulso:settings")||"{}");if(s.theme==="light"||s.theme==="dark")document.documentElement.setAttribute("data-theme",s.theme)}catch(e){}`;
+// Antes de pintar: tema y color de acento guardados (igual que AppShell y usePersonalization), sin destello.
+const themeScript = `try{var d=document.documentElement,g=function(k){return JSON.parse(localStorage.getItem(k)||"null")||{}},s=g("pulso:settings");if(s.theme==="light"||s.theme==="dark")d.setAttribute("data-theme",s.theme);else if(s.theme==="system")d.removeAttribute("data-theme");var x=g("pulso:assessment").sex||g("pulso:nutrition").sex,a=s.accent||(x==="female"?"magenta":"fire");if(a!=="fire")d.setAttribute("data-accent",a)}catch(e){}`;
 
 export default function RootLayout({
   children,

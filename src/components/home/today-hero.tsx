@@ -14,6 +14,7 @@ import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, u
 import { completedSets, totalSets } from "@/lib/training";
 import { heroKind, heroPhoto, type HeroPhoto } from "@/data/hero-photos";
 import { heroLine } from "@/lib/motivation";
+import { usePersonalization } from "@/lib/use-personalize";
 import { localDaySeed } from "@/lib/utils";
 import type { ExerciseRecord, ReadinessEntry } from "@/types";
 
@@ -30,6 +31,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const [settings] = useSettings();
   const start = useStartWorkout();
   const seed = localDaySeed(now);
+  const { audience } = usePersonalization();
   const motivation = (minutes: number) => heroLine({ workouts, weeklyGoal: settings.weeklyGoal, pausedWeeks: settings.pausedWeeks, minutes, now: new Date(now) });
 
   const program = progress ? programById(progress.programId) : undefined;
@@ -54,7 +56,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const done = completedSets(draft.records);
     const total = totalSets(draft.records);
     return (
-      <HeroFrame photo={heroPhoto("home", seed)} tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
+      <HeroFrame photo={heroPhoto("home", seed, audience)} tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
         <div className="home-hero-progress">
           <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
@@ -70,7 +72,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
     const name = programSessionName(program, next.week, next.day);
     return (
       <HeroFrame
-        photo={heroPhoto(heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed)}
+        photo={heroPhoto(heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed, audience)}
         line={motivation(program.minutes)}
         tag={`Semana ${next.week} de ${program.weeks}`}
         meta={program.name}
@@ -89,7 +91,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
 
   if (!generated) {
     return (
-      <HeroFrame photo={heroPhoto("home", seed)} tag="Tu sesión de hoy" meta="Preparando" title="Armando tu sesión…">
+      <HeroFrame photo={heroPhoto("home", seed, audience)} tag="Tu sesión de hoy" meta="Preparando" title="Armando tu sesión…">
         <div className="home-hero-skeleton" aria-hidden="true" />
       </HeroFrame>
     );
@@ -98,7 +100,7 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   const minutes = generated.estimatedMinutes || estimateMinutes(generated.records, generated.restSeconds);
   return (
     <HeroFrame
-      photo={heroPhoto(heroKind({ focus: generated.focus, location: preference.location }), seed)}
+      photo={heroPhoto(heroKind({ focus: generated.focus, location: preference.location }), seed, audience)}
       line={motivation(minutes)}
       tag="Tu sesión de hoy"
       meta={focusLabels[generated.focus]}
