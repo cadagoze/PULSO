@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Award, ChevronRight, Download, Gauge, History, Ruler, Share2, Trophy } from "lucide-react";

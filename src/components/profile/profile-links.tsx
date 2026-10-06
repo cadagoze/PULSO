@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import type { CSSProperties, ReactNode } from "react";
 import { Bell, BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Smartphone, Utensils } from "lucide-react";
 

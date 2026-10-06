@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import { ArrowLeft, Check, ListPlus, Lock, Play } from "lucide-react";
 import { categoryLabels, levelLabels, patternLabels } from "@/data/catalog";

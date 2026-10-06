@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { ChevronRight, CopyX } from "lucide-react";
 import { Button, Sheet } from "@/components/ui";
 import { duplicateIds, sameFood, sameWorkout } from "@/lib/cloud/sync-plan";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import type { CSSProperties } from "react";
 import { Camera, Pencil, Settings as SettingsIcon, UserRound } from "lucide-react";
 import { Button, NumberMetric } from "@/components/ui";

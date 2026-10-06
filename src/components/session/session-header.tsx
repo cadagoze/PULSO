@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import type { CSSProperties } from "react";
 import { ChevronDown, Ellipsis, ListOrdered, Play } from "lucide-react";
 import { clockLabel, durationSeconds } from "@/lib/training";

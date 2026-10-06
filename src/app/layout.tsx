@@ -15,7 +15,8 @@ import "@/styles/cloud.css";
 import "@/styles/accents.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
+// Sólo para etiquetas pequeñas: no se precarga, así no compite con lo esencial al abrir la app.
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap", preload: false });
 // Títulos y números: Archivo con eje de ancho para el tono editorial y deportivo.
 const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo", display: "swap" });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { usePathname } from "next/navigation";
 import { ChartNoAxesColumn, Dumbbell, House, Pause, Play, Salad, Square, UserRound, type LucideIcon } from "lucide-react";
 import { useState, type CSSProperties } from "react";

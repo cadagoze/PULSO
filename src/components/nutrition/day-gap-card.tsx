@@ -23,12 +23,12 @@ export function DayGapCard({ gap, onAdd }: { gap: DayGap; onAdd: (idea: FoodIdea
         <ul className="nut-food-list">
           {gap.ideas.map((idea) => (
             <li key={idea.food.id}>
-              <button type="button" className="nut-food" onClick={() => onAdd(idea)} aria-label={`Agregar ${idea.food.name} a ${mealLabel}: ${formatKcal(idea.kcal)} kcal, ${idea.protein} g de proteína`}>
+              <button type="button" className="nut-food" onClick={() => onAdd(idea)}>
                 <span className="grow">
-                  <span className="nut-item-name">{idea.food.name}{idea.usual && <span className="nut-gap-usual">Habitual</span>}</span>
+                  <span className="nut-item-name"><span className="sr-only">Agregar a {mealLabel}: </span>{idea.food.name}{idea.usual && <span className="nut-gap-usual">Habitual</span>}</span>
                   <small>{amountLabel({ portions: idea.portions, portion: idea.food.portion })} · <span className="num">{idea.protein}</span> g proteína</small>
                 </span>
-                <span className="num nut-item-kcal">{formatKcal(idea.kcal)}</span>
+                <span className="num nut-item-kcal">{formatKcal(idea.kcal)}<span className="sr-only"> kcal</span></span>
                 <span className="nut-gap-add" aria-hidden="true"><Plus size={16} strokeWidth={2.6} /></span>
               </button>
             </li>

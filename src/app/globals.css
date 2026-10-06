@@ -13,8 +13,8 @@
   --surface-3: #e4e0d5;
   --ink: #161816;
   /* Gris del brief (#6E756F) apenas más oscuro para cumplir contraste AA sobre marfil. */
-  --ink-2: #656c66;
-  --ink-3: #858b85;
+  --ink-2: #545a55;
+  --ink-3: #626863;
   --line: #e6e2d8;
   --line-strong: #d3cec2;
   --carbon: #161816;
@@ -94,7 +94,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0a0a0a; --bg-2: #050505; --surface: #141414; --surface-2: #1c1c1c; --surface-3: #282828;
-    --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #787671; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
+    --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #8a8884; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
     --carbon: #141414; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
     --accent: #ff5f24; --accent-bright: #ff7d4a; --accent-soft: rgb(var(--accent-rgb) / 14%); --accent-text: #ff7a45; --accent-rgb: 255 95 36;
     --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
@@ -108,7 +108,7 @@
 }
 :root[data-theme="dark"], .on-dark {
   --bg: #0a0a0a; --bg-2: #050505; --surface: #141414; --surface-2: #1c1c1c; --surface-3: #282828;
-  --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #787671; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
+  --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #8a8884; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
   --carbon: #141414; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
   --accent: #ff5f24; --accent-bright: #ff7d4a; --accent-soft: rgb(var(--accent-rgb) / 14%); --accent-text: #ff7a45; --accent-rgb: 255 95 36;
   --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;

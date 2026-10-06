@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Privacidad" };

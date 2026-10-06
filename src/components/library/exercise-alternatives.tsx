@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { exercises } from "@/data/mock-data";

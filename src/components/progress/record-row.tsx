@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { Trophy } from "lucide-react";
 import { StatusBadge } from "@/components/ui";
 import { exerciseName, recordValueLabel, type Unit } from "@/components/progress/format";

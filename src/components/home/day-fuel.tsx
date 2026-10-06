@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { Calculator, ChevronRight, Lightbulb, Plus, Scale } from "lucide-react";
 import { ButtonLink, ProgressRing } from "@/components/ui";
 import { WaterTracker } from "@/components/nutrition/water-tracker";

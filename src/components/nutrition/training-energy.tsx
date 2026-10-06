@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { ArrowRight } from "lucide-react";
 import { Button, NumberMetric } from "@/components/ui";
 import { activityRank, totalCalories, trainedActivity, weekTraining } from "@/lib/energy";

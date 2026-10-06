@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import type { CSSProperties, ReactNode } from "react";
 import { NumberMetric } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ export function StatCard({ label, value, unit, detail, icon, href, className }: 
 export function PhotoCard({ photo, tag, ratio, grain = true, priority = false, sizes = "(max-width: 720px) 100vw, 640px", className, children }: { photo: Photo; tag?: ReactNode; ratio?: string; grain?: boolean; priority?: boolean; sizes?: string; className?: string; children?: ReactNode }) {
   return (
     <div className={cn("photo photo-shade photo-card on-dark", grain && "grain", className)} style={ratio ? { aspectRatio: ratio } : undefined}>
-      <Image src={photo.src} alt={photo.alt} fill sizes={sizes} preload={priority} loading={priority ? "eager" : undefined} className="photo-img" style={{ objectPosition: photo.position ?? "center" }} />
+      <Image src={photo.src} alt={photo.alt} fill sizes={sizes} preload={priority} loading={priority ? "eager" : undefined} fetchPriority={priority ? "high" : undefined} className="photo-img" style={{ objectPosition: photo.position ?? "center" }} />
       {tag && <span className="photo-tag glass photo-card-tag">{tag}</span>}
       {children && <div className="photo-content photo-card-content">{children}</div>}
     </div>

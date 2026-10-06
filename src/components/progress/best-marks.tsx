@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { ArrowRight, Trophy } from "lucide-react";
 import { exerciseName, type Unit } from "@/components/progress/format";
 import type { PeriodSummary } from "@/components/progress/period";

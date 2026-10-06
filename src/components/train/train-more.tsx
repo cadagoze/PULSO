@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useEffect, useState, type ReactNode } from "react";
 import { BookOpen, CalendarRange, ChevronDown, ListChecks, Wrench } from "lucide-react";
 import { exercises } from "@/data/exercises";

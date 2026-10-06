@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { UserRound } from "lucide-react";
 import { useSettings } from "@/lib/store";
 import { formatLongDate } from "@/lib/utils";

@@ -24,11 +24,10 @@ function MealRow({ meal, next, fresh, onOpen }: { meal: Meal; next: boolean; fre
   const done = isLogged(meal);
   const detail = parseSummary(meal.summary);
   const facts = [detail.groups.join(", "), detail.satiety !== null ? `Saciedad ${detail.satiety}/5` : ""].filter(Boolean).join(" · ");
-  const label = `${done ? "Editar" : "Registrar"} ${meal.name}, ${meal.time}, ${meal.status.toLocaleLowerCase("es-CL")}${done && facts ? `: ${facts}` : ""}`;
-
   return (
-    <button type="button" className={cn("cnt-row cnt-meal", done && "is-done", fresh && "is-fresh")} onClick={onOpen} aria-label={label}>
+    <button type="button" className={cn("cnt-row cnt-meal", done && "is-done", fresh && "is-fresh")} onClick={onOpen}>
       <span className="cnt-row-body">
+        <span className="sr-only">{done ? "Editar" : "Registrar"}: </span>
         <span className="meta cnt-row-meta"><span className="num">{meal.time}</span> · {meal.status}</span>
         <strong className="cnt-row-title">{meal.name}</strong>
         {done && facts && <span className="cnt-row-detail">{facts}</span>}

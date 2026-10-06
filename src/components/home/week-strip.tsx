@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { ArrowRight, Check, Flame } from "lucide-react";
 import { NumberMetric } from "@/components/ui";
 import { weekStreak } from "@/lib/analytics";

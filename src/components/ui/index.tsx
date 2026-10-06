@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { AnchorHTMLAttributes, AnimationEvent, ButtonHTMLAttributes, CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, Minus, Plus, X } from "lucide-react";

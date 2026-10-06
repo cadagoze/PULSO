@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import type { CSSProperties } from "react";
 import { exercises } from "@/data/mock-data";
 import { exercisePhoto } from "@/components/exercises/exercise-visual";

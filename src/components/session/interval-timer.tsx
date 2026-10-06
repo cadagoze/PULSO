@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowLeft, Check, Pause, Play, RotateCcw, SkipForward, Square, Volume2, VolumeX } from "lucide-react";
@@ -141,11 +141,10 @@ function Setup({ onStart }: { onStart: (config: IntervalConfig) => void }) {
                 className={cn("ses-iv-preset rise", item.id === "custom" && "is-custom")}
                 style={{ "--i": index } as CSSProperties}
                 aria-pressed={active}
-                aria-label={`${item.name}: ${item.detail}`}
                 onClick={() => setSelected(item.id)}
               >
                 <span className="ses-iv-preset-head">
-                  <strong>{item.name}</strong>
+                  <strong>{item.name}<span className="sr-only">: {item.detail}</span></strong>
                   {active && <span className="ses-iv-preset-check" aria-hidden="true"><Check size={12} strokeWidth={3} /></span>}
                 </span>
                 <span className="ses-iv-preset-nums num" aria-hidden="true">{item.work}<small>s</small><i>/</i>{item.rest}<small>s</small></span>

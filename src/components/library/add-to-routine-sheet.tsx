@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { Check, Plus } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { recordFor } from "@/lib/training";

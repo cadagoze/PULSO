@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Calculator, Disc3, Dumbbell, Flame, StretchHorizontal, Timer } from "lucide-react";

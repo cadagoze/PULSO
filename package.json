@@ -14,7 +14,8 @@
     "build:vinext": "vite build",
     "start:vinext": "vite preview",
     "deploy:vinext": "vinext-cloudflare deploy",
-    "deploy:response-store": "cf deploy --prebuilt --mode production --worker pulso-response-store"
+    "deploy:response-store": "cf deploy --prebuilt --mode production --worker pulso-response-store",
+    "postinstall": "node scripts/patch-vinext.mjs"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",

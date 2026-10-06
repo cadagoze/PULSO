@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import { ArrowRight, Info, Minus, Plus, Shuffle, Zap } from "lucide-react";
 import { Button, MetaLine, SegmentedControl, Sheet } from "@/components/ui";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useState, type CSSProperties } from "react";
 import { CloudOff, CloudUpload, LogOut, Trash2 } from "lucide-react";
 import { Button, Sheet } from "@/components/ui";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowRight, ClipboardCheck, HeartPulse, House, Building2, SlidersHorizontal } from "lucide-react";

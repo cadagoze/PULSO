@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Info, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import { muscleLabels } from "@/data/catalog";

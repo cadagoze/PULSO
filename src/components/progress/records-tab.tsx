@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { ChevronRight, Medal } from "lucide-react";
 import { EmptyState, NumberMetric } from "@/components/ui";
 import { exerciseName, weightLabel, type Unit } from "@/components/progress/format";

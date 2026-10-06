@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/app-link";
 import { Check, Lock } from "lucide-react";
 import { levelLabels } from "@/data/catalog";
 import { equipmentText } from "@/components/exercises/exercise-technique";
