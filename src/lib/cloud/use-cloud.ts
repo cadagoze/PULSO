@@ -7,6 +7,8 @@ import { getCloudStatus, getServerCloudStatus, subscribeCloudStatus } from "./st
 const loadEngine = () => import("./engine");
 
 export const cloudActions = {
+  /** Descarga Firebase de antemano (al abrir la hoja de cuenta), para que la ventana de Google se abra al instante. */
+  preload: () => { void loadEngine().catch(() => undefined); },
   boot: async () => (await loadEngine()).bootCloud(),
   signInWithGoogle: async () => (await loadEngine()).signInWithGoogle(),
   signInWithEmail: async (email: string, password: string) => (await loadEngine()).signInWithEmail(email, password),

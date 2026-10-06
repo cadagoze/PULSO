@@ -7,12 +7,14 @@ import {
   createUserWithEmailAndPassword,
   deleteUser,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   type Auth,
   type User,
@@ -37,8 +39,8 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { PERSISTENT_CHANGE_EVENT, readPersistentRaw, writePersistentValue } from "@/lib/use-persistent-state";
-import { firebaseConfig } from "./config";
-import { CLOUD_SESSION_KEY, CLOUD_SYNC_KEY, setCloudStatus, type CloudUser } from "./status";
+import { authDomainFor, firebaseConfig } from "./config";
+import { CLOUD_SESSION_KEY, CLOUD_SYNC_KEY, redirectPending, setCloudStatus, setRedirectPending, type CloudUser } from "./status";
 import {
   applyRemoteRecord,
   cloudSpecs,
@@ -72,7 +74,7 @@ let session: Session | null = null;
 
 function services() {
   if (!auth || !db) {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp({ ...firebaseConfig, authDomain: authDomainFor(window.location.host) });
     auth = getAuth(app);
     auth.languageCode = "es";
     db = getFirestore(app);
@@ -401,6 +403,13 @@ class Session {
 export function bootCloud() {
   if (booted) return;
   booted = true;
+  // Vuelta de Google tras iniciar sesión por redirección: completa el ingreso o muestra el error.
+  if (redirectPending()) {
+    setCloudStatus({ phase: "starting" });
+    getRedirectResult(services().auth)
+      .catch((error: unknown) => setCloudStatus({ phase: "error", message: cloudErrorMessage(error) }))
+      .finally(() => setRedirectPending(false));
+  }
   onAuthStateChanged(services().auth, (user) => {
     if (user) {
       markSession(user);
@@ -423,11 +432,34 @@ export function bootCloud() {
   });
 }
 
+/**
+ * En iPhone y en la app instalada, la ventana emergente de Google no puede avisar de vuelta: ahí se
+ * entra por redirección (la página va a Google y vuelve). Sólo funciona desde el propio dominio.
+ */
+function preferRedirect() {
+  if (authDomainFor(window.location.host) !== window.location.host) return false;
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  return ios || window.matchMedia("(display-mode: standalone)").matches;
+}
+
 export async function signInWithGoogle() {
   bootCloud();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  await signInWithPopup(services().auth, provider);
+  const redirect = async () => {
+    setRedirectPending(true);
+    await signInWithRedirect(services().auth, provider);
+  };
+  if (preferRedirect()) return redirect();
+  try {
+    await signInWithPopup(services().auth, provider);
+  } catch (error) {
+    // Ventana bloqueada por el navegador: se intenta por redirección si se puede.
+    const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : "";
+    if ((code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") && authDomainFor(window.location.host) === window.location.host) return redirect();
+    throw error;
+  }
 }
 
 export async function signInWithEmail(email: string, password: string) {

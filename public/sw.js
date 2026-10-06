@@ -146,6 +146,8 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Inicio de sesión (puente a Firebase): siempre a la red, nunca guardado.
+  if (url.pathname.startsWith("/__/")) return;
 
   if (isAsset(url)) {
     event.respondWith(cacheFirst(request));

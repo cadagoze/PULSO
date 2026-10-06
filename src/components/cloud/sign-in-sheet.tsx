@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button, SegmentedControl, Sheet } from "@/components/ui";
 import { cloudActions } from "@/lib/cloud/use-cloud";
 
@@ -28,6 +28,11 @@ export function SignInSheet({ open, onClose, onDone }: { open: boolean; onClose:
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<"google" | "email" | "reset" | null>(null);
+
+  // Firebase se descarga al abrir la hoja: así la ventana de Google se abre en el mismo toque.
+  useEffect(() => {
+    if (open) cloudActions.preload();
+  }, [open]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -65,6 +70,9 @@ export function SignInSheet({ open, onClose, onDone }: { open: boolean; onClose:
         <Button variant="secondary" size="l" block disabled={busy !== null} onClick={() => void run("google", cloudActions.signInWithGoogle)}>
           <GoogleMark />{busy === "google" ? "Abriendo Google…" : "Continuar con Google"}
         </Button>
+        {busy === "google" && (
+          <button type="button" className="link-button cloud-cancel" onClick={() => setBusy(null)}>¿Se quedó pegado? Cancelar y reintentar</button>
+        )}
 
         <p className="cloud-divider"><span>o con tu correo</span></p>
 

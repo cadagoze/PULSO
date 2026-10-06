@@ -40,3 +40,25 @@ export function hasCloudSession() {
     return false;
   }
 }
+
+/** Inicio de sesión con Google por redirección en curso (la página fue a Google y debe volver a completarlo). */
+const AUTH_REDIRECT_KEY = "pulso:auth-redirect";
+const REDIRECT_TTL_MS = 15 * 60_000;
+
+export function redirectPending() {
+  try {
+    const started = Number(window.localStorage.getItem(AUTH_REDIRECT_KEY));
+    return started > 0 && Date.now() - started < REDIRECT_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function setRedirectPending(pending: boolean) {
+  try {
+    if (pending) window.localStorage.setItem(AUTH_REDIRECT_KEY, String(Date.now()));
+    else window.localStorage.removeItem(AUTH_REDIRECT_KEY);
+  } catch {
+    // Sin almacenamiento, la sesión igual se recupera al volver a abrir la app.
+  }
+}
