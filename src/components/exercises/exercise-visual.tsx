@@ -22,18 +22,25 @@ export function exercisePhoto(exercise: Exercise, panel: "start" | "end" = "end"
 export function ExerciseVisual({ exercise, size = "card", className, eager = false }: { exercise: Exercise; size?: "thumb" | "card" | "hero" | "immersive"; className?: string; eager?: boolean }) {
   const illustration = exerciseIllustrations[exercise.id];
   if (size === "immersive") {
-    const panel = exercisePhoto(exercise, "end");
-    if (panel) {
+    // Movimiento: alterna sola entre la posición inicial y la final (con «reducir movimiento», queda fija).
+    const start = exercisePhoto(exercise, "start");
+    const end = exercisePhoto(exercise, "end");
+    if (start && end) {
       return (
-        <div className={cn("exercise-visual exercise-visual-immersive photo on-dark", className)}>
-          <Image src={panel} alt={`${exercise.name}: posición final`} fill sizes="(max-width: 720px) 100vw, 720px" preload={eager} loading={eager ? "eager" : undefined} className="photo-img" style={{ objectPosition: "center 30%" }} />
+        <div className={cn("exercise-visual exercise-visual-immersive photo on-dark ex-move", className)} role="img" aria-label={`${exercise.name}: posición inicial y final`}>
+          <Image src={start} alt="" fill sizes="(max-width: 720px) 100vw, 720px" preload={eager} loading={eager ? "eager" : undefined} className="photo-img ex-move-frame is-start" style={{ objectPosition: "center 30%" }} />
+          <Image src={end} alt="" fill sizes="(max-width: 720px) 100vw, 720px" preload={eager} loading={eager ? "eager" : undefined} className="photo-img ex-move-frame is-end" style={{ objectPosition: "center 30%" }} />
+          <MoveSteps />
         </div>
       );
     }
     if (illustration) {
       return (
-        <div className={cn("exercise-visual exercise-visual-immersive exercise-visual-ill atmosphere grain on-dark", className)}>
-          <ExerciseIllustration spec={illustration} primary={exercise.primary} labels title={`Ilustración de ${exercise.name}: posición inicial y final`} />
+        <div className={cn("exercise-visual exercise-visual-immersive exercise-visual-ill atmosphere grain on-dark ex-move", className)} role="img" aria-label={`Ilustración de ${exercise.name}: posición inicial y final`}>
+          <div className="ex-move-frame is-start"><ExerciseIllustration spec={illustration} primary={exercise.primary} panels="start" /></div>
+          <div className="ex-move-frame is-end"><ExerciseIllustration spec={illustration} primary={exercise.primary} panels="end" /></div>
+          <div className="ex-move-still"><ExerciseIllustration spec={illustration} primary={exercise.primary} labels /></div>
+          <MoveSteps />
         </div>
       );
     }
@@ -62,6 +69,16 @@ export function ExerciseVisual({ exercise, size = "card", className, eager = fal
     <div className={cn("exercise-visual", "exercise-visual-map", `exercise-visual-${size === "immersive" ? "hero" : size}`, className)}>
       <MuscleMap primary={exercise.primary} secondary={exercise.secondary} captions={size !== "thumb" && size !== "card"} views={size === "thumb" ? [frontOrBack(exercise)] : undefined} label={`Músculos trabajados: ${exercise.muscle}`} />
     </div>
+  );
+}
+
+/** «Inicio · Final» sincronizado con la animación. */
+function MoveSteps() {
+  return (
+    <span className="ex-move-steps" aria-hidden="true">
+      <span className="is-start">Inicio</span>
+      <span className="is-end">Final</span>
+    </span>
   );
 }
 

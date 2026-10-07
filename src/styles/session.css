@@ -458,3 +458,32 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
   .ses-toast { bottom: 116px; }
   .ses-iv-run-main { gap: 24px; }
 }
+
+/* ─── Movimiento del ejercicio (inicio ↔ final) ────────────────────────── */
+.ex-move-frame { position: absolute; inset: 0; animation: ex-move 3.6s var(--ease-standard) infinite; }
+.ex-move-frame.is-end { animation-delay: -1.8s; }
+/* Bloque (no grilla): así la figura se ajusta al alto libre entre la barra y el nombre. */
+.exercise-visual-ill.ex-move .ex-move-frame, .exercise-visual-ill.ex-move .ex-move-still { box-sizing: border-box; padding: inherit; display: block; }
+.exercise-visual-ill.ex-move .ex-move-frame > *, .exercise-visual-ill.ex-move .ex-move-still > * { display: block; width: 100%; height: 100%; }
+.ex-move-still { position: absolute; inset: 0; visibility: hidden; }
+@keyframes ex-move { 0%, 38% { opacity: 1; } 50%, 88% { opacity: 0; } 100% { opacity: 1; } }
+.ex-move-steps { position: absolute; z-index: 2; right: var(--gutter); top: calc(var(--safe-t) + 76px); display: grid; pointer-events: none; }
+/* En la sesión: entre las flechas y el nombre del ejercicio. */
+.ses-hero .ex-move-steps { top: auto; bottom: 88px; }
+.ex-move-steps span { grid-area: 1 / 1; justify-self: end; padding: 4px 10px; border-radius: var(--radius-pill); background: rgb(10 10 10 / 50%); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #fff; animation: ex-move 3.6s var(--ease-standard) infinite; }
+.ex-move-steps .is-end { animation-delay: -1.8s; }
+@media (max-height: 600px) { .ex-move-steps { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ex-move-frame, .ex-move-steps span { animation: none; }
+  .ex-move-frame.is-start { opacity: 0; }
+  .ex-move-steps { display: none; }
+  .exercise-visual-ill.ex-move .ex-move-frame { visibility: hidden; }
+  .exercise-visual-ill.ex-move .ex-move-still { visibility: visible; }
+}
+
+/* ─── Claves de técnica (bajo el nombre del ejercicio) ─────────────────── */
+.ses-cues { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.ses-cues ol { list-style: none; margin: 0; padding: 0; display: contents; }
+.ses-cues li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 12.5px; font-weight: 600; line-height: 1.2; color: var(--ink); }
+.ses-cues li .num { display: grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); font-size: 10.5px; font-weight: 700; color: var(--accent-ink); }
+.ses-cues-more { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 600; color: var(--accent-text); box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 35%); }

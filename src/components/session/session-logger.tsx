@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link2, StickyNote } from "lucide-react";
+import { Link2, Maximize2, StickyNote } from "lucide-react";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
 import { MetaLine } from "@/components/ui";
 import { beep, primeAudio, speak, useWakeLock, vibrate } from "@/lib/feedback";
@@ -460,6 +460,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         next={nextItem?.exercise.name}
         onPrev={() => previousItem && goTo(previousItem.index)}
         onNext={() => nextItem && goTo(nextItem.index)}
+        onTechnique={record && exercise ? () => openMenu(index, { view: "technique" }) : undefined}
         topBar={(
           <SessionTopBar
             draft={draft}
@@ -490,6 +491,16 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             )}
             <h1 className="ses-name">{exercise.name}</h1>
             <MetaLine className="ses-muscles" items={primaryMuscles(exercise)} />
+            <div className="ses-cues">
+              <ol aria-label="Claves de técnica">
+                {exercise.phases.map((phase, position) => (
+                  <li key={phase}><span className="num" aria-hidden="true">{position + 1}</span>{phase}</li>
+                ))}
+              </ol>
+              <button type="button" className="ses-cues-more" onClick={() => openMenu(index, { view: "technique" })}>
+                <Maximize2 size={13} aria-hidden="true" />Técnica
+              </button>
+            </div>
             {record.note && <p className="ses-head-note"><StickyNote size={14} aria-hidden="true" /><span>{record.note}</span></p>}
           </header>
         ) : (
