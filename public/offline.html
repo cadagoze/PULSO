@@ -6,25 +6,25 @@
   <meta name="theme-color" content="#0a0a0a">
   <title>Sin conexión | PULSO</title>
   <style>
-    :root { --bg: #0a0a0a; --ink: #f4f2ee; --ink-2: #a8a6a1; --carbon: #141414; --lime: #ff5f24; --lime-ink: #1c0a02; --lime-text: #ff7a45; }
+    :root { --bg: #0a0a0a; --ink: #ffffff; --ink-2: #a1a5a2; --carbon: #151515; --accent: #ff351f; --accent-ink: #1c0a02; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     main { max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
-    .mark { font-weight: 800; font-size: 22px; letter-spacing: -.04em; }
-    .mark span { color: var(--lime-text); }
+    .mark { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 20px; font-stretch: expanded; letter-spacing: .04em; }
+    .mark svg { height: 22px; width: auto; fill: var(--accent); }
     h1 { margin: 8px 0 0; font-size: 36px; line-height: 1; letter-spacing: -.045em; font-weight: 650; }
     p { margin: 0; color: var(--ink-2); line-height: 1.55; }
-    .card { padding: 20px; border-radius: 28px; background: var(--carbon); color: #f4f2ee; }
-    .card p { color: #a8a6a1; }
+    .card { padding: 20px; border-radius: 28px; background: var(--carbon); color: var(--ink); }
+    .card p { color: var(--ink-2); }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; }
     a, button { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 24px; border-radius: 999px; font: inherit; font-weight: 600; text-decoration: none; border: 0; cursor: pointer; }
-    .primary { background: var(--lime); color: var(--lime-ink); }
+    .primary { background: var(--accent); color: var(--accent-ink); }
     .secondary { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 30%, transparent); }
   </style>
 </head>
 <body>
   <main>
-    <div class="mark">PULSO<span>.</span></div>
+    <div class="mark"><svg viewBox="0 0 100 88" aria-hidden="true"><path d="M0 0H84A16 16 0 0 1 100 16V46A16 16 0 0 1 84 62H36V49A7 7 0 0 1 43 42H67A7 7 0 0 0 74 35V24.5H0Z"/><path d="M0 54L32.5 28V62L0 88Z"/></svg>PULSO</div>
     <h1>Esta pantalla aún no está guardada en tu teléfono.</h1>
     <p>Estás sin conexión. Las pantallas que ya abriste funcionan igual, y todo lo que registras se guarda en este dispositivo.</p>
     <div class="card"><p>Puedes entrenar sin internet: abre Hoy o Entrenar e inicia tu sesión como siempre.</p></div>

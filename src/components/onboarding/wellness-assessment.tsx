@@ -29,6 +29,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui";
 import { usePreference, useSettings } from "@/lib/store";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
@@ -360,7 +361,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
       <div className="onb-scroll" ref={scrollRef}>
         <header className="onb-head">
           <div className="onb-top">
-            <span className="wordmark">PULSO<span>.</span></span>
+            <Logo />
             {onCancel && (
               <button type="button" className="btn-icon small" onClick={onCancel} aria-label="Cerrar evaluación">
                 <X size={18} />

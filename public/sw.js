@@ -8,7 +8,7 @@
  *
  * Sube VERSION si cambias este archivo de forma incompatible.
  */
-const VERSION = "pulso-v4";
+const VERSION = "pulso-v5";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 

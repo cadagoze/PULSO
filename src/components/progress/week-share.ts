@@ -1,3 +1,4 @@
+import { isotype } from "@/components/brand/isotype";
 import { volumeLabel, type Unit } from "@/components/progress/format";
 import type { WeekRecap } from "@/lib/week-recap";
 import { formatShortDate, toDisplayWeight } from "@/lib/utils";
@@ -52,22 +53,23 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
   const css = getComputedStyle(document.documentElement);
   const display = css.getPropertyValue("--font-archivo").trim() || "system-ui, sans-serif";
   const body = css.getPropertyValue("--font-geist").trim() || "system-ui, sans-serif";
-  const accent = css.getPropertyValue("--accent").trim() || "#ff5a1f";
+  const accent = css.getPropertyValue("--accent").trim() || "#ff351f";
+  const accentBright = css.getPropertyValue("--accent-bright").trim() || "#ff7a2f";
   const accentInk = css.getPropertyValue("--accent-ink").trim() || "#0a0a0a";
   await Promise.all([document.fonts.load(`800 100px ${display}`), document.fonts.load(`600 30px ${body}`)]).catch(() => undefined);
 
-  const font = (weight: number, size: number, family: string, condensed = false, spacing = 0) => {
+  const font = (weight: number, size: number, family: string, stretch: CanvasFontStretch = "normal", spacing = 0) => {
     ctx.font = `${weight} ${size}px ${family}`;
-    if ("fontStretch" in ctx) ctx.fontStretch = condensed ? "condensed" : "normal";
+    if ("fontStretch" in ctx) ctx.fontStretch = stretch;
     if ("letterSpacing" in ctx) ctx.letterSpacing = `${spacing}px`;
   };
   /** Achica el texto hasta que quepa en el ancho. */
-  const fit = (value: string, weight: number, size: number, family: string, maxWidth: number, condensed = false) => {
+  const fit = (value: string, weight: number, size: number, family: string, maxWidth: number, stretch: CanvasFontStretch = "normal") => {
     let current = size;
-    font(weight, current, family, condensed);
+    font(weight, current, family, stretch);
     while (ctx.measureText(value).width > maxWidth && current > 16) {
       current -= 4;
-      font(weight, current, family, condensed);
+      font(weight, current, family, stretch);
     }
     return current;
   };
@@ -88,36 +90,47 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
   glow(W * 0.92, H * 0.05, 760, 0.42);
   glow(W * 0.05, H * 0.98, 620, 0.12);
 
-  // Marca y semana.
+  // Marca (isotipo con el gradiente y «PULSO» ancho, como el logo) y semana.
+  const markW = 52;
+  const markTop = 118 - (markW * isotype.ratio) / 2;
+  ctx.save();
+  ctx.translate(P, markTop);
+  ctx.scale(markW / 100, markW / 100);
+  const brandFill = ctx.createLinearGradient(0, 0, 100, 88);
+  brandFill.addColorStop(0, accent);
+  brandFill.addColorStop(1, accentBright);
+  ctx.fillStyle = brandFill;
+  for (const d of isotype.paths) ctx.fill(new Path2D(d));
+  ctx.restore();
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#fff";
-  font(800, 46, display, true, 6);
+  font(800, 38, display, "expanded", 1.5);
   ctx.textAlign = "left";
-  ctx.fillText("PULSO", P, 132);
+  ctx.fillText("PULSO", P + markW + 18, 132);
   ctx.fillStyle = muted;
-  font(600, 25, body, false, 3);
+  font(600, 25, body, "normal", 3);
   ctx.textAlign = "right";
   ctx.fillText(recap.label.toUpperCase(), W - P, 128);
   ctx.textAlign = "left";
 
   // Título.
   ctx.fillStyle = "#fff";
-  fit("MI SEMANA", 800, 176, display, W - 2 * P, true);
+  fit("MI SEMANA", 800, 176, display, W - 2 * P, "condensed");
   ctx.fillText("MI SEMANA", P - 4, 318);
   if (recap.current) {
     ctx.fillStyle = accent;
-    font(700, 25, body, false, 4);
+    font(700, 25, body, "normal", 4);
     ctx.fillText("EN CURSO", P, 368);
   }
 
   // Entrenamientos en grande y la meta.
   ctx.fillStyle = accent;
-  font(800, 320, display, true);
+  font(800, 320, display, "condensed");
   const big = String(recap.sessions);
   ctx.fillText(big, P - 8, 650);
   const x = P + ctx.measureText(big).width + 34;
   ctx.fillStyle = "#fff";
-  fit(recap.sessions === 1 ? "ENTRENAMIENTO" : "ENTRENAMIENTOS", 800, 64, display, W - P - x, true);
+  fit(recap.sessions === 1 ? "ENTRENAMIENTO" : "ENTRENAMIENTOS", 800, 64, display, W - P - x, "condensed");
   ctx.fillText(recap.sessions === 1 ? "ENTRENAMIENTO" : "ENTRENAMIENTOS", x, 530);
   const met = recap.sessions >= recap.goal;
   const left = recap.goal - recap.sessions;
@@ -145,7 +158,7 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
       ctx.setLineDash([]);
     }
     ctx.fillStyle = day.trained ? accentInk : day.future ? "rgba(255, 255, 255, .3)" : muted;
-    font(800, 40, display, true);
+    font(800, 40, display, "condensed");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(DAY_LETTERS[index], cx, cy + 2);
@@ -170,10 +183,10 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
     const sx = P + (index % 2) * (column + 40);
     const sy = top + Math.floor(index / 2) * rowHeight;
     ctx.fillStyle = muted;
-    font(600, 23, body, false, 3);
+    font(600, 23, body, "normal", 3);
     ctx.fillText(stat.label, sx, sy);
     ctx.fillStyle = "#fff";
-    font(800, compact ? 64 : 84, display, true);
+    font(800, compact ? 64 : 84, display, "condensed");
     ctx.fillText(stat.value, sx, sy + valueOffset);
     if (stat.unit) {
       const width = ctx.measureText(stat.value).width;
@@ -191,7 +204,7 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
     ctx.fillRect(P, y - 44, W - 2 * P, 2);
     for (const line of extras) {
       ctx.fillStyle = muted;
-      font(600, 22, body, false, 3);
+      font(600, 22, body, "normal", 3);
       ctx.fillText(line.label.toUpperCase(), P, y + 8);
       ctx.fillStyle = "#fff";
       const value = line.value.charAt(0).toUpperCase() + line.value.slice(1);
@@ -203,7 +216,7 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
 
   // Pie.
   ctx.fillStyle = "rgba(255, 255, 255, .42)";
-  font(600, 24, body, false, 1);
+  font(600, 24, body, "normal", 1);
   ctx.fillText("Tu salud en movimiento.", P, H - 52);
 
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Sin imagen"))), "image/png"));

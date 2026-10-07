@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AnimationEvent, CSSProperties } from "react";
 import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui";
+import { Logo } from "@/components/brand/logo";
 import { SignInSheet } from "@/components/cloud/sign-in-sheet";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: n
       </div>
       <div className="onb-splash-content">
         <header className="onb-splash-top">
-          <span className="wordmark">PULSO<span>.</span></span>
+          <Logo gradient className="onb-splash-logo" />
         </header>
         <div className="onb-splash-center">
           <p className="onb-splash-kicker rise" style={{ "--i": 2 } as CSSProperties}>Disciplina</p>

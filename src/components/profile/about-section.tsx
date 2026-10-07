@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { HeartPulse, ShieldCheck } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 export const appVersion = "2.0";
 
@@ -11,14 +12,14 @@ export function AboutSection({ order = 0 }: { order?: number }) {
         <h2 id="acerca-title" className="meta"><span className="prof-group-index num" aria-hidden="true">06</span>Acerca de</h2>
       </header>
       <div className="prof-about-body">
-        <p className="wordmark prof-about-mark">PULSO<span>.</span></p>
+        <Logo className="prof-about-mark" />
         <div className="prof-about-lead">
           <p className="prof-about-tagline">Tu salud en movimiento.</p>
           <p className="prof-about-idea">Entrenamiento que se adapta a tu vida.</p>
         </div>
         <p className="prof-about-line">
           <ShieldCheck size={16} aria-hidden="true" />
-          <span>Tus datos viven sólo en este dispositivo. Sin cuentas, sin servidores, sin anuncios.</span>
+          <span>Tus datos viven en este dispositivo. La cuenta es opcional y sólo sirve para respaldarlos y sincronizarlos. Sin anuncios.</span>
         </p>
         <p className="prof-about-line">
           <HeartPulse size={16} aria-hidden="true" />

@@ -2,6 +2,7 @@
 
 import Link from "@/components/ui/app-link";
 import { UserRound } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { useSettings } from "@/lib/store";
 import { formatLongDate } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export function HomeHeader({ now, line }: { now: number; line: string }) {
   return (
     <header className="home-header">
       <div className="home-header-bar">
-        <span className="wordmark">PULSO<span>.</span></span>
+        <Logo />
         <Link href="/perfil" className="home-avatar" aria-label="Tu perfil">
           {photo ? <span className="home-avatar-photo" style={{ backgroundImage: `url("${photo}")` }} /> : name ? <span>{initials(name)}</span> : <UserRound size={19} />}
         </Link>

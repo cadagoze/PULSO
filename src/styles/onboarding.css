@@ -96,7 +96,7 @@
 .onb-splash-floor { top: auto !important; height: 46% !important; object-fit: cover; object-position: center 70%; filter: grayscale(1) contrast(1.25) brightness(.62); -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%); mask-image: linear-gradient(to bottom, transparent, #000 45%); animation: onb-settle 1.6s var(--ease-standard) backwards; }
 .onb-splash-content { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 28px; width: min(100%, 1180px); min-height: 0; margin: 0 auto; overflow-y: auto; padding: calc(var(--safe-t) + 20px) var(--gutter) calc(var(--safe-b) + 22px); }
 .onb-splash-top { display: flex; align-items: center; justify-content: center; }
-.onb-splash-top .wordmark span { color: var(--onb-accent); }
+.onb-splash-logo { font-size: 22px; }
 .onb-splash-center { display: flex; flex-direction: column; align-items: center; gap: 18px; margin: auto 0; text-align: center; }
 .onb-splash-kicker { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: .3em; line-height: 1.6; text-transform: uppercase; color: rgb(255 255 255 / 72%); }
 .onb-splash-rule { width: 26px; height: 1.5px; background: rgb(255 255 255 / 55%); }

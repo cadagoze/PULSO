@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { AnimationEvent, CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, HeartPulse, RotateCcw, X } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { Button, NumberMetric } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { AssessmentProfile } from "./wellness-assessment";
@@ -48,7 +49,7 @@ export function AssessmentResult({ profile, retake, disclaimer, onActivate, onBa
       </div>
       <div className="onb-result-scroll">
         <header className="onb-top">
-          <span className="wordmark">PULSO<span>.</span></span>
+          <Logo />
           {onCancel && (
             <button type="button" className="btn-icon small glass" onClick={onCancel} aria-label="Cerrar evaluación">
               <X size={18} />

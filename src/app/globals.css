@@ -1,49 +1,53 @@
 @import "tailwindcss";
 
 /* PULSO — sistema visual.
- * Marfil, carbón, verde bosque y lima como identidad; naranja sólo como acento puntual.
- * Archivo (ancho variable) para títulos y números; Geist para la interfaz; Geist Mono para etiquetas editoriales.
+ * Paleta oficial (2026-10-07): negro #0a0a0a, carbón #151515, blanco roto #f4f3ee y rojo-naranja #ff351f
+ * como color de marca; naranja cálido #ff7a2f sólo como complemento (gradiente de marca, brillos).
+ * Negro y blanco premium con la marca en ~10 % de la pantalla: el rojo pesa porque no está en todas partes.
+ * Archivo (ancho variable) para títulos, números y el logo; Geist para la interfaz; Geist Mono para etiquetas editoriales.
  * `.on-dark` aplica los colores oscuros a una zona (sesión, fotos, barra de navegación) sin cambiar el tema.
  */
 :root {
-  --bg: #f5f3ec;
+  --bg: #f4f3ee;
   --bg-2: #ebe8df;
   --surface: #ffffff;
   --surface-2: #f1eee6;
   --surface-3: #e4e0d5;
-  --ink: #161816;
-  /* Gris del brief (#6E756F) apenas más oscuro para cumplir contraste AA sobre marfil. */
+  --ink: #171917;
+  /* Gris de la paleta (#6F756F) apenas más oscuro para cumplir contraste AA sobre blanco roto. */
   --ink-2: #545a55;
   --ink-3: #626863;
-  --line: #e6e2d8;
-  --line-strong: #d3cec2;
-  --carbon: #161816;
-  --carbon-2: #212421;
-  --on-carbon: #f2f1ec;
+  --line: #d9ddd8;
+  --line-strong: #c9cec8;
+  --carbon: #151515;
+  --carbon-2: #1f1f1f;
+  --on-carbon: #f4f3ee;
   --on-carbon-2: #a9aea8;
   --forest: #1f1a17;
   --forest-2: #151110;
   --on-forest: #f3efe9;
   --on-forest-2: #b3aaa2;
-  /* Naranja fuego: acento único (botones, avance, navegación). Texto oscuro encima. */
-  --accent: #ff5a1f;
-  --accent-bright: #ff7a45;
+  /* Rojo-naranja PULSO: logo, botón principal, avance activo y selección. Texto oscuro encima.
+     Como texto sobre fondos claros va más oscuro (AA); el naranja cálido sólo acompaña al rojo. */
+  --accent: #ff351f;
+  --accent-bright: #ff7a2f;
   --accent-ink: #1c0a02;
-  --accent-soft: #ffe6da;
-  --accent-text: #b83a0c;
-  --accent-rgb: 255 90 31;
+  --accent-soft: #ffe3de;
+  --accent-text: #c42a12;
+  --accent-rgb: 255 53 31;
   /* Dorado: rachas y récords. */
   --gold: #e0a020;
   --gold-soft: #fbf0d6;
   --gold-text: #8a5b00;
   --violet: #7657ff;
   --violet-soft: #ece8ff;
+  /* Estados (no decorativos). En claro, error y advertencia más oscuros que la paleta para leerse como texto. */
   --danger: #c43d32;
   --danger-soft: #fbe9e6;
   --warning: #a86a00;
   --warning-soft: #f8eed6;
   --map-base: #e3dfd4;
-  --map-line: #f5f3ec;
+  --map-line: #f4f3ee;
   --ill-ink: #1f1d1b;
   --ill-ink-far: #a9b3a8;
   --ill-accent: var(--accent);
@@ -93,30 +97,30 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0a0a; --bg-2: #050505; --surface: #141414; --surface-2: #1c1c1c; --surface-3: #282828;
-    --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #8a8884; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
-    --carbon: #141414; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
-    --accent: #ff5f24; --accent-bright: #ff7d4a; --accent-soft: rgb(var(--accent-rgb) / 14%); --accent-text: #ff7a45; --accent-rgb: 255 95 36;
+    --bg: #0a0a0a; --bg-2: #050505; --surface: #151515; --surface-2: #1c1c1c; --surface-3: #282828;
+    --ink: #ffffff; --ink-2: #a1a5a2; --ink-3: #8a8f8b; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
+    --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
+    --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
     --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #ff7b70; --danger-soft: rgb(255 123 112 / 13%); --warning: #f2b44c; --warning-soft: rgb(242 180 76 / 13%);
-    --map-base: #2b2b2b; --map-line: #141414;
+    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%);
+    --map-base: #2b2b2b; --map-line: #151515;
     --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
     --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);
-    --ill-ink: #ece9e4; --ill-ink-far: #6f6c68; --ill-accent: var(--accent); --ill-accent-far: color-mix(in srgb, var(--accent) 40%, #141414); --ill-metal: #aaa7a2; --ill-hub: #3b3936; --ill-prop: #2d2b29; --ill-pad: #57504a; --ill-band: #9b87ff; --ill-cable: #8f8c88; --ill-ground: #2d2b29;
+    --ill-ink: #ece9e4; --ill-ink-far: #6f6c68; --ill-accent: var(--accent); --ill-accent-far: color-mix(in srgb, var(--accent) 40%, #151515); --ill-metal: #aaa7a2; --ill-hub: #3b3936; --ill-prop: #2d2b29; --ill-pad: #57504a; --ill-band: #9b87ff; --ill-cable: #8f8c88; --ill-ground: #2d2b29;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"], .on-dark {
-  --bg: #0a0a0a; --bg-2: #050505; --surface: #141414; --surface-2: #1c1c1c; --surface-3: #282828;
-  --ink: #f4f2ee; --ink-2: #a8a6a1; --ink-3: #8a8884; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
-  --carbon: #141414; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
-  --accent: #ff5f24; --accent-bright: #ff7d4a; --accent-soft: rgb(var(--accent-rgb) / 14%); --accent-text: #ff7a45; --accent-rgb: 255 95 36;
+  --bg: #0a0a0a; --bg-2: #050505; --surface: #151515; --surface-2: #1c1c1c; --surface-3: #282828;
+  --ink: #ffffff; --ink-2: #a1a5a2; --ink-3: #8a8f8b; --line: rgb(255 255 255 / 8%); --line-strong: rgb(255 255 255 / 15%);
+  --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
+  --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
   --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #ff7b70; --danger-soft: rgb(255 123 112 / 13%); --warning: #f2b44c; --warning-soft: rgb(242 180 76 / 13%);
-  --map-base: #2b2b2b; --map-line: #141414;
+  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%);
+  --map-base: #2b2b2b; --map-line: #151515;
   --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
   --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);
-  --ill-ink: #ece9e4; --ill-ink-far: #6f6c68; --ill-accent: var(--accent); --ill-accent-far: color-mix(in srgb, var(--accent) 40%, #141414); --ill-metal: #aaa7a2; --ill-hub: #3b3936; --ill-prop: #2d2b29; --ill-pad: #57504a; --ill-band: #9b87ff; --ill-cable: #8f8c88; --ill-ground: #2d2b29;
+  --ill-ink: #ece9e4; --ill-ink-far: #6f6c68; --ill-accent: var(--accent); --ill-accent-far: color-mix(in srgb, var(--accent) 40%, #151515); --ill-metal: #aaa7a2; --ill-hub: #3b3936; --ill-prop: #2d2b29; --ill-pad: #57504a; --ill-band: #9b87ff; --ill-cable: #8f8c88; --ill-ground: #2d2b29;
   color-scheme: dark;
 }
 .on-dark { color: var(--ink); }
@@ -406,8 +410,10 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 }
 
 /* ─── Marca ────────────────────────────────────────────────────────────── */
-.wordmark { font-family: var(--font-display); font-stretch: 118%; font-weight: 700; font-size: 20px; letter-spacing: -.008em; line-height: 1; }
-.wordmark span { color: var(--accent-text); }
+/* Logo: isotipo del color de acento y «PULSO» en Archivo ancho (125 %). Se escala con font-size. */
+.logo { display: inline-flex; align-items: center; gap: .42em; font-size: 19px; line-height: 1; }
+.isotype { flex: none; width: auto; height: 1.12em; fill: var(--accent); }
+.wordmark { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; letter-spacing: .03em; line-height: 1; }
 
 /* ─── Mapa muscular ───────────────────────────────────────────────────── */
 .muscle-map { display: flex; gap: 6px; justify-content: center; }

@@ -11,7 +11,7 @@ export type AccentName = "fire" | "magenta" | "violet" | "lime" | "electric";
 export type PhotoPreference = "auto" | "female" | "male" | "mixed";
 
 export const accentOptions: Array<{ value: AccentName; label: string; swatch: string }> = [
-  { value: "fire", label: "Fuego", swatch: "#ff5a1f" },
+  { value: "fire", label: "Fuego", swatch: "#ff351f" },
   { value: "magenta", label: "Magenta", swatch: "#ff2e88" },
   { value: "violet", label: "Violeta", swatch: "#9b6bff" },
   { value: "lime", label: "Lima", swatch: "#c9ff68" },

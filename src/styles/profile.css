@@ -164,7 +164,7 @@ button.prof-avatar:active { transform: scale(.96); }
 .accent-swatch:active { transform: scale(.97); }
 .accent-swatch.is-selected { box-shadow: inset 0 0 0 2px var(--ink); }
 .accent-dot { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--swatch); color: #111; }
-.accent-dot.is-auto { background: conic-gradient(#ff5a1f, #ff2e88, #9b6bff, #2fb8ff, #c9ff68, #ff5a1f); color: #fff; }
+.accent-dot.is-auto { background: conic-gradient(#ff351f, #ff2e88, #9b6bff, #2fb8ff, #c9ff68, #ff351f); color: #fff; }
 @media (min-width: 560px) { .accent-picker { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .photo-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .photo-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-3); color: var(--ink); }
