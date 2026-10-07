@@ -60,6 +60,37 @@ export function beep({ count = 1, frequency = 880, duration = 0.12, finalLong = 
   }
 }
 
+/**
+ * Metrónomo con el reloj de audio: programa cada golpe un poco antes, así el ritmo no se atrasa aunque
+ * la pantalla vaya lenta. El primer golpe de cada `accentEvery` suena más agudo. Devuelve cómo detenerlo.
+ */
+export function startMetronome(bpm: number, accentEvery = 4) {
+  const ctx = context();
+  if (!ctx) return () => undefined;
+  const interval = 60 / bpm;
+  let next = ctx.currentTime + 0.05;
+  let beat = 0;
+  const schedule = () => {
+    while (next < ctx.currentTime + 0.3) {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "square";
+      oscillator.frequency.value = beat % accentEvery === 0 ? 1320 : 990;
+      gain.gain.setValueAtTime(0.0001, next);
+      gain.gain.exponentialRampToValueAtTime(0.12, next + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, next + 0.05);
+      oscillator.connect(gain).connect(ctx.destination);
+      oscillator.start(next);
+      oscillator.stop(next + 0.06);
+      next += interval;
+      beat += 1;
+    }
+  };
+  schedule();
+  const timer = window.setInterval(schedule, 100);
+  return () => window.clearInterval(timer);
+}
+
 export function vibrate(pattern: number | number[]) {
   try {
     navigator.vibrate?.(pattern);

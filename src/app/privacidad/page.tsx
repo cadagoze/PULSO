@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <article className="privacy">
         <section>
           <h2>Qué guardamos</h2>
-          <p>Lo que registras en la app: entrenamientos, comidas, agua, peso, medidas, tu evaluación inicial, tu plan de alimentación, tus ajustes y tu foto de perfil. Parte de esto es información sobre tu salud.</p>
+          <p>Lo que registras en la app: entrenamientos, comidas, agua, peso, medidas, tests físicos, tu evaluación inicial, tu plan de alimentación, tus ajustes y tu foto de perfil. Parte de esto es información sobre tu salud.</p>
         </section>
         <section>
           <h2>Dónde se guarda</h2>

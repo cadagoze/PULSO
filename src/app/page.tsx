@@ -14,6 +14,7 @@ import { localDateKey } from "@/lib/utils";
 import type { ReadinessEntry } from "@/types";
 import { completedSets, totalSets } from "@/lib/training";
 import { ChallengeRow } from "@/components/home/challenge-row";
+import { FitnessTestRow } from "@/components/home/fitness-test-row";
 
 /** Frase bajo el saludo, según lo que toca hoy (el progreso de la semana va en la portada). */
 function homeLine({ inProgress, ready, readiness }: { inProgress: boolean; ready: boolean; readiness?: ReadinessEntry["recommendation"] }) {
@@ -59,6 +60,7 @@ export default function Home() {
         {showReadiness && <ReadinessCard today={today} now={now} />}
         <WeekStrip now={now} />
         <ChallengeRow />
+        <FitnessTestRow />
       </div>
     </div>
   );

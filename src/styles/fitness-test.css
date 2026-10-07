@@ -1,0 +1,137 @@
+/* PULSO — Test físico: pantalla guiada (oscura, como la sesión), informe y aviso en Inicio. */
+
+.ft-screen { min-height: 100svh; }
+
+/* ─── Introducción ───────────────────────────────────────────────────── */
+.ft-intro { gap: 26px; }
+.ft-plan { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ft-plan-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--ring); }
+.ft-plan-item .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ft-plan-item strong { font-size: 15px; font-weight: 600; }
+.ft-plan-item small { font-size: 13px; color: var(--ink-2); }
+.ft-plan-num { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 17px; font-weight: 800; color: var(--accent-text); }
+.ft-plan-done { flex: none; color: var(--accent-text); }
+.ft-intro-box { display: flex; flex-direction: column; gap: 6px; padding: 6px 18px 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--ring); }
+.ft-intro-box .toggle-row > span { display: flex; flex-direction: column; gap: 2px; }
+.ft-intro-box .toggle-row small { font-size: 12.5px; color: var(--ink-2); }
+.ft-intro-need { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); padding-top: 10px; }
+.ft-intro-box .toggle-row + .ft-intro-need { box-shadow: inset 0 1px 0 var(--line); }
+.ft-safety { font-size: 13.5px; line-height: 1.45; }
+.ft-dock .ft-skip { flex: none; min-height: 60px; padding: 0 18px; }
+
+/* ─── Barra superior y avance ────────────────────────────────────────── */
+.ft-bar { position: relative; z-index: 3; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: calc(var(--safe-t) + 12px) var(--gutter) 0; }
+.ft-bar > :first-child { justify-self: start; }
+.ft-bar > :last-child { justify-self: end; }
+.ft-progress { display: flex; gap: 6px; }
+.ft-progress i { width: 22px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 18%, transparent); transition: background-color var(--motion-base), width var(--motion-base) var(--ease-standard); }
+.ft-progress i.is-done { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.ft-progress i.is-current { width: 34px; background: var(--accent); }
+
+/* ─── Instrucciones de cada prueba ───────────────────────────────────── */
+.ft-brief { position: relative; display: flex; flex-direction: column; min-height: 100svh; padding-bottom: calc(120px + var(--safe-b)); }
+.ft-brief .ft-bar { position: absolute; top: 0; left: 0; right: 0; }
+.ft-visual.exercise-visual-immersive { position: relative; height: clamp(230px, 36svh, 400px); }
+.ft-visual.exercise-visual-ill { padding: calc(var(--safe-t) + 62px) 22px 20px; }
+.ft-brief-body { display: flex; flex-direction: column; gap: 14px; width: min(100%, 640px); margin: 0 auto; padding: 18px var(--gutter) 0; }
+.ft-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10.5vw, 58px); font-weight: 800; letter-spacing: .012em; line-height: .96; text-transform: uppercase; text-wrap: balance; }
+.ft-rest { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.ft-rest b { color: var(--ink); letter-spacing: .03em; }
+.ft-rest.is-ready { background: var(--accent-soft); color: var(--accent-text); }
+.ft-steps { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0; padding: 0; list-style: none; counter-reset: ft-step; }
+.ft-steps li { position: relative; padding-left: 36px; font-size: 15.5px; line-height: 1.45; counter-increment: ft-step; }
+.ft-steps li::before { content: counter(ft-step); position: absolute; left: 0; top: -1px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); font-size: 12.5px; font-weight: 700; color: var(--accent-text); }
+.ft-note { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+
+/* ─── Temporizador ───────────────────────────────────────────────────── */
+.ft-run.phase-work .ses-iv-glow { opacity: 1; }
+.ft-run.phase-work .ses-iv-phase { color: var(--accent); }
+.ft-run.phase-work .ses-iv-timer .workout-timer-value { stroke: var(--accent); }
+.ft-run-note { min-height: 92px; display: grid; place-items: center; font-size: 13.5px; color: var(--ink-2); }
+.ft-stop span { font-size: 11px; }
+.ft-pulse { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--accent-text); }
+.ft-pulse svg { animation: ft-heart 1s ease-in-out infinite; }
+@keyframes ft-heart { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(1); } }
+
+/* Arriba, arriba, abajo, abajo: cada palabra se enciende un golpe (4 golpes por ciclo). */
+.ft-beat { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; width: min(100%, 360px); }
+.ft-beat span { display: grid; place-items: center; min-height: 40px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 12.5px; font-weight: 700; letter-spacing: .02em; color: var(--ink-2); animation: ft-beat calc(var(--beat) * 4) linear infinite; }
+.ft-beat span:nth-child(2) { animation-delay: var(--beat); }
+.ft-beat span:nth-child(3) { animation-delay: calc(var(--beat) * 2); }
+.ft-beat span:nth-child(4) { animation-delay: calc(var(--beat) * 3); }
+@keyframes ft-beat {
+  0%, 22% { background: var(--accent); color: var(--accent-ink); }
+  25%, 100% { background: var(--surface-2); color: var(--ink-2); }
+}
+
+/* ─── Anotar el resultado ────────────────────────────────────────────── */
+.ft-record { display: flex; flex-direction: column; min-height: 100svh; }
+.ft-record-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: min(100%, 560px); margin: 0 auto; padding: 24px var(--gutter) calc(130px + var(--safe-b)); text-align: center; }
+.ft-question { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 44px); font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.ft-value { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
+.ft-value-btn { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
+.ft-value-btn:active { transform: scale(.92); }
+.ft-value-input { width: 3.2ch; min-width: 0; padding: 0; border: 0; border-bottom: 2px solid var(--line-strong); background: transparent; font-size: clamp(84px, 26vw, 132px); text-align: center; color: var(--ink); caret-color: var(--accent); outline: none; }
+.ft-value-input:focus { border-bottom-color: var(--accent); }
+.ft-value-input::placeholder { color: color-mix(in srgb, var(--ink) 22%, transparent); }
+.ft-value-help { font-size: 14px; color: var(--ink-2); }
+
+/* ─── Informe ────────────────────────────────────────────────────────── */
+.ft-report { display: flex; flex-direction: column; gap: 22px; }
+.ft-score { display: flex; flex-direction: column; gap: 6px; }
+.ft-score-num { display: flex; align-items: baseline; gap: 6px; }
+.ft-score-num .num-display { font-size: clamp(88px, 28vw, 140px); color: var(--accent-text); }
+.ft-score-num small { font-size: 20px; font-weight: 600; color: var(--ink-3); }
+.ft-score-level { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.ft-score-level strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; }
+.ft-score-note { max-width: 42ch; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.ft-delta { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+.ft-delta.is-up { background: var(--accent-soft); color: var(--accent-text); }
+.ft-results { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ft-result { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--ring); }
+.ft-result-head, .ft-result-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ft-result-head strong { font-size: 15px; font-weight: 600; }
+.ft-result-value { flex: none; font-size: 15px; font-weight: 700; }
+.ft-result-foot small { font-size: 12.5px; color: var(--ink-2); }
+.ft-result-foot .ft-delta { flex: none; }
+.ft-meter { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.ft-meter i { height: 6px; border-radius: 6px; background: var(--surface-3); }
+.ft-meter i.is-on { background: var(--accent); }
+.ft-focus { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--ring), inset 3px 0 0 var(--accent); }
+.ft-focus strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; }
+.ft-focus p { font-size: 14px; line-height: 1.45; color: var(--ink-2); margin-bottom: 6px; }
+.ft-refs { padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.ft-refs summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.ft-refs p { margin-top: 10px; }
+.ft-refs ul { margin: 8px 0 0; padding-left: 18px; }
+.ft-refs b { color: var(--ink); font-weight: 600; }
+.ft-done .ft-score-num .num-display { color: var(--accent); }
+
+/* ─── Progreso → Test físico ─────────────────────────────────────────── */
+.ft-start { display: flex; flex-direction: column; gap: 14px; }
+.ft-start-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.4vw, 40px); font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.ft-next { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.ft-next .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ft-next strong { font-size: 15px; font-weight: 600; }
+.ft-next small { font-size: 13px; color: var(--ink-2); }
+.ft-next.is-due { box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+.ft-history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-radius: var(--radius); background: var(--surface); box-shadow: var(--ring); }
+.ft-history-row { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; }
+.ft-history-row + .ft-history-row { box-shadow: inset 0 1px 0 var(--line); }
+.ft-history-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ft-history-row strong { font-size: 14.5px; font-weight: 600; }
+.ft-history-row small { font-size: 12.5px; color: var(--ink-2); }
+.ft-history-score { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.ft-history-score b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 24px; font-weight: 800; line-height: 1; }
+.ft-history-row .icon-button { box-shadow: none; background: transparent; color: var(--ink-3); }
+
+/* ─── Inicio ─────────────────────────────────────────────────────────── */
+.home-test { position: relative; }
+.home-test .home-challenge { padding-right: 52px; }
+.home-test .home-challenge .grow { gap: 2px; }
+.home-test-close { position: absolute; top: 50%; right: 8px; display: grid; place-items: center; width: 36px; height: 36px; margin-top: -18px; border-radius: 50%; color: var(--ink-3); }
+.home-test-close:active { transform: scale(.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ft-pulse svg { animation: none; }
+}

@@ -968,3 +968,54 @@ test('retos de 30 días: cuenta, meta, vencimiento y ritmo', () => {
   assert.match(challenges.paceLine(tooLate), /este no alcanza/);
   assert.equal(challenges.challengeCatalog.filter((item) => item.counting).length, 2);
 });
+
+const fitness = load('src/lib/fitness-test.ts');
+const fitnessData = load('src/data/fitness-test.ts');
+
+test('test físico: niveles, puntaje, comparación y cuándo repetirlo', () => {
+  const [pushups, , plank, step] = fitnessData.fitnessTests;
+  // Referencias por edad e identidad (CSEP, YMCA); sin identidad, el promedio.
+  assert.deepEqual([...fitness.cutsFor(pushups, 25, 'male')], [17, 22, 29, 36]);
+  assert.deepEqual([...fitness.cutsFor(pushups, 25, 'female', 'knees')], [10, 15, 21, 30]);
+  assert.equal(fitness.cutsFor(pushups, 25, 'male', 'knees'), null, 'rodillas apoyadas: sin referencia masculina');
+  assert.deepEqual([...fitness.cutsFor(step, 40, 'unspecified')], [116, 108, 92, 80]);
+  assert.deepEqual([...fitness.cutsFor(plank, 70, 'male')], [10, 20, 40, 70], 'la última fila cubre las edades mayores');
+  // Nivel y puntaje coinciden en los cortes; el escalón premia el pulso más bajo.
+  const cuts = fitness.cutsFor(pushups, 25, 'male');
+  assert.deepEqual([16, 17, 22, 29, 36].map((v) => fitness.levelFor(v, cuts, false)), [1, 2, 3, 4, 5]);
+  assert.deepEqual([0, 17, 22, 29, 36, 43, 60].map((v) => fitness.pointsFor(v, cuts, false)), [0, 20, 40, 60, 80, 100, 100]);
+  const stepCuts = fitness.cutsFor(step, 22, 'male');
+  assert.deepEqual([130, 107, 100, 84, 76, 60].map((v) => fitness.pointsFor(v, stepCuts, true)), [0, 20, 40, 60, 80, 100]);
+  assert.equal(fitness.levelFor(90, stepCuts, true), 3);
+  for (const test of fitnessData.fitnessTests) {
+    for (const row of test.norms) {
+      for (const sex of ['male', 'female']) {
+        const c = row[sex];
+        assert.ok(c.every((v, i) => i === 0 || (test.lowerIsBetter ? v < c[i - 1] : v > c[i - 1])), `${test.id} ${row.maxAge} ${sex}: cortes en orden`);
+      }
+    }
+  }
+  // Puntaje PULSO, comparación (las flexiones sólo con la misma variante) y prueba a mejorar.
+  const first = { id: 'a', date: '2026-10-01', completedAt: '2026-10-01T10:00:00Z', age: 30, sex: 'male', results: { pushups: 20, squats: 35, plank: 60, step: 105 }, pushupVariant: 'standard' };
+  const second = { ...first, id: 'b', date: '2026-10-29', completedAt: '2026-10-29T10:00:00Z', results: { pushups: 26, squats: 38, plank: 80, step: 96 } };
+  const results = fitness.testResults(first);
+  assert.equal(results.length, 4);
+  assert.ok(fitness.fitnessScore(results) > 0 && fitness.fitnessScore(results) < 100);
+  const comparison = fitness.compareTests(second, first);
+  assert.deepEqual({ ...comparison.deltas }, { pushups: 6, squats: 3, plank: 20, step: -9 });
+  assert.ok(comparison.scoreDelta > 0);
+  assert.ok(fitness.isImprovement('step', -9) && !fitness.isImprovement('pushups', -2));
+  assert.equal(fitness.deltaLabel('step', -9), '−9 lpm');
+  assert.equal(fitness.compareTests({ ...second, pushupVariant: 'knees' }, first).deltas.pushups, undefined, 'otra variante no se compara');
+  assert.equal(fitness.focusFor(results).test.id, fitness.testResults(first).reduce((low, item) => (item.points < low.points ? item : low)).test.id);
+  assert.equal(fitness.testResults({ ...first, results: { pushups: 12 }, pushupVariant: 'knees' })[0].points, null);
+  assert.equal(fitness.fitnessScore(fitness.testResults({ ...first, results: { pushups: 12 }, pushupVariant: 'knees' })), null);
+  assert.equal(fitness.valueLabel('plank', 95), '1:35 min');
+  assert.equal(fitness.valueLabel('plank', 45), '45 s');
+  // Cada 4 semanas.
+  assert.deepEqual({ ...fitness.testStatus([], '2026-10-05') }, { last: null, previous: null, due: true, daysLeft: 0, nextDate: '2026-10-05' });
+  const status = fitness.testStatus([second, first], '2026-11-10');
+  assert.deepEqual([status.last.id, status.previous.id, status.nextDate, status.daysLeft, status.due], ['b', 'a', '2026-11-26', 16, false]);
+  assert.equal(fitness.testStatus([first], '2026-10-29').due, true);
+  assert.ok(sync.docSpecs.some((spec) => spec.key === 'pulso:fitness-tests'), 'se sincroniza como documento');
+});

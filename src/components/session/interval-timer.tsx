@@ -92,8 +92,8 @@ function roundsDone(run: Run, elapsedMs: number) {
   return run.segments.filter((segment) => segment.phase === "work" && (segment.start + segment.duration) * 1000 <= elapsedMs + 1).length;
 }
 
-/** Sonido y voz (el mismo ajuste del perfil), a mano en el temporizador. */
-function SoundToggle() {
+/** Sonido y voz (el mismo ajuste del perfil), a mano en el temporizador (también en el test físico). */
+export function SoundToggle() {
   const [settings, update] = useSettings();
   return (
     <button type="button" className={cn("ses-glass ses-pill", !settings.sound && "is-off")} onClick={() => update({ sound: !settings.sound })} aria-pressed={settings.sound}>

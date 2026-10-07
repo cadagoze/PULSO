@@ -3,18 +3,19 @@
 import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Award, ChevronRight, Download, Gauge, History, Medal, Ruler, Share2, Trophy } from "lucide-react";
+import { Activity, Award, ChevronRight, Download, Gauge, History, Medal, Ruler, Share2, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { ExportSheet } from "@/components/progress/export-sheet";
 import { weightLabel } from "@/components/progress/format";
 import { LoadDetails, loadStatusCopy, ratioLabel } from "@/components/progress/load-card";
 import { markFromSummary, subviewHref, type ProgressSubview } from "@/components/progress/progress-nav";
 import { achievements, trainingLoad } from "@/lib/analytics";
-import { useSettings, useWeights } from "@/lib/store";
+import { useFitnessTests, useSettings, useWeights } from "@/lib/store";
 import { sortedWorkouts } from "@/lib/training";
-import { formatRelativeDay } from "@/lib/utils";
+import { formatRelativeDay, localDateKey } from "@/lib/utils";
 import type { WorkoutEntry } from "@/types";
 import { useChallengeBoard } from "@/lib/use-challenges";
+import { fitnessScore, testResults, testStatus } from "@/lib/fitness-test";
 
 function RowContent({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -52,6 +53,12 @@ export function MoreList({ workouts, nowMs, onShare }: { workouts: WorkoutEntry[
   const load = trainingLoad(workouts, nowMs);
   const lastWeight = [...weights].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
   const board = useChallengeBoard();
+  const [tests] = useFitnessTests();
+  const testState = testStatus(tests, localDateKey(new Date(nowMs)));
+  const testScore = testState.last ? fitnessScore(testResults(testState.last)) : null;
+  const testDetail = testState.last
+    ? [testScore !== null ? `Puntaje ${testScore}` : "", testState.due ? "toca repetirlo" : `próximo en ${testState.daysLeft} ${testState.daysLeft === 1 ? "día" : "días"}`].filter(Boolean).join(" · ")
+    : "Tu condición física en 12 minutos";
   const challengeDetail = board.active.length || board.medals.length
     ? [board.active.length ? `${board.active.length} en curso` : "", board.medals.length ? `${board.medals.length} ${board.medals.length === 1 ? "medalla" : "medallas"}` : ""].filter(Boolean).join(" · ")
     : "Una meta de 30 días, con medalla";
@@ -77,6 +84,7 @@ export function MoreList({ workouts, nowMs, onShare }: { workouts: WorkoutEntry[
         <ViewRow view="cuerpo" icon={<Ruler size={18} />} title="Cuerpo" detail={lastWeight ? `${weightLabel(lastWeight.weight, settings.unit)} · peso y medidas` : "Peso y medidas"} />
         <ViewRow view="logros" icon={<Award size={18} />} title="Logros" detail={`${unlocked} de ${list.length} desbloqueados`} />
         <ViewRow view="retos" icon={<Medal size={18} />} title="Retos de 30 días" detail={challengeDetail} />
+        <ViewRow view="test" icon={<Activity size={18} />} title="Test físico" detail={testDetail} />
         <li>
           <button type="button" className="list-row" onClick={() => setSheet("load")}>
             <RowContent icon={<Gauge size={18} />} title="Carga de entrenamiento" detail={load.ratio === null ? loadStatusCopy.unknown.short : `${loadStatusCopy[load.status].short} · ${ratioLabel(load.ratio)}`} />

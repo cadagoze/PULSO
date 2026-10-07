@@ -20,7 +20,7 @@ const items: NavItem[] = [
 ];
 
 /** Pantallas a pantalla completa, sin navegación. */
-export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos"];
+export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test"];
 
 function activeIndex(pathname: string) {
   return items.findIndex((item) => item.href === "/" ? pathname === "/" : (item.match ?? [item.href]).some((href) => pathname.startsWith(href)));
