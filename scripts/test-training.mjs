@@ -899,3 +899,41 @@ test('días de entreno: descanso, próximo día y propuesta', () => {
   for (let goal = 1; goal <= 7; goal++) assert.equal(trainingDays.suggestedDays(goal).length, goal);
   assert.equal(trainingDays.daysLabel([4, 0, 2]), 'L · X · V');
 });
+
+const { bodyZones } = load('src/data/body-zones.ts');
+
+test('rutina por zona: ejercicios de esa zona con tu equipo', () => {
+  const setups = [
+    ['casa sin equipo', { location: 'home', equipment: [] }],
+    ['casa con mancuernas, banco y bandas', { location: 'home', equipment: ['dumbbells', 'bench', 'bands'] }],
+    ['gimnasio', { location: 'gym', equipment: [] }],
+  ];
+  for (const zone of bodyZones) {
+    for (const [label, preference] of setups) {
+      const plan = generator.generateWorkout({ preference, minutes: 30, focus: 'full', level: 2, seed: 5, zone: zone.id });
+      assert.match(plan.name, new RegExp(`^${zone.label} · 30 min`));
+      assert.equal(plan.zone, zone.id);
+      const chosen = plan.records.map((record) => exercises.find((item) => item.id === record.exerciseId));
+      const main = chosen.filter((exercise) => exercise.primary.some((muscle) => zone.muscles.includes(muscle)));
+      assert.ok(chosen.every((exercise) => exercise.category === 'strength'), `${zone.id} ${label}: sólo fuerza`);
+      const zoneMuscles = [...zone.muscles, ...(zone.support ?? [])];
+      assert.ok(chosen.every((exercise) => [...exercise.primary, ...exercise.secondary].some((muscle) => zoneMuscles.includes(muscle))), `${zone.id} ${label}: todo trabaja la zona`);
+      if (label !== 'casa sin equipo') assert.ok(main.length >= 3, `${zone.id} ${label}: ${main.length} ejercicios principales de la zona`);
+      assert.ok(plan.records.length >= 2, `${zone.id} ${label}: ${plan.records.length} ejercicios`);
+      assert.ok(plan.estimatedMinutes <= 33, `${zone.id} ${label}: ${plan.estimatedMinutes} min`);
+    }
+  }
+  const glutes = generator.generateWorkout({ preference: { location: 'gym', equipment: [] }, minutes: 45, focus: 'full', level: 2, seed: 1, zone: 'gluteos' });
+  const patterns = glutes.records.map((record) => exercises.find((item) => item.id === record.exerciseId).pattern);
+  assert.ok(new Set(patterns).size >= 3, `variedad de movimientos: ${patterns.join(', ')}`);
+  const zonesLib = load('src/data/body-zones.ts');
+  assert.equal(zonesLib.zoneForMuscles(['glutes']).id, 'gluteos');
+  assert.equal(zonesLib.zoneForMuscles(['biceps', 'triceps']).id, 'brazos');
+  assert.equal(zonesLib.zoneForMuscles([]), undefined);
+  assert.equal(zonesLib.zoneForQuery('Glúteos').id, 'gluteos');
+  assert.equal(zonesLib.zoneForQuery('abs').id, 'abdomen');
+  assert.equal(zonesLib.zoneForQuery('press de banca'), undefined);
+  const input = generator.todayGeneratorInput({ profile: null, preference: { location: 'home', equipment: [] }, workouts: [], now: Date.now(), zone: 'piernas' });
+  assert.equal(input.focus, 'lower');
+  assert.equal(input.zone, 'piernas');
+});

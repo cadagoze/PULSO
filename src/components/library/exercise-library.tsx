@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Dumbbell, Lock, Search, SearchX, SlidersHorizontal, Star, X } from "lucide-react";
+import { ArrowRight, Dumbbell, Lock, Search, SearchX, SlidersHorizontal, Star, X } from "lucide-react";
+import Link from "@/components/ui/app-link";
+import { zoneForMuscles, zoneForQuery, type BodyZoneInfo } from "@/data/body-zones";
 import { exercises } from "@/data/mock-data";
 import { levelLabels, muscleLabels } from "@/data/catalog";
 import { Button, EmptyState, ToggleChip } from "@/components/ui";
@@ -149,6 +151,7 @@ export function ExerciseLibrary() {
       </div>
 
       {filters.muscles.length > 0 && <MuscleFocus muscles={filters.muscles} />}
+      <ZoneRoutineCta zone={zoneForMuscles(filters.muscles) ?? zoneForQuery(query)} />
 
       {!active && <LibraryFeatured />}
 
@@ -221,6 +224,21 @@ function MuscleFocus({ muscles }: { muscles: MuscleGroup[] }) {
         <p className="lib-focus-note">Incluye ejercicios donde trabaja como músculo principal o de apoyo.</p>
       </div>
     </aside>
+  );
+}
+
+/** «Armar rutina de glúteos»: lleva a Entrenar con la rutina de esa zona lista para empezar. */
+function ZoneRoutineCta({ zone }: { zone?: BodyZoneInfo }) {
+  if (!zone) return null;
+  return (
+    <Link href={`/entrenar?zona=${zone.id}`} className="lib-zone-cta pressable">
+      <span className="grow">
+        <span className="meta">Rutina por zona</span>
+        <strong>Armar rutina de {zone.label.toLowerCase()}</strong>
+        <small>{zone.hint}, con tu equipamiento</small>
+      </span>
+      <ArrowRight size={18} aria-hidden="true" />
+    </Link>
   );
 }
 

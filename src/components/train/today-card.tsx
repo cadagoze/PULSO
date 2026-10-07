@@ -5,6 +5,7 @@ import { CalendarDays, ChevronDown, Play, RotateCcw, Shuffle, SlidersHorizontal 
 import { Button, ButtonLink, MetaLine, ProgressBar, SegmentedControl } from "@/components/ui";
 import { Card } from "@/components/ui/cards";
 import { focusLabels } from "@/lib/generator";
+import { zoneById } from "@/data/body-zones";
 import { programSessionName } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useSettings } from "@/lib/store";
@@ -148,7 +149,7 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
   const start = useStartWorkout();
   const restDay = useRestDay();
   const total = today.records.length;
-  const context = today.edited ? "Con tus cambios" : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
+  const context = today.edited ? "Con tus cambios" : today.zone ? "Zona elegida por ti" : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
 
   if (!today.ready) {
     return (
@@ -166,7 +167,7 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
     <>
       <Head meta={restDay ? "Hoy es descanso · opcional" : "Tu rutina de hoy"} context={context} number={today.estimated} label="min" />
       <Title details={[count(total, "ejercicio", "ejercicios"), place]} note={easier ? today.plan?.notes[0] : undefined}>
-        {focusLabels[today.focus]}
+        {zoneById(today.zone)?.label ?? focusLabels[today.focus]}
       </Title>
       <SessionList records={today.records} onMore={listOpen === false ? onToggleList : undefined} />
       <div className="train-hero-actions">

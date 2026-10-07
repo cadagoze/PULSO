@@ -13,6 +13,8 @@ import { cn, formatNumber, fromDisplayWeight, toDisplayWeight } from "@/lib/util
 import { loadStep, targetLabel, topLoad } from "@/components/train/shared";
 import type { TodayPlan } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, ReadinessEntry } from "@/types";
+import { ZoneChips } from "@/components/train/zone-picker";
+import { zoneById } from "@/data/body-zones";
 
 const durations = durationOptions.map((value) => ({ value: String(value), label: `${value} min` }));
 const focuses = Object.keys(focusLabels) as WorkoutFocus[];
@@ -30,7 +32,7 @@ export function AdjustSheet({ open, onClose, today }: { open: boolean; onClose: 
     <Sheet open={open} onClose={onClose} eyebrow="Tu rutina de hoy" title="Ajustar sesión" className="train-adjust">
       <MetaLine
         className="train-adjust-summary"
-        items={[focusLabels[today.focus], <><b className="num">{today.records.length}</b> ejercicios</>, <><b className="num">{today.estimated}</b> min</>]}
+        items={[zoneById(today.zone)?.label ?? focusLabels[today.focus], <><b className="num">{today.records.length}</b> ejercicios</>, <><b className="num">{today.estimated}</b> min</>]}
       />
       <div className="train-field">
         <p className="train-field-label">Duración</p>
@@ -40,12 +42,16 @@ export function AdjustSheet({ open, onClose, today }: { open: boolean; onClose: 
         <p className="train-field-label">Enfoque</p>
         <div className="chips train-focus">
           {focuses.map((option) => (
-            <button key={option} type="button" className="chip" aria-pressed={today.focus === option} onClick={() => today.setFocus(option)}>
+            <button key={option} type="button" className="chip" aria-pressed={!today.zone && today.focus === option} onClick={() => today.setFocus(option)}>
               {focusLabels[option]}
               {option === today.suggested && <span className="train-suggested">Sugerido</span>}
             </button>
           ))}
         </div>
+      </div>
+      <div className="train-field">
+        <p className="train-field-label">O una zona del cuerpo</p>
+        <ZoneChips value={today.zone} onChange={today.setZone} className="train-focus" />
       </div>
       {entry ? (
         <div className="train-readiness" data-tone={entry.recommendation}>

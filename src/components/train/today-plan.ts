@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, focusLabels, generateWorkout, suggestedFocus, todayGeneratorInput } from "@/lib/generator";
+import { estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { progressedSets } from "@/lib/progression";
@@ -11,6 +11,7 @@ import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
 import { useLatestWeight } from "@/lib/use-nutrition";
+import { zoneById, type BodyZone } from "@/data/body-zones";
 
 const HOUR = 3_600_000;
 
@@ -32,7 +33,7 @@ export function recordForExercise(exercise: Exercise, workouts: WorkoutEntry[], 
  * así «Personalizar» lleva a la misma sesión. Duración, enfoque, variante, calentamiento y ediciones
  * son locales a la pantalla (no se guardan).
  */
-export function useTodayPlan(now: number) {
+export function useTodayPlan(now: number, initialZone?: string | null) {
   const [profile] = useProfile();
   const [nutrition] = useNutritionProfile();
   const bodyKg = useLatestWeight();
@@ -43,6 +44,8 @@ export function useTodayPlan(now: number) {
 
   const [minutesChoice, setMinutesChoice] = useState<number | null>(null);
   const [focusChoice, setFocusChoice] = useState<WorkoutFocus | null>(null);
+  // Zona del cuerpo elegida (glúteos, brazos…): manda sobre el enfoque mientras esté puesta.
+  const [zone, setZone] = useState<BodyZone | null>(() => zoneById(initialZone)?.id ?? null);
   const [variant, setVariant] = useState(0);
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [edits, setEdits] = useState<{ key: string; records: ExerciseRecord[] } | null>(null);
@@ -59,11 +62,11 @@ export function useTodayPlan(now: number) {
   // Mismas entradas que la portada de Inicio (ver todayGeneratorInput); aquí se pueden ajustar.
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, variant, bodyKg }));
-  }, [bodyKg, hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, zone: zone ?? undefined, variant, bodyKg }));
+  }, [bodyKg, hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts, zone]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
+  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 
@@ -78,7 +81,7 @@ export function useTodayPlan(now: number) {
   const fullRecords = [...warmupRecords, ...records];
   const restSeconds = plan?.restSeconds ?? settings.defaultRest;
   const estimated = estimateMinutes(fullRecords, restSeconds);
-  const name = plan ? `${focusLabels[focus]} · ${minutes} min` : "Entrenamiento de hoy";
+  const name = plan ? plan.name : "Entrenamiento de hoy";
 
   const exercises = records.map((record) => exerciseById(record.exerciseId)).filter((item): item is Exercise => Boolean(item));
   const primary = [...new Set(exercises.flatMap((exercise) => exercise.primary))];
@@ -89,6 +92,7 @@ export function useTodayPlan(now: number) {
     plan,
     name,
     focus,
+    zone,
     suggested,
     minutes,
     variant,
@@ -105,7 +109,8 @@ export function useTodayPlan(now: number) {
     workouts,
     setIncludeWarmup,
     setMinutes: setMinutesChoice,
-    setFocus: setFocusChoice,
+    setFocus: (value: WorkoutFocus | null) => { setZone(null); setFocusChoice(value); },
+    setZone,
     reroll: () => setVariant((value) => value + 1),
     editRecords,
     resetEdits: () => setEdits(null),

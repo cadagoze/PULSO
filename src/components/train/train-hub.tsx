@@ -17,6 +17,7 @@ import type { TodaySource } from "@/components/train/today-plan";
 import { AdjustSheet } from "@/components/train/today-sheets";
 import { TrainMore } from "@/components/train/train-more";
 import { Toast, useToast } from "@/components/ui/toast";
+import { ZoneRow } from "@/components/train/zone-picker";
 
 const weekday = new Intl.DateTimeFormat("es-CL", { weekday: "long" });
 
@@ -34,11 +35,12 @@ export function TrainHub() {
   const [draft] = useDraft();
   const [, setRoutines] = useRoutines();
   const [settings] = useSettings();
-  const today = useTodayPlan(now);
+  const today = useTodayPlan(now, params.get("zona"));
   const active = useActiveProgram();
   const toast = useToast();
 
-  const [picked, setPicked] = useState<TodaySource | null>(null);
+  // Con ?zona=… (desde la biblioteca) se muestra directo la rutina a tu medida de esa zona.
+  const [picked, setPicked] = useState<TodaySource | null>(() => (params.get("zona") ? "custom" : null));
   const [listOpen, setListOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [editor, setEditor] = useState<{ routine: Routine; isNew: boolean; open: boolean; key: number } | null>(null);
@@ -90,6 +92,14 @@ export function TrainHub() {
         onToggleList={() => setListOpen((value) => !value)}
         onAdjust={() => setAdjustOpen(true)}
         notify={toast.show}
+      />
+      <ZoneRow
+        value={today.zone}
+        onChange={(zone) => {
+          today.setZone(zone);
+          if (zone) setPicked("custom");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
       />
       <div className="train-extra">
         <TodayExercises source={source} today={today} active={active} visible={listOpen} onSaveRoutine={saveToday} />

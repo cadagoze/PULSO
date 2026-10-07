@@ -5,6 +5,7 @@ import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
 import { capabilitiesOf, fullGym } from "@/data/equipment";
 import { availableLoads, fitLoad, loadCapability, nearestLoad, startingLoad, unfit } from "@/lib/loads";
+import { zoneById, type BodyZone } from "@/data/body-zones";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
@@ -42,11 +43,14 @@ export interface GeneratorInput {
   exclude?: number[];
   /** Peso corporal (kg) para sugerir cargas iniciales con tus pesas. */
   bodyKg?: number;
+  /** Zona del cuerpo a trabajar (glúteos, brazos…): manda sobre el enfoque. */
+  zone?: BodyZone;
 }
 
 export interface GeneratedWorkout {
   name: string;
   focus: WorkoutFocus;
+  zone?: BodyZone;
   records: ExerciseRecord[];
   warmup: Exercise[];
   cooldown: Exercise[];
@@ -151,7 +155,44 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     && exercise.level <= Math.min(3, level + (input.readiness === "recovery" ? 0 : 1))
     && !(input.exclude ?? []).includes(exercise.id));
 
-  for (const patterns of slots[focus]) {
+  const zone = zoneById(input.zone);
+  if (zone) {
+    // Rutina por zona: ejercicios de fuerza cuyo músculo principal es la zona, variando el movimiento.
+    // Peso de cada músculo: los de la zona cuentan entero; los de apoyo, menos.
+    const weight = (muscle: MuscleGroup) => (zone.muscles.includes(muscle) ? 1 : zone.support?.includes(muscle) ? 0.35 : 0);
+    const hits = (muscles: MuscleGroup[]) => muscles.reduce((sum, muscle) => sum + weight(muscle), 0);
+    const pool = usable.filter((exercise) => exercise.category === "strength" && (hits(exercise.primary) > 0 || hits(exercise.secondary) > 0));
+    const patternsUsed = new Map<string, number>();
+    const musclesUsed = new Map<MuscleGroup, number>();
+    while (chosen.length < count) {
+      const scored = pool.filter((exercise) => !chosen.some((item) => item.id === exercise.id)).map((exercise) => {
+        const primary = hits(exercise.primary);
+        const repeat = (patternsUsed.get(exercise.pattern) ?? 0) * 9;
+        // Alterna entre los músculos de la zona (bíceps y tríceps, dorsales y espalda media…).
+        const sameMuscle = exercise.primary.filter((muscle) => zone.muscles.includes(muscle)).reduce((sum, muscle) => sum + (musclesUsed.get(muscle) ?? 0), 0) * 8;
+        // En una zona el nivel pesa menos: un aislamiento básico sirve a cualquier nivel.
+        const levelFit = 10 - Math.abs(exercise.level - level) * 3;
+        const loaded = exercise.equipment.length > 0 ? 6 : 0;
+        const rotation = hash(exercise.id * 7919 + seed) % 14;
+        // Más específico, mejor: una extensión de tríceps antes que un press de banca para «brazos».
+        const specific = exercise.primary.length ? primary / exercise.primary.length : 0;
+        return { exercise, primary, score: Math.min(primary, 1.5) * 20 + specific * 30 + hits(exercise.secondary) * 6 + levelFit + loaded + rotation - repeat - sameMuscle };
+      }).sort((a, b) => b.score - a.score);
+      // Primero lo que trabaja la zona como músculo principal; si no alcanza, lo que la apoya.
+      const pick = scored.find((item) => item.primary >= 1) ?? scored.find((item) => item.primary > 0) ?? scored[0];
+      if (!pick) break;
+      chosen.push(pick.exercise);
+      patternsUsed.set(pick.exercise.pattern, (patternsUsed.get(pick.exercise.pattern) ?? 0) + 1);
+      for (const muscle of pick.exercise.primary) musclesUsed.set(muscle, (musclesUsed.get(muscle) ?? 0) + 1);
+    }
+    if (recovery) {
+      const fresh = zone.muscles.reduce((sum, muscle) => sum + recovery[muscle], 0) / zone.muscles.length;
+      if (fresh < 45) notes.push(`${zone.label} aún se recupera del último entrenamiento: baja el peso o una serie si la sientes cargada.`);
+    }
+    if (chosen.length < 3) notes.push(`Con tu equipamiento hay pocos ejercicios de ${zone.label.toLowerCase()}: suma equipos en Entrenar para más variedad.`);
+  }
+
+  for (const patterns of zone ? [] : slots[focus]) {
     if (chosen.length >= count) break;
     const candidates = usable.filter((exercise) => patterns.includes(exercise.pattern) && !chosen.some((item) => item.id === exercise.id));
     if (!candidates.length) continue;
@@ -170,7 +211,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     }
     chosen.push(pick.exercise);
   }
-  if (chosen.length < Math.min(3, count)) {
+  if (!zone && chosen.length < Math.min(3, count)) {
     const fallback = usable.filter((exercise) => exercise.category !== "mobility" && !chosen.some((item) => item.id === exercise.id))
       .sort((a, b) => (hash(a.id + seed) % 7) - (hash(b.id + seed) % 7));
     chosen.push(...fallback.slice(0, Math.min(3, count) - chosen.length));
@@ -221,8 +262,9 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   const cooldown = focus === "mobility" ? [] : byRelevance.slice(3, 5);
 
   return {
-    name: `${focusLabels[focus]} · ${input.minutes} min`,
+    name: `${zone ? zone.label : focusLabels[focus]} · ${input.minutes} min`,
     focus,
+    ...(zone ? { zone: zone.id } : {}),
     records,
     warmup,
     cooldown,
@@ -275,7 +317,7 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, variant = 0, bodyKg }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, zone, variant = 0, bodyKg }: {
   profile: ProfileForToday;
   nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
@@ -285,13 +327,16 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
   now: number;
   minutes?: number;
   focus?: WorkoutFocus;
+  zone?: BodyZone;
   variant?: number;
   bodyKg?: number | null;
 }): GeneratorInput {
+  const zoneInfo = zoneById(zone);
   return {
     preference,
     minutes: minutes ?? profile?.recommendation?.sessionMinutes ?? 30,
-    focus: focus ?? suggestedFocus(recovery, readiness),
+    focus: zoneInfo ? zoneInfo.base : focus ?? suggestedFocus(recovery, readiness),
+    ...(zoneInfo ? { zone: zoneInfo.id } : {}),
     goal: trainingGoal(profile?.goals, nutritionGoal),
     level: levelFromActivities(profile?.activities),
     limitations: profileLimitations(profile?.limitations),

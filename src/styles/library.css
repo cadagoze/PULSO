@@ -321,3 +321,10 @@
   .lib-dock { display: none; }
   .lib-toast, .lib-detail-draft .lib-toast { bottom: calc(var(--nav-h) + var(--nav-gap) + 20px); }
 }
+
+/* ─── Rutina por zona ──────────────────────────────────────────────────── */
+.lib-zone-cta { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: var(--radius-l); background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 30%); color: var(--ink); }
+.lib-zone-cta .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lib-zone-cta strong { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .005em; }
+.lib-zone-cta small { font-size: 13px; color: var(--ink-2); }
+.lib-zone-cta svg { flex: none; color: var(--accent-text); }
