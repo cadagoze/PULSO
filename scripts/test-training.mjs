@@ -979,7 +979,9 @@ test('test físico: niveles, puntaje, comparación y cuándo repetirlo', () => {
   assert.deepEqual([...fitness.cutsFor(pushups, 25, 'female', 'knees')], [10, 15, 21, 30]);
   assert.equal(fitness.cutsFor(pushups, 25, 'male', 'knees'), null, 'rodillas apoyadas: sin referencia masculina');
   assert.deepEqual([...fitness.cutsFor(step, 40, 'unspecified')], [116, 108, 92, 80]);
-  assert.deepEqual([...fitness.cutsFor(plank, 70, 'male')], [10, 20, 40, 70], 'la última fila cubre las edades mayores');
+  assert.deepEqual([...fitness.cutsFor(plank, 70, 'male')], [15, 30, 45, 60], 'plancha: de 15 en 15 segundos, a toda edad');
+  assert.deepEqual([...fitness.cutsFor(plank, 25, 'unspecified')], [15, 30, 45, 60]);
+  assert.deepEqual([14, 15, 30, 45, 60].map((v) => fitness.levelFor(v, fitness.cutsFor(plank, 30, 'female'), false)), [1, 2, 3, 4, 5]);
   // Nivel y puntaje coinciden en los cortes; el escalón premia el pulso más bajo.
   const cuts = fitness.cutsFor(pushups, 25, 'male');
   assert.deepEqual([16, 17, 22, 29, 36].map((v) => fitness.levelFor(v, cuts, false)), [1, 2, 3, 4, 5]);

@@ -3,7 +3,7 @@
  * Son orientativas, no una evaluación médica:
  * - Flexiones: normas de la CSEP (Canadá); hombres con flexiones normales, mujeres con rodillas apoyadas.
  * - Sentadillas en 1 minuto: tablas de referencia habituales de esa prueba.
- * - Plancha: escala propia de PULSO (no existe una norma estándar).
+ * - Plancha: escala propia de PULSO, de 15 en 15 segundos e igual para todas las edades (no existe una norma estándar).
  * - Escalón: test de 3 minutos de la YMCA (cajón de 30 cm, 96 golpes por minuto) y pulso del minuto siguiente.
  */
 
@@ -96,12 +96,8 @@ export const fitnessTests: FitnessTestDef[] = [
       "Toca «Me detuve» cuando pierdas la posición.",
     ],
     focus: { area: "Fuerza del centro", label: "Rutina de abdomen", href: "/entrenar?zona=abdomen" },
-    source: "Escala PULSO por edad",
-    norms: [
-      { maxAge: 39, male: [20, 40, 70, 120], female: [20, 40, 70, 120] },
-      { maxAge: 59, male: [15, 30, 55, 90], female: [15, 30, 55, 90] },
-      { maxAge: Infinity, male: [10, 20, 40, 70], female: [10, 20, 40, 70] },
-    ],
+    source: "Escala PULSO, de 15 en 15 segundos",
+    norms: [{ maxAge: Infinity, male: [15, 30, 45, 60], female: [15, 30, 45, 60] }],
   },
   {
     id: "step",
