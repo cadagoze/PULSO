@@ -937,3 +937,34 @@ test('rutina por zona: ejercicios de esa zona con tu equipo', () => {
   assert.equal(input.focus, 'lower');
   assert.equal(input.zone, 'piernas');
 });
+
+const challenges = load('src/lib/challenges.ts');
+
+test('retos de 30 días: cuenta, meta, vencimiento y ritmo', () => {
+  const day = (n) => { const d = new Date(2026, 9, 1 + n, 12); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const workout = (n, mobility = false) => ({ id: `w${n}${mobility}`, date: day(n), completedAt: `${day(n)}T18:00:00Z`, durationMinutes: 30, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: mobility ? exercises.find((e) => e.category === 'mobility').id : 1, unit: 'reps', sets: [] }] });
+  const data = (overrides = {}) => ({ workouts: [], foodLog: [], water: [], waterGoal: 8, proteinTarget: 140, ...overrides });
+  const entry = { id: 'r1', kind: 'entrenos-12', start: day(0) };
+  // Antes del inicio no cuenta; 5 entrenos en la ventana.
+  const five = challenges.challengeProgress(entry, data({ workouts: [workout(-2), ...[0, 2, 4, 6, 8].map((n) => workout(n))] }), day(10));
+  assert.deepEqual([five.count, five.target, five.status, five.end, five.daysLeft], [5, 12, 'active', day(29), 20]);
+  assert.match(challenges.paceLine(five), /Te faltan 7 en 20 días: unos 3 por semana/);
+  // 12 entrenos: cumplido el día del duodécimo.
+  const twelve = challenges.challengeProgress(entry, data({ workouts: Array.from({ length: 13 }, (_, n) => workout(n * 2)) }), day(29));
+  assert.deepEqual([twelve.status, twelve.count, twelve.doneOn], ['done', 12, day(22)]);
+  // Vencido sin llegar, y abandonado.
+  assert.equal(challenges.challengeProgress(entry, data({ workouts: [workout(1)] }), day(30)).status, 'expired');
+  assert.equal(challenges.challengeProgress({ ...entry, endedAt: day(5) }, data({ workouts: [workout(1), workout(7)] }), day(8)).count, 1, 'lo de después de abandonar no cuenta');
+  // Agua, comidas, proteína y movilidad.
+  const water = Array.from({ length: 22 }, (_, n) => ({ date: day(n), glasses: n % 2 ? 9 : 5 }));
+  assert.equal(challenges.challengeProgress({ id: 'a', kind: 'agua-21', start: day(0) }, data({ water }), day(25)).count, 11);
+  const food = (n, protein) => ({ id: `f${n}${protein}`, date: day(n), meal: 'almuerzo', foodId: 'x', name: 'x', portion: '', portions: 2, kcal: 300, protein, carbs: 0, fat: 0 });
+  const foodLog = [food(0, 40), food(0, 40), food(1, 30), food(2, 80)];
+  assert.equal(challenges.challengeProgress({ id: 'c', kind: 'comidas-25', start: day(0) }, data({ foodLog }), day(5)).count, 3);
+  assert.equal(challenges.challengeProgress({ id: 'p', kind: 'proteina-20', start: day(0) }, data({ foodLog }), day(5)).count, 2, '160 g y 160 g llegan a 140; 60 g no');
+  assert.equal(challenges.challengeProgress({ id: 'p', kind: 'proteina-20', start: day(0) }, data({ foodLog, proteinTarget: null }), day(5)).count, 0);
+  assert.equal(challenges.challengeProgress({ id: 'm', kind: 'movilidad-10', start: day(0) }, data({ workouts: [workout(1, true), workout(2), workout(3, true)] }), day(5)).count, 2);
+  const tooLate = challenges.challengeProgress({ id: 'a', kind: 'agua-21', start: day(0) }, data({ water: [] }), day(20));
+  assert.match(challenges.paceLine(tooLate), /este no alcanza/);
+  assert.equal(challenges.challengeCatalog.filter((item) => item.counting).length, 2);
+});

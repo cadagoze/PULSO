@@ -8,6 +8,7 @@ export const progressViews = [
   { value: "records", label: "Récords" },
   { value: "cuerpo", label: "Cuerpo" },
   { value: "logros", label: "Logros" },
+  { value: "retos", label: "Retos" },
 ] as const;
 
 export type ProgressSubview = (typeof progressViews)[number]["value"];

@@ -10,6 +10,7 @@ import { removePersistentKey, removePersistentMemory, usePersistentState } from 
 import { localDateKey } from "@/lib/utils";
 import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, ProgramProgress, ReadinessEntry, SavedMeal, Settings, TrainingDraft, TrainingPreference, TrainingRoutine, WaterEntry, WeightEntry, WorkoutEntry } from "@/types";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
+import type { ChallengeEntry } from "@/lib/challenges";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
 export { STORAGE_KEYS };
@@ -39,6 +40,7 @@ const emptyIds: number[] = [];
 const emptyFoodLog: FoodEntry[] = [];
 const emptyFoods: FoodItem[] = [];
 const emptyWater: WaterEntry[] = [];
+const emptyChallenges: ChallengeEntry[] = [];
 const emptySavedMeals: SavedMeal[] = [];
 /** Plantilla diaria de comidas: todas pendientes. */
 const mealTemplate: Meal[] = initialMeals.map((meal) => ({ id: meal.id, name: meal.name, time: meal.time, status: "Pendiente" as const }));
@@ -136,6 +138,11 @@ export function useCustomFoods() {
 /** Comidas guardadas para registrar con un toque. */
 export function useSavedMeals() {
   return usePersistentState<SavedMeal[]>(STORAGE_KEYS.savedMeals, emptySavedMeals);
+}
+
+/** Retos de 30 días empezados (activos, cumplidos, vencidos o abandonados). */
+export function useChallenges() {
+  return usePersistentState<ChallengeEntry[]>(STORAGE_KEYS.challenges, emptyChallenges);
 }
 
 /** Vasos de agua por día (historial de 120 días). */

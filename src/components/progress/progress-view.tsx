@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AchievementsTab } from "@/components/progress/achievements-tab";
 import { BodyTab } from "@/components/progress/body-tab";
+import { ChallengesTab } from "@/components/progress/challenges-tab";
 import { HistoryTab } from "@/components/progress/history-tab";
 import { isPeriod, type Period } from "@/components/progress/period";
 import type { ChartMetric } from "@/components/progress/period-chart";
@@ -17,6 +18,7 @@ const subtitles: Record<ProgressSubview, string> = {
   records: "Tus mejores marcas, ejercicio por ejercicio.",
   cuerpo: "Peso y medidas: cambios que se ven con el tiempo.",
   logros: "Hitos de constancia, fuerza y volumen.",
+  retos: "30 días, una meta. Se cuenta sola con lo que registras.",
 };
 
 /**
@@ -62,6 +64,7 @@ function Subview({ view }: { view: ProgressSubview }) {
         {view === "records" && <RecordsTab />}
         {view === "cuerpo" && <BodyTab />}
         {view === "logros" && <AchievementsTab />}
+        {view === "retos" && <ChallengesTab />}
       </div>
     </div>
   );

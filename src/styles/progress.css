@@ -362,3 +362,24 @@
 .share-secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .share-secondary .btn { padding: 0 12px; }
 .share-notice { min-height: 18px; margin-top: -6px; text-align: center; font-size: 13px; color: var(--ink-2); }
+
+/* ─── Retos de 30 días ─────────────────────────────────────────────────── */
+.challenges { gap: 32px; }
+.ch-list, .ch-catalog, .ch-medals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ch-card { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.ch-card-head { display: flex; align-items: center; gap: 12px; }
+.ch-card-head .grow, .ch-option .grow, .ch-medal .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ch-card-head strong, .ch-option strong, .ch-medal strong { font-size: 15px; font-weight: 600; }
+.ch-card-head small, .ch-option small, .ch-medal small { font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.ch-count { display: flex; align-items: baseline; gap: 2px; }
+.ch-count .num-display { font-size: 44px; line-height: 1; }
+.ch-count .nmetric-soft { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 26px; font-weight: 700; }
+.ch-unit { margin-left: 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.ch-pace { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.ch-abandon { align-self: flex-start; font-size: 13px; color: var(--ink-3); }
+.ch-option { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 16px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.ch-option .btn { flex: none; }
+.ch-note { font-size: 13px; }
+.ch-medal { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--gold) 30%, transparent); }
+.ch-medal-badge { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: #1a1205; }
+.ch-medal-mark { flex: none; color: var(--gold); }

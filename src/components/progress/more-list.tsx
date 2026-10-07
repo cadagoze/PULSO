@@ -3,7 +3,7 @@
 import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Award, ChevronRight, Download, Gauge, History, Ruler, Share2, Trophy } from "lucide-react";
+import { Award, ChevronRight, Download, Gauge, History, Medal, Ruler, Share2, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { ExportSheet } from "@/components/progress/export-sheet";
 import { weightLabel } from "@/components/progress/format";
@@ -14,6 +14,7 @@ import { useSettings, useWeights } from "@/lib/store";
 import { sortedWorkouts } from "@/lib/training";
 import { formatRelativeDay } from "@/lib/utils";
 import type { WorkoutEntry } from "@/types";
+import { useChallengeBoard } from "@/lib/use-challenges";
 
 function RowContent({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -50,6 +51,10 @@ export function MoreList({ workouts, nowMs, onShare }: { workouts: WorkoutEntry[
   const unlocked = list.filter((item) => item.unlocked).length;
   const load = trainingLoad(workouts, nowMs);
   const lastWeight = [...weights].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+  const board = useChallengeBoard();
+  const challengeDetail = board.active.length || board.medals.length
+    ? [board.active.length ? `${board.active.length} en curso` : "", board.medals.length ? `${board.medals.length} ${board.medals.length === 1 ? "medalla" : "medallas"}` : ""].filter(Boolean).join(" · ")
+    : "Una meta de 30 días, con medalla";
 
   return (
     <section className="section prog-more" aria-labelledby="prog-more-title">
@@ -71,6 +76,7 @@ export function MoreList({ workouts, nowMs, onShare }: { workouts: WorkoutEntry[
         <ViewRow view="records" icon={<Trophy size={18} />} title="Récords" detail={exercises ? `${exercises} ${exercises === 1 ? "ejercicio" : "ejercicios"} · ${prs} ${prs === 1 ? "récord" : "récords"}` : "Tus mejores marcas por ejercicio"} />
         <ViewRow view="cuerpo" icon={<Ruler size={18} />} title="Cuerpo" detail={lastWeight ? `${weightLabel(lastWeight.weight, settings.unit)} · peso y medidas` : "Peso y medidas"} />
         <ViewRow view="logros" icon={<Award size={18} />} title="Logros" detail={`${unlocked} de ${list.length} desbloqueados`} />
+        <ViewRow view="retos" icon={<Medal size={18} />} title="Retos de 30 días" detail={challengeDetail} />
         <li>
           <button type="button" className="list-row" onClick={() => setSheet("load")}>
             <RowContent icon={<Gauge size={18} />} title="Carga de entrenamiento" detail={load.ratio === null ? loadStatusCopy.unknown.short : `${loadStatusCopy[load.status].short} · ${ratioLabel(load.ratio)}`} />

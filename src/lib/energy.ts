@@ -9,7 +9,7 @@ const DAY = 86_400_000;
 // ─── Gasto por sesión ──────────────────────────────────────────────────────
 
 /** Sólo ejercicios de movilidad (p. ej. «Movilidad 10 min»): cuentan como estiramientos, no como fuerza. */
-function isMobilityOnly(entry: Pick<WorkoutEntry, "records">) {
+export function isMobilityOnly(entry: Pick<WorkoutEntry, "records">) {
   const records = entry.records ?? [];
   return records.length > 0 && records.every((record) => exerciseById(record.exerciseId)?.category === "mobility");
 }
