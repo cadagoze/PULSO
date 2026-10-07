@@ -15,6 +15,7 @@ import { defaultMetric, PeriodChart, type ChartMetric } from "@/components/progr
 import { clearFromSummary } from "@/components/progress/progress-nav";
 import { WeekShareSheet } from "@/components/progress/week-share-sheet";
 import { WeightSummary } from "@/components/progress/weight-summary";
+import { WeekInsights } from "@/components/progress/week-insights";
 import { weekStreak } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
@@ -94,11 +95,12 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
           <div className="prog-area-chart rise" style={rise(1)}>
             <PeriodChart key={period} summary={summary} metric={metric ?? defaultMetric(summary)} onMetric={onMetric} unit={settings.unit} />
           </div>
-          <div className="prog-area-consistency rise" style={rise(2)}><ConsistencySection workouts={workouts} now={date} goal={goal} pausedWeeks={settings.pausedWeeks} /></div>
-          <div className="prog-area-marks rise" style={rise(3)}><BestMarks summary={summary} workouts={workouts} unit={settings.unit} /></div>
-          <div className="prog-area-weight rise" style={rise(4)}><WeightSummary period={period} nowMs={now} /></div>
-          <div className="prog-area-muscles rise" style={rise(5)}><MusclesSection workouts={workouts} summary={summary} nowMs={now} /></div>
-          <div className="prog-area-more rise" style={rise(6)}><MoreList workouts={workouts} nowMs={now} onShare={() => setSharing(true)} /></div>
+          <div className="prog-area-insights rise" style={rise(2)}><WeekInsights nowMs={now} /></div>
+          <div className="prog-area-consistency rise" style={rise(3)}><ConsistencySection workouts={workouts} now={date} goal={goal} pausedWeeks={settings.pausedWeeks} /></div>
+          <div className="prog-area-marks rise" style={rise(4)}><BestMarks summary={summary} workouts={workouts} unit={settings.unit} /></div>
+          <div className="prog-area-weight rise" style={rise(5)}><WeightSummary period={period} nowMs={now} /></div>
+          <div className="prog-area-muscles rise" style={rise(6)}><MusclesSection workouts={workouts} summary={summary} nowMs={now} /></div>
+          <div className="prog-area-more rise" style={rise(7)}><MoreList workouts={workouts} nowMs={now} onShare={() => setSharing(true)} /></div>
         </div>
       )}
       {!empty && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}

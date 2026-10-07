@@ -1021,3 +1021,52 @@ test('test físico: niveles, puntaje, comparación y cuándo repetirlo', () => {
   assert.equal(fitness.testStatus([first], '2026-10-29').due, true);
   assert.ok(sync.docSpecs.some((spec) => spec.key === 'pulso:fitness-tests'), 'se sincroniza como documento');
 });
+
+const insightsLib = load('src/lib/week-insights.ts');
+
+test('tu semana en datos: hallazgos con datos suficientes y qué falta', () => {
+  const today = '2026-10-29';
+  const day = (n) => { const d = new Date(`${today}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
+  const base = { today, workouts: [], readiness: [], foodLog: [], water: [], waterGoal: 8, targets: null, trainingDays: [], reminderTime: null };
+  // Sin datos: nada que mostrar, pero sí qué registrar.
+  const empty = insightsLib.weekInsights(base);
+  assert.equal(empty.insights.length, 0);
+  assert.equal(empty.missing.length, 2);
+  // Sueño: con buen sueño entrena 4 de 4; con sueño normal o malo, 1 de 4.
+  const checkin = (n, sleep) => ({ date: day(n), energy: 2, sleep, soreness: 0, score: 60, recommendation: 'planned', updatedAt: '' });
+  const at = (n, hour) => { const [y, m, d] = day(n).split('-').map(Number); return new Date(y, m - 1, d, hour, 0).toISOString(); };
+  const workout = (n, hour = 19) => ({ id: `w${n}`, date: day(n), completedAt: at(n, hour), durationMinutes: 40, exerciseCount: 4, sets: 12, mode: 'full' });
+  const readiness = [...[1, 2, 3, 4].map((n) => checkin(n, 3)), ...[5, 6, 7, 8].map((n) => checkin(n, 1))];
+  const sleep = insightsLib.weekInsights({ ...base, readiness, workouts: [1, 2, 3, 4, 5].map((n) => workout(n)) });
+  const found = sleep.insights.find((item) => item.id === 'checkin-sleep');
+  assert.ok(found, 'aparece el hallazgo del sueño');
+  assert.equal(found.detail, 'Con buen sueño entrenaste 4 de 4 días; con sueño normal o malo, 1 de 4.');
+  // Hoy no cuenta y lo de hace más de 4 semanas tampoco.
+  assert.equal(insightsLib.weekInsights({ ...base, readiness: readiness.map((entry) => ({ ...entry, date: today })) }).insights.length, 0);
+  // Días fuertes (si no hay días fijos) y la hora del aviso.
+  const weekly = [1, 3, 8, 10, 15, 17, 22].map((n) => workout(n));
+  const days = insightsLib.weekInsights({ ...base, workouts: weekly });
+  assert.ok(days.insights.some((item) => item.id === 'weekdays' && item.action.href === '/perfil'));
+  assert.equal(insightsLib.weekInsights({ ...base, workouts: weekly, trainingDays: [0, 2] }).insights.some((item) => item.id === 'weekdays'), false);
+  const timing = insightsLib.weekInsights({ ...base, workouts: weekly, reminderTime: '08:00' }).insights.find((item) => item.id === 'timing');
+  assert.ok(timing, 'sugiere mover el aviso');
+  assert.equal(timing.title, 'Sueles entrenar cerca de las 18:30', 'empieza 18:20 (termina 19:00 tras 40 min)');
+  assert.equal(timing.action.time, '18:00', 'el aviso, 30 minutos antes');
+  assert.equal(insightsLib.weekInsights({ ...base, workouts: weekly, reminderTime: '18:00' }).insights.some((item) => item.id === 'timing'), false);
+  // Comidas (sólo contando calorías): fin de semana y proteína en días de entreno.
+  const food = (n, kcal, protein) => [{ id: `a${n}`, date: day(n), meal: 'almuerzo', foodId: 'x', name: 'x', portion: '', portions: 1, kcal: kcal / 2, protein: protein / 2, carbs: 0, fat: 0 }, { id: `b${n}`, date: day(n), meal: 'cena', foodId: 'x', name: 'x', portion: '', portions: 1, kcal: kcal / 2, protein: protein / 2, carbs: 0, fat: 0 }];
+  const weekdayOf = (n) => (new Date(`${day(n)}T12:00:00Z`).getUTCDay() + 6) % 7;
+  const range = Array.from({ length: 14 }, (_, i) => i + 1);
+  const foodLog = range.flatMap((n) => food(n, weekdayOf(n) >= 5 ? 2600 : 1900, 80));
+  const withFood = insightsLib.weekInsights({ ...base, foodLog, workouts: [2, 3, 4].map((n) => workout(n)), targets: { kcal: 2000, protein: 120 } });
+  const weekend = withFood.insights.find((item) => item.id === 'weekend');
+  assert.ok(weekend && /El fin de semana comes más/.test(weekend.title));
+  assert.match(weekend.detail, /2\.600 kcal por día; de lunes a viernes, 1\.900/);
+  assert.ok(withFood.insights.some((item) => item.id === 'protein-low'), '80 de 120 g en días de entreno');
+  assert.equal(insightsLib.weekInsights({ ...base, foodLog }).insights.some((item) => item.id === 'weekend'), false, 'sin contar calorías no hay hallazgos de comida');
+  // Agua: 1 de 7 días en la meta.
+  const water = [1, 2, 3, 4, 5].map((n) => ({ date: day(n), glasses: n === 1 ? 9 : 4 }));
+  assert.ok(insightsLib.weekInsights({ ...base, water }).insights.some((item) => item.id === 'water-low'));
+  // Nunca más de 3.
+  assert.ok(insightsLib.weekInsights({ ...base, readiness, foodLog, water, workouts: weekly, targets: { kcal: 2000, protein: 120 }, reminderTime: '08:00' }).insights.length <= 3);
+});
