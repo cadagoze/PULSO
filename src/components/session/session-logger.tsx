@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link2, StickyNote } from "lucide-react";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
 import { MetaLine } from "@/components/ui";
-import { beep, primeAudio, useWakeLock, vibrate } from "@/lib/feedback";
+import { beep, primeAudio, speak, useWakeLock, vibrate } from "@/lib/feedback";
 import { exerciseBests, progressedSets, warmupSets } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
 import { markProgramSession } from "@/lib/programs";
@@ -60,12 +60,15 @@ export function SessionLogger() {
 }
 
 /** Avisos del temporizador por serie (ejercicios por tiempo). No pinta nada. */
-function CountdownWatcher({ countdown, sound, vibration }: { countdown: SetCountdown; sound: boolean; vibration: boolean }) {
+function CountdownWatcher({ countdown, sound, voice, vibration }: { countdown: SetCountdown; sound: boolean; voice: boolean; vibration: boolean }) {
   const now = useNow(250);
   useCountdownCues({
     key: `${countdown.recordIndex}-${countdown.setIndex}-${countdown.until}`,
     remainingMs: countdown.until - now,
     now,
+    onTen: () => {
+      if (voice) speak("Quedan 10 segundos");
+    },
     onTick: () => {
       if (sound) beep({ frequency: 660, duration: 0.09 });
     },
@@ -214,6 +217,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     if (settingsRef.current.sound) beep({ frequency: 1180, duration: 0.05 });
     setFocus(null);
     setJustDone({ recordIndex, setIndex, next: nextExerciseAfter(records, recordIndex) });
+    // Última serie de la sesión: tras ver el check, se abre la hoja para guardar (así cuenta en tu semana).
+    if (!records.some(hasPending)) window.setTimeout(() => setFinishOpen(true), 900);
   }, [patch]);
 
   const onAddSet = useCallback((recordIndex: number) => {
@@ -469,6 +474,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             restUntil={draft.restUntil}
             restTotal={draft.restTotal ?? draft.restSeconds}
             sound={settings.sound}
+            voice={settings.sound && settings.voice !== false}
             vibration={settings.vibration}
             size={ringSize}
             upcoming={upcoming}
@@ -555,7 +561,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         )}
       </div>
 
-      {countdown && <CountdownWatcher countdown={countdown} sound={settings.sound} vibration={settings.vibration} />}
+      {countdown && <CountdownWatcher countdown={countdown} sound={settings.sound} voice={settings.sound && settings.voice !== false} vibration={settings.vibration} />}
 
       <SessionSheet
         open={sessionOpen}

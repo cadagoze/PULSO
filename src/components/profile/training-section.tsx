@@ -57,6 +57,11 @@ export function TrainingSection({ settings, update, order }: { settings: Setting
         control={<Switch checked={settings.sound} onChange={(sound) => update({ sound })} label="Sonidos" />}
       />
       <SettingRow
+        title="Voz"
+        helper={settings.sound ? "Te dice «quedan 10 segundos» en ejercicios por tiempo, descansos e intervalos." : "Necesita los sonidos activados."}
+        control={<Switch checked={settings.sound && settings.voice !== false} onChange={(voice) => update(voice ? { voice, sound: true } : { voice })} label="Avisos con voz" />}
+      />
+      <SettingRow
         title="Vibración"
         helper="En Android. Safari en iPhone no permite vibrar desde la web."
         control={<Switch checked={settings.vibration} onChange={(vibration) => update({ vibration })} label="Vibración" />}

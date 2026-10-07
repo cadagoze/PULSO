@@ -13,6 +13,10 @@ export const finishRequestPending = () => finishRequested;
 export function clearFinishRequest() {
   finishRequested = false;
 }
+/** Abrir la hoja de guardar al entrar a la sesión (desde Inicio o la barra del entrenamiento en curso). */
+export function requestFinish() {
+  finishRequested = true;
+}
 
 /** Pausar o reanudar el reloj del entrenamiento en curso, y descartarlo, desde fuera de la sesión. */
 export function useDraftControls() {

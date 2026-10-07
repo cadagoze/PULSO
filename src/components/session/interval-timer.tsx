@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowLeft, Check, Pause, Play, RotateCcw, SkipForward, Square, Volume2, VolumeX } from "lucide-react";
 import { intervalPresets } from "@/data/programs";
@@ -195,12 +195,14 @@ function Setup({ onStart }: { onStart: (config: IntervalConfig) => void }) {
 function Completion({ run, elapsedMs, onRepeat }: { run: Run; elapsedMs: number; onRepeat: () => void }) {
   const [, setWorkouts] = useWorkouts();
   const [effort, setEffort] = useState<Effort>(3);
-  const [saved, setSaved] = useState(false);
+  const [manualSaved, setManualSaved] = useState(false);
   const rounds = roundsDone(run, elapsedMs);
   const minutes = Math.round(elapsedMs / 6000) / 10;
   const finished = rounds >= run.config.rounds;
+  // Completos se guardan solos (así cuentan en tu semana aunque salgas); detenidos antes, a mano.
+  const saved = finished || manualSaved;
 
-  function save() {
+  function save(value: Effort = effort) {
     const now = Date.now();
     const stamp = new Date(now).toISOString();
     const entry: WorkoutEntry = {
@@ -213,15 +215,24 @@ function Completion({ run, elapsedMs, onRepeat }: { run: Run; elapsedMs: number;
       sets: rounds,
       mode: "full",
       records: [],
-      effort,
+      effort: value,
       feedbackAt: stamp,
       source: { type: "free" },
       kind: "interval",
       volume: 0,
-      load: Math.round(effort * 2 * minutes * 10) / 10,
+      load: Math.round(value * 2 * minutes * 10) / 10,
     };
     setWorkouts((items) => [entry, ...items.filter((item) => item.id !== entry.id)]);
-    setSaved(true);
+  }
+
+  const autoSave = useEffectEvent(() => save(3));
+  useEffect(() => {
+    if (finished) autoSave();
+  }, [finished]);
+
+  function changeEffort(value: Effort) {
+    setEffort(value);
+    if (saved) save(value);
   }
 
   return (
@@ -240,11 +251,14 @@ function Completion({ run, elapsedMs, onRepeat }: { run: Run; elapsedMs: number;
         </dl>
 
         {saved ? (
-          <p className="notice" role="status"><Check size={18} /><span>Guardado en tu historial. Trabajo hecho.</span></p>
+          <div className="ses-iv-save">
+            <p className="notice" role="status"><Check size={18} /><span>Guardado en tu historial. Trabajo hecho.</span></p>
+            <EffortPicker value={effort} onChange={changeEffort} />
+          </div>
         ) : rounds > 0 ? (
           <div className="ses-iv-save">
             <EffortPicker value={effort} onChange={setEffort} />
-            <button type="button" className="btn btn-primary btn-large btn-block" onClick={save}>Guardar en mi historial</button>
+            <button type="button" className="btn btn-primary btn-large btn-block" onClick={() => { save(); setManualSaved(true); }}>Guardar en mi historial</button>
           </div>
         ) : (
           <p className="ses-summary-sub">No alcanzaste a completar una ronda, así que no hay nada que guardar.</p>
@@ -259,10 +273,11 @@ function Completion({ run, elapsedMs, onRepeat }: { run: Run; elapsedMs: number;
   );
 }
 
-function Runner({ run, setRun, sound, vibration, keepAwake, onRepeat }: {
+function Runner({ run, setRun, sound, voice, vibration, keepAwake, onRepeat }: {
   run: Run;
   setRun: (update: (run: Run) => Run) => void;
   sound: boolean;
+  voice: boolean;
   vibration: boolean;
   keepAwake: boolean;
   onRepeat: () => void;
@@ -284,6 +299,10 @@ function Runner({ run, setRun, sound, vibration, keepAwake, onRepeat }: {
     key: running ? `${run.id}-${index}` : null,
     remainingMs,
     now,
+    // Sólo en los tramos de trabajo: en las pausas basta con el aviso de la fase.
+    onTen: () => {
+      if (voice && segment.phase === "work") speak("Quedan 10 segundos");
+    },
     onTick: () => {
       if (sound) beep({ frequency: 660, duration: 0.09 });
     },
@@ -299,11 +318,11 @@ function Runner({ run, setRun, sound, vibration, keepAwake, onRepeat }: {
     phaseRef.current = { run: run.id, index, done };
     if (!previous || previous.run !== run.id) return;
     if (done && !previous.done) {
-      if (sound) speak("Terminado");
+      if (voice) speak("Terminado");
       return;
     }
-    if (!done && previous.index !== index && sound) speak(phaseLabels[segment.phase]);
-  }, [done, index, now, run.id, segment.phase, sound]);
+    if (!done && previous.index !== index && voice) speak(phaseLabels[segment.phase]);
+  }, [done, index, now, run.id, segment.phase, voice]);
 
   function togglePause() {
     const time = Date.now();
@@ -390,7 +409,7 @@ export function IntervalTimer() {
 
   function start(config: IntervalConfig) {
     primeAudio();
-    if (settings.sound) speak("Prepárate");
+    if (settings.sound && settings.voice !== false) speak("Prepárate");
     setRunState(createRun(config));
   }
 
@@ -402,6 +421,7 @@ export function IntervalTimer() {
           run={run}
           setRun={setRun}
           sound={settings.sound}
+          voice={settings.sound && settings.voice !== false}
           vibration={settings.vibration}
           keepAwake={settings.keepAwake}
           onRepeat={() => start(run.config)}

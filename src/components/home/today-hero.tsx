@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Flame, Pause, Play, SlidersHorizontal, Square, StretchHorizontal } from "lucide-react";
-import { DraftEndSheet, useDraftControls } from "@/components/session/draft-controls";
+import { Check, Flame, Pause, Play, SlidersHorizontal, Square, StretchHorizontal } from "lucide-react";
+import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
@@ -65,13 +65,23 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
   if (draft) {
     const done = completedSets(draft.records);
     const total = totalSets(draft.records);
+    // Todas las series hechas pero sin guardar: no cuenta en tu semana hasta guardarlo.
+    const ready = total > 0 && done === total;
     return (
-      <HeroFrame photo={heroPhoto("home", seed, audience)} tag={<><span className="home-live-dot" aria-hidden="true" />En curso</>} meta="Entrenamiento a medias" title={draft.name}>
+      <HeroFrame
+        photo={heroPhoto("home", seed, audience)}
+        tag={ready ? <><Check size={13} strokeWidth={3} aria-hidden="true" />Listo para guardar</> : <><span className="home-live-dot" aria-hidden="true" />En curso</>}
+        meta={ready ? "Entrenamiento completo" : "Entrenamiento a medias"}
+        title={draft.name}
+        line={ready ? "Guárdalo para que cuente en tu semana." : undefined}
+      >
         <div className="home-hero-progress">
-          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
+          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, ready ? "Sin guardar" : draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
         </div>
-        <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar entrenamiento</ButtonLink>
+        {ready
+          ? <ButtonLink href="/entrenar/sesion?terminar=1" size="l" block onClick={requestFinish}><Check size={18} />Guardar entrenamiento</ButtonLink>
+          : <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar entrenamiento</ButtonLink>}
         <DraftButtons />
       </HeroFrame>
     );

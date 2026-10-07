@@ -12,9 +12,11 @@ import { WeekStrip } from "@/components/home/week-strip";
 import { useDraft, useProfile, useReadiness, useWorkouts } from "@/lib/store";
 import { localDateKey } from "@/lib/utils";
 import type { ReadinessEntry } from "@/types";
+import { completedSets, totalSets } from "@/lib/training";
 
 /** Frase bajo el saludo, según lo que toca hoy (el progreso de la semana va en la portada). */
-function homeLine({ inProgress, readiness }: { inProgress: boolean; readiness?: ReadinessEntry["recommendation"] }) {
+function homeLine({ inProgress, ready, readiness }: { inProgress: boolean; ready: boolean; readiness?: ReadinessEntry["recommendation"] }) {
+  if (ready) return "Entrenamiento completo: guárdalo para que cuente.";
   if (inProgress) return "Dejaste un entrenamiento a medias. Termínalo.";
   if (readiness === "recovery") return "Hoy se recupera. Moverse suave también es disciplina.";
   if (readiness === "short") return "Poco tiempo no es excusa: sesión corta y bien hecha.";
@@ -34,12 +36,14 @@ export default function Home() {
 
   const today = localDateKey(new Date(now));
   const todayEntry = readiness.find((entry) => entry.date === today);
+  // Todas las series hechas pero sin guardar.
+  const draftReady = draft ? totalSets(draft.records) > 0 && completedSets(draft.records) === totalSets(draft.records) : false;
   // El chequeo sirve antes de entrenar: con la sesión en curso o ya hecha, sobra.
   const showReadiness = !draft && !workouts.some((workout) => workout.date === today);
 
   return (
     <div className="page home">
-      <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), readiness: todayEntry?.recommendation })} />
+      <HomeHeader now={now} line={homeLine({ inProgress: Boolean(draft), ready: draftReady, readiness: todayEntry?.recommendation })} />
       {/* Lo primero al abrir: calorías, alimentación y agua; después, el entrenamiento de hoy. */}
       <div className="home-fuel-slot">
         <FirstWeek />

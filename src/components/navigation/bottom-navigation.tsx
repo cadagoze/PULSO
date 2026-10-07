@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChartNoAxesColumn, Dumbbell, House, Pause, Play, Salad, Square, UserRound, type LucideIcon } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { clockLabel, completedSets, durationSeconds, totalSets } from "@/lib/training";
-import { DraftEndSheet, useDraftControls } from "@/components/session/draft-controls";
+import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
@@ -63,14 +63,15 @@ function ResumeBanner() {
   const now = useNow(1000);
   if (!draft) return null;
   const elapsed = now ? durationSeconds(draft, now) : draft.elapsedSeconds;
+  const ready = totalSets(draft.records) > 0 && completedSets(draft.records) === totalSets(draft.records);
   return (
     <>
       <div className={cn("nav-resume", paused && "is-paused")}>
-        <Link href="/entrenar/sesion" className="nav-resume-link" aria-label={`Volver al entrenamiento en curso: ${draft.name}`}>
+        <Link href={ready ? "/entrenar/sesion?terminar=1" : "/entrenar/sesion"} onClick={ready ? requestFinish : undefined} className="nav-resume-link" aria-label={ready ? `Guardar el entrenamiento completo: ${draft.name}` : `Volver al entrenamiento en curso: ${draft.name}`}>
           <span className="pulse-dot" aria-hidden="true" />
           <span className="grow">
             <strong>{draft.name}</strong>
-            <small><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{paused ? " · En pausa" : ""}</small>
+            <small>{ready ? "Todo listo · toca para guardar" : <><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{paused ? " · En pausa" : ""}</>}</small>
           </span>
         </Link>
         <button type="button" className="resume-btn resume-go" onClick={togglePause} aria-label={paused ? "Reanudar el reloj" : "Pausar el reloj"}>

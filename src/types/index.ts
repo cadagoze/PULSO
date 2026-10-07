@@ -241,6 +241,8 @@ export interface Settings {
   vibration: boolean;
   keepAwake: boolean;
   autoRest: boolean;
+  /** Avisos hablados («quedan 10 segundos», fases de intervalos). Sin valor: activos (si hay sonido). */
+  voice?: boolean;
   barWeight: number;
   plates: number[];
   /** Color de acento elegido; sin valor, automático según cómo te identificas. */

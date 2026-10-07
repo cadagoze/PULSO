@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { WorkoutTimer } from "@/components/ui/workout-timer";
-import { beep, vibrate } from "@/lib/feedback";
+import { beep, speak, vibrate } from "@/lib/feedback";
 import { clockLabel } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -15,10 +15,11 @@ const AFTERGLOW_MS = 4000;
  * últimos segundos. Se calcula desde `restUntil`, así que sobrevive a recargas. Al terminar queda
  * unos segundos un aviso de «descanso terminado».
  */
-export function RestOverlay({ restUntil, restTotal, sound, vibration, size, upcoming }: {
+export function RestOverlay({ restUntil, restTotal, sound, voice = false, vibration, size, upcoming }: {
   restUntil: number | null;
   restTotal: number;
   sound: boolean;
+  voice?: boolean;
   vibration: boolean;
   size: number;
   /** Lo que viene después: «Serie 3 de 4» o el siguiente ejercicio. */
@@ -31,6 +32,9 @@ export function RestOverlay({ restUntil, restTotal, sound, vibration, size, upco
     key: restUntil === null ? null : String(restUntil),
     remainingMs,
     now,
+    onTen: () => {
+      if (voice) speak("Quedan 10 segundos de descanso");
+    },
     onTick: () => {
       if (sound) beep({ frequency: 660, duration: 0.09 });
     },

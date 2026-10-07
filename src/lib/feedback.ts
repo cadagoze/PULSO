@@ -15,9 +15,29 @@ function context() {
   }
 }
 
-/** Desbloquea el audio en iOS: llamar dentro de un gesto del usuario (p. ej. al iniciar la sesión). */
+let speechPrimed = false;
+
+/** Desbloquea el audio y la voz en iOS: llamar dentro de un gesto del usuario (p. ej. al iniciar la sesión). */
 export function primeAudio() {
   context();
+  if (speechPrimed || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  try {
+    // Una frase vacía dentro del toque habilita las siguientes, que llegan sin gesto.
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+    speechPrimed = true;
+  } catch {
+    // Sin voz: se sigue con sonido y vibración.
+  }
+}
+
+/** Voz en español; primero la latinoamericana (Chile, México, EE. UU.), si el equipo la tiene. */
+function spanishVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  for (const lang of ["es-CL", "es-419", "es-MX", "es-US", "es-ES"]) {
+    const voice = voices.find((item) => item.lang.replace("_", "-") === lang);
+    if (voice) return voice;
+  }
+  return voices.find((item) => item.lang.toLowerCase().startsWith("es")) ?? null;
 }
 
 /** Pitido corto. `count` repite el tono; el último puede ser más largo para marcar el final. */
@@ -54,7 +74,9 @@ export function speak(text: string) {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "es-ES";
+    const voice = spanishVoice();
+    if (voice) utterance.voice = voice;
+    utterance.lang = voice?.lang ?? "es-ES";
     utterance.rate = 1.05;
     window.speechSynthesis.speak(utterance);
   } catch {
