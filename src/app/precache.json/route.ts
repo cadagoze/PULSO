@@ -1,5 +1,6 @@
 import { exercises } from "@/data/mock-data";
 import { programs } from "@/data/programs";
+import { breakRoutines } from "@/data/active-breaks";
 
 export const dynamic = "force-static";
 
@@ -9,6 +10,7 @@ export function GET() {
     pages: [
       ...programs.map((program) => `/entrenar/programas/${program.id}`),
       ...exercises.map((exercise) => `/ejercicios/${exercise.id}`),
+      ...breakRoutines.map((routine) => `/pausas/${routine.id}`),
     ],
   });
 }

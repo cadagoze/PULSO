@@ -6,7 +6,7 @@ import { waterGoal } from "@/lib/nutrition";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
 import { defaultPushPrefs, type PushPrefs, type PushState } from "@/lib/reminders";
 import { cleanDays } from "@/lib/training-days";
-import { useFoodLog, useNutritionProfile, useSettings, useWater, useWorkouts } from "@/lib/store";
+import { useBreaks, useFoodLog, useNutritionProfile, useSettings, useWater, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { usePersistentState } from "@/lib/use-persistent-state";
@@ -119,6 +119,7 @@ export function usePushState(): PushState | null {
   const [foodLog] = useFoodLog();
   const [water] = useWater();
   const [nutrition] = useNutritionProfile();
+  const [breaks] = useBreaks();
   const weight = useLatestWeight();
   // Resolución de un minuto: el día cambia a medianoche aunque no se toque nada.
   const minute = Math.floor(useNow() / 60_000);
@@ -142,8 +143,9 @@ export function usePushState(): PushState | null {
       water: water.find((entry) => entry.date === today)?.glasses ?? 0,
       waterGoal: waterGoal(weight).glasses,
       trainingDays: cleanDays(settings.trainingDays),
+      breaksToday: breaks.filter((entry) => entry.date === today).length,
     };
-  }, [foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.trainingDays, settings.weeklyGoal, water, weight, workouts]);
+  }, [breaks, foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.trainingDays, settings.weeklyGoal, water, weight, workouts]);
 }
 
 /**

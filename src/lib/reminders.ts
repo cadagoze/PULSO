@@ -10,9 +10,11 @@ export interface PushPrefs {
   streak: boolean;
   meals: boolean;
   water: boolean;
+  /** Pausas activas a las 11:00 y 16:00, de lunes a viernes. */
+  breaks?: boolean;
 }
 
-export const defaultPushPrefs: PushPrefs = { training: true, trainingTime: "19:00", streak: true, meals: false, water: false };
+export const defaultPushPrefs: PushPrefs = { training: true, trainingTime: "19:00", streak: true, meals: false, water: false, breaks: false };
 
 /** Lo mínimo para saber si un aviso sirve: nunca nombres, comidas, pesos ni medidas. */
 export interface PushState {
@@ -34,9 +36,11 @@ export interface PushState {
   waterGoal: number;
   /** Días fijos de entreno (0 = lunes); vacío o ausente: cualquier día. */
   trainingDays?: number[];
+  /** Pausas activas hechas hoy. */
+  breaksToday?: number;
 }
 
-export type ReminderKind = "training" | "streak" | "meals" | "water-1" | "water-2" | "water-3";
+export type ReminderKind = "training" | "streak" | "meals" | "break-1" | "break-2" | "water-1" | "water-2" | "water-3";
 export interface Reminder { kind: ReminderKind; title: string; body: string; url: string }
 
 export const STREAK_TIME = 18 * 60;
@@ -46,10 +50,15 @@ export const WATER_TIMES: Array<{ kind: ReminderKind; at: number; share: number 
   { kind: "water-2", at: 15 * 60, share: 0.55 },
   { kind: "water-3", at: 18 * 60 + 30, share: 0.8 },
 ];
+/** Pausas activas: la segunda sólo si aún no llevas dos pausas hoy. */
+export const BREAK_TIMES: Array<{ kind: ReminderKind; at: number; before: number }> = [
+  { kind: "break-1", at: 11 * 60, before: 1 },
+  { kind: "break-2", at: 16 * 60, before: 2 },
+];
 /** Si el envío se atrasa, aún vale dentro de esta ventana (minutos); después, ya no. */
 const WINDOW = 90;
 /** Primero lo más específico: si tocan dos a la vez, sólo se envía uno. */
-const PRIORITY: ReminderKind[] = ["streak", "training", "meals", "water-1", "water-2", "water-3"];
+const PRIORITY: ReminderKind[] = ["streak", "training", "meals", "break-1", "break-2", "water-1", "water-2", "water-3"];
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** «19:30» → 1170 minutos; null si no es una hora válida entre 05:00 y 23:00. */
@@ -131,6 +140,14 @@ export function dueReminders({ prefs, state, sent, timeZone, now }: {
       body: today && state.loggedToday ? "Te falta anotar la once o la cena. Un minuto basta." : "Aún no registras comidas hoy. Anótalas en un minuto.",
       url: "/comidas?registrar=1",
     });
+  }
+  if (prefs.breaks && clock.weekday <= 4) {
+    const breaks = today ? state?.breaksToday ?? 0 : 0;
+    for (const slot of BREAK_TIMES) {
+      if (inWindow(slot.at) && pending(slot.kind) && breaks < slot.before) {
+        due.push({ kind: slot.kind, title: "Pausa activa", body: "3 minutos para soltar cuello, espalda y piernas. Tu cuerpo lo agradece.", url: "/pausas" });
+      }
+    }
   }
   if (prefs.water) {
     for (const slot of WATER_TIMES) {

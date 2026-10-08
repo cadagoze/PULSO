@@ -12,6 +12,7 @@ import type { FoodEntry, FoodItem, Meal, MeasurementEntry, NutritionProfile, Pro
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { ChallengeEntry } from "@/lib/challenges";
 import type { FitnessTestEntry } from "@/lib/fitness-test";
+import type { BreakEntry } from "@/lib/active-breaks";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
 export { STORAGE_KEYS };
@@ -43,6 +44,7 @@ const emptyFoods: FoodItem[] = [];
 const emptyWater: WaterEntry[] = [];
 const emptyChallenges: ChallengeEntry[] = [];
 const emptyFitnessTests: FitnessTestEntry[] = [];
+const emptyBreaks: BreakEntry[] = [];
 const emptySavedMeals: SavedMeal[] = [];
 /** Plantilla diaria de comidas: todas pendientes. */
 const mealTemplate: Meal[] = initialMeals.map((meal) => ({ id: meal.id, name: meal.name, time: meal.time, status: "Pendiente" as const }));
@@ -150,6 +152,11 @@ export function useChallenges() {
 /** Tests físicos (uno cada 4 semanas). */
 export function useFitnessTests() {
   return usePersistentState<FitnessTestEntry[]>(STORAGE_KEYS.fitnessTests, emptyFitnessTests);
+}
+
+/** Pausas activas hechas (últimos 120 días). */
+export function useBreaks() {
+  return usePersistentState<BreakEntry[]>(STORAGE_KEYS.breaks, emptyBreaks);
 }
 
 /** Vasos de agua por día (historial de 120 días). */

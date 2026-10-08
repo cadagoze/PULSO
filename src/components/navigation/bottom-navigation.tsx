@@ -13,14 +13,14 @@ type NavItem = { href: string; label: string; icon: LucideIcon; match?: string[]
 
 const items: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
-  { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios"] },
+  { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios", "/pausas"] },
   { href: "/comidas", label: "Nutrición", icon: Salad },
   { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
   { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia"] },
 ];
 
 /** Pantallas a pantalla completa, sin navegación. */
-export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test"];
+export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/pausas/"];
 
 function activeIndex(pathname: string) {
   return items.findIndex((item) => item.href === "/" ? pathname === "/" : (item.match ?? [item.href]).some((href) => pathname.startsWith(href)));

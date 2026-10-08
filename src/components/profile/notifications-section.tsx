@@ -23,7 +23,7 @@ const supportHelp: Record<Exclude<PushSupport, "ready">, string> = {
 };
 
 /**
- * Avisos: activar en este teléfono y elegir cuáles (hora de entrenar, racha, comidas y agua). Cada uno
+ * Avisos: activar en este teléfono y elegir cuáles (hora de entrenar, racha, comidas, pausas activas y agua). Cada uno
  * sólo llega cuando sirve: si ya entrenaste, registraste o tomaste agua, no se envía.
  */
 export function NotificationsSection({ order, onToast }: { order?: number; onToast: (message: string) => void }) {
@@ -98,6 +98,11 @@ export function NotificationsSection({ order, onToast }: { order?: number; onToa
             title="Registrar comidas"
             helper={counting ? "A las 21:00, si aún no registras la once o la cena." : "Para quien cuenta calorías en Nutrición."}
             control={counting ? <Switch checked={push.prefs.meals} onChange={(on) => setPref("meals", on)} label="Aviso para registrar comidas" /> : undefined}
+          />
+          <SettingRow
+            title="Pausas activas"
+            helper="A las 11:00 y 16:00, de lunes a viernes, si aún no haces tu pausa."
+            control={<Switch checked={push.prefs.breaks ?? false} onChange={(on) => setPref("breaks", on)} label="Avisos de pausas activas" />}
           />
           <SettingRow
             title="Agua"

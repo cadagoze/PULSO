@@ -56,7 +56,7 @@ export function sanitizePrefs(value: unknown): PushPrefs {
   const input = isRecord(value) ? value : {};
   const flag = (key: keyof PushPrefs) => (typeof input[key] === "boolean" ? (input[key] as boolean) : (defaultPushPrefs[key] as boolean));
   const time = typeof input.trainingTime === "string" && parseTime(input.trainingTime) !== null ? input.trainingTime : defaultPushPrefs.trainingTime;
-  return { training: flag("training"), trainingTime: time, streak: flag("streak"), meals: flag("meals"), water: flag("water") };
+  return { training: flag("training"), trainingTime: time, streak: flag("streak"), meals: flag("meals"), water: flag("water"), breaks: flag("breaks") };
 }
 
 export function sanitizeState(value: unknown): PushState | null {
@@ -78,6 +78,7 @@ export function sanitizeState(value: unknown): PushState | null {
     loggedEvening: value.loggedEvening === true,
     water: count("water", 30),
     waterGoal: Math.max(1, count("waterGoal", 30)),
+    breaksToday: count("breaksToday", 20),
     trainingDays: Array.isArray(value.trainingDays) ? [...new Set(value.trainingDays.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6))].sort((a, b) => a - b) : [],
   };
 }

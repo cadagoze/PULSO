@@ -13,7 +13,7 @@ const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 
 const ROUTES = [
-  "/", "/entrenar", "/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/ejercicios",
+  "/", "/entrenar", "/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/pausas", "/ejercicios",
   "/progreso", "/perfil", "/ajustes", "/guia", "/comidas",
 ];
 const STATIC_FILES = [

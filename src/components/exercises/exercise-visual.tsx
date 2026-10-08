@@ -3,7 +3,8 @@ import { exerciseIllustrations } from "@/data/illustrations";
 import { ExerciseIllustration } from "@/components/exercises/exercise-illustration";
 import { MuscleMap } from "@/components/ui/muscle-map";
 import { cn } from "@/lib/utils";
-import type { Exercise } from "@/types";
+import type { IllustrationSpec } from "@/lib/illustration";
+import type { Exercise, MuscleGroup } from "@/types";
 
 /**
  * Recorte vertical de una de las dos posiciones de la foto de demostración
@@ -35,14 +36,7 @@ export function ExerciseVisual({ exercise, size = "card", className, eager = fal
       );
     }
     if (illustration) {
-      return (
-        <div className={cn("exercise-visual exercise-visual-immersive exercise-visual-ill atmosphere grain on-dark ex-move", className)} role="img" aria-label={`Ilustración de ${exercise.name}: posición inicial y final`}>
-          <div className="ex-move-frame is-start"><ExerciseIllustration spec={illustration} primary={exercise.primary} panels="start" /></div>
-          <div className="ex-move-frame is-end"><ExerciseIllustration spec={illustration} primary={exercise.primary} panels="end" /></div>
-          <div className="ex-move-still"><ExerciseIllustration spec={illustration} primary={exercise.primary} labels /></div>
-          <MoveSteps />
-        </div>
-      );
+      return <MovingIllustration spec={illustration} primary={exercise.primary} label={`Ilustración de ${exercise.name}: posición inicial y final`} className={className} />;
     }
   }
   if (exercise.image) {
@@ -68,6 +62,18 @@ export function ExerciseVisual({ exercise, size = "card", className, eager = fal
   return (
     <div className={cn("exercise-visual", "exercise-visual-map", `exercise-visual-${size === "immersive" ? "hero" : size}`, className)}>
       <MuscleMap primary={exercise.primary} secondary={exercise.secondary} captions={size !== "thumb" && size !== "card"} views={size === "thumb" ? [frontOrBack(exercise)] : undefined} label={`Músculos trabajados: ${exercise.muscle}`} />
+    </div>
+  );
+}
+
+/** Ilustración a pantalla completa que alterna sola entre la posición inicial y la final (fija con «reducir movimiento»). */
+export function MovingIllustration({ spec, primary, label, className }: { spec: IllustrationSpec; primary: MuscleGroup[]; label: string; className?: string }) {
+  return (
+    <div className={cn("exercise-visual exercise-visual-immersive exercise-visual-ill atmosphere grain on-dark ex-move", className)} role="img" aria-label={label}>
+      <div className="ex-move-frame is-start"><ExerciseIllustration spec={spec} primary={primary} panels="start" /></div>
+      <div className="ex-move-frame is-end"><ExerciseIllustration spec={spec} primary={primary} panels="end" /></div>
+      <div className="ex-move-still"><ExerciseIllustration spec={spec} primary={primary} labels /></div>
+      <MoveSteps />
     </div>
   );
 }

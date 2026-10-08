@@ -3,7 +3,7 @@
 import Link from "@/components/ui/app-link";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Calculator, Disc3, Dumbbell, Flame, StretchHorizontal, Timer } from "lucide-react";
+import { Armchair, Calculator, Disc3, Dumbbell, Flame, StretchHorizontal, Timer } from "lucide-react";
 import { OneRepMaxSheet, PlatesSheet, WarmupSheet } from "@/components/train/tool-sheets";
 import { useStartMobility, useStartWorkout } from "@/lib/session";
 
@@ -46,6 +46,9 @@ export function ToolsRow() {
         </button>
         <Link href="/entrenar/intervalos" className="train-tool">
           <Label icon={<Timer size={17} />}>Intervalos</Label>
+        </Link>
+        <Link href="/pausas" className="train-tool">
+          <Label icon={<Armchair size={17} />}>Pausas activas</Label>
         </Link>
       </div>
       <OneRepMaxSheet open={open === "orm"} onClose={close} />

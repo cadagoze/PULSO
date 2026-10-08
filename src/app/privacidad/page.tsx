@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <article className="privacy">
         <section>
           <h2>Qué guardamos</h2>
-          <p>Lo que registras en la app: entrenamientos, comidas, agua, peso, medidas, tests físicos, tu evaluación inicial, tu plan de alimentación, tus ajustes y tu foto de perfil. Parte de esto es información sobre tu salud.</p>
+          <p>Lo que registras en la app: entrenamientos, comidas, agua, peso, medidas, tests físicos, pausas activas, tu evaluación inicial, tu plan de alimentación, tus ajustes y tu foto de perfil. Parte de esto es información sobre tu salud.</p>
         </section>
         <section>
           <h2>Dónde se guarda</h2>
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2>Avisos</h2>
-          <p>Si activas las notificaciones, tu teléfono guarda una suscripción en el servidor de PULSO (Cloudflare) con tu zona horaria, los avisos que elegiste y un resumen mínimo del día: si entrenaste hoy, cuántas sesiones llevas en la semana y tu meta, tu racha, si registraste comidas (sin detalle) y tus vasos de agua. No incluye tu nombre, correo, comidas, peso ni medidas. Los avisos pasan por el servicio de notificaciones de tu navegador (Google, Apple o Mozilla). Al desactivarlos se borra la suscripción.</p>
+          <p>Si activas las notificaciones, tu teléfono guarda una suscripción en el servidor de PULSO (Cloudflare) con tu zona horaria, los avisos que elegiste y un resumen mínimo del día: si entrenaste hoy, cuántas sesiones llevas en la semana y tu meta, tu racha, si registraste comidas (sin detalle), tus vasos de agua y cuántas pausas activas llevas. No incluye tu nombre, correo, comidas, peso ni medidas. Los avisos pasan por el servicio de notificaciones de tu navegador (Google, Apple o Mozilla). Al desactivarlos se borra la suscripción.</p>
         </section>
         <section>
           <h2>Quién puede verlos</h2>

@@ -1070,3 +1070,66 @@ test('tu semana en datos: hallazgos con datos suficientes y qué falta', () => {
   // Nunca más de 3.
   assert.ok(insightsLib.weekInsights({ ...base, readiness, foodLog, water, workouts: weekly, targets: { kcal: 2000, protein: 120 }, reminderTime: '08:00' }).insights.length <= 3);
 });
+
+const breaksData = load('src/data/active-breaks.ts');
+const breaksLib = load('src/lib/active-breaks.ts');
+
+test('pausas activas: ilustraciones dentro del cuadro y apoyadas en el suelo', () => {
+  const { PANEL } = illustration;
+  for (const move of breaksData.breakMoves) {
+    assert.ok(move.illustration, `${move.id}: sin ilustración`);
+    const panels = illustration.layoutIllustration(move.illustration);
+    panels.forEach((panel, index) => {
+      const points = panel.segments.flatMap((s) => [[s.x1, s.y1, s.width / 2], [s.x2, s.y2, s.width / 2]]);
+      points.push([panel.head.cx, panel.head.cy, panel.head.r]);
+      for (const [x, y, pad] of points) {
+        assert.ok(Number.isFinite(x) && Number.isFinite(y), `${move.id}: coordenada inválida`);
+        assert.ok(x - pad > -3 && x + pad < PANEL.width + 3 && y - pad > -3 && y + pad < PANEL.height + 3, `${move.id} (${index ? 'final' : 'inicio'}): la figura se sale del cuadro`);
+      }
+      assert.ok(Math.max(...points.map(([, y, pad]) => y + pad)) <= PANEL.ground + 0.5, `${move.id}: algo atraviesa el suelo`);
+    });
+  }
+});
+
+test('pausas activas: tramos, duración, rotación y registro', () => {
+  const ids = new Set(breaksData.breakMoves.map((move) => move.id));
+  for (const routine of breaksData.breakRoutines) {
+    for (const item of routine.items) assert.ok(ids.has(item.move), `${routine.id}: movimiento desconocido ${item.move}`);
+    const minutes = breaksLib.routineMinutes(routine);
+    assert.ok(minutes >= 2 && minutes <= 6, `${routine.id}: ${minutes} min`);
+  }
+  const neck = breaksData.breakRoutineById.get('cuello');
+  const segments = breaksLib.breakSegments(neck);
+  // Prepárate + cuello por lado (2) y luego, por cada movimiento, «sigue» + movimiento.
+  assert.deepEqual(JSON.parse(JSON.stringify(segments.slice(0, 4).map((s) => [s.kind, s.side ?? 0, s.seconds]))), [['prep', 0, 5], ['move', 1, 20], ['move', 2, 20], ['switch', 0, 5]]);
+  assert.equal(breaksLib.routineSeconds(neck), 5 + 40 + 4 * (5 + 30));
+  // Rotación: cuello → piernas → espalda → ojos → completa.
+  const entry = (routine, date = '2026-10-08') => ({ id: `${routine}${date}`, date, completedAt: '', routine });
+  assert.equal(breaksLib.suggestedRoutine([], '2026-10-08').id, 'cuello');
+  assert.equal(breaksLib.suggestedRoutine([entry('cuello')], '2026-10-08').id, 'piernas');
+  assert.equal(breaksLib.suggestedRoutine([entry('cuello', '2026-10-07')], '2026-10-08').id, 'cuello', 'lo de ayer no cuenta');
+  assert.equal(breaksLib.suggestedRoutine(['cuello', 'piernas', 'espalda', 'ojos'].map((id) => entry(id)), '2026-10-08').id, 'completa');
+  assert.equal(breaksLib.breaksOn([entry('cuello'), entry('ojos'), entry('cuello', '2026-10-07')], '2026-10-08'), 2);
+  // Se guardan 120 días y sin duplicados.
+  const saved = breaksLib.addBreak([entry('cuello', '2026-05-01'), entry('ojos', '2026-09-01')], entry('piernas'));
+  assert.deepEqual(JSON.parse(JSON.stringify(saved.map((item) => item.routine))), ['ojos', 'piernas']);
+  assert.equal(breaksLib.addBreak(saved, entry('piernas')).length, 2);
+  assert.ok(sync.docSpecs.some((spec) => spec.key === 'pulso:breaks'), 'se sincroniza como documento');
+});
+
+test('avisos: pausas activas a las 11:00 y 16:00 de lunes a viernes', () => {
+  const tz = 'America/Santiago';
+  const at = (date, hh, mm = 5) => { const [y, m, d] = date.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d, hh + 3, mm)); };
+  const prefs = { ...reminders.defaultPushPrefs, training: false, streak: false, breaks: true };
+  const state = { date: '2026-10-07', weekStart: '2026-10-05', trainedToday: false, weekSessions: 0, weekGoal: 3, streak: 0, counting: false, loggedToday: false, loggedEvening: false, water: 0, waterGoal: 8, breaksToday: 0 };
+  const due = (overrides = {}, when = at('2026-10-07', 11), sent = {}, p = prefs) => reminders.dueReminders({ prefs: p, state: { ...state, ...overrides }, sent, timeZone: tz, now: when });
+  assert.equal(reminders.defaultPushPrefs.breaks, false, 'desactivadas por defecto');
+  assert.equal(due().send.kind, 'break-1');
+  assert.equal(due().send.url, '/pausas');
+  assert.equal(due({ breaksToday: 1 }).send, null, 'ya hizo su pausa de la mañana');
+  assert.equal(due({ breaksToday: 1 }, at('2026-10-07', 16)).send.kind, 'break-2');
+  assert.equal(due({ breaksToday: 2 }, at('2026-10-07', 16)).send, null);
+  assert.equal(due({ date: '2026-10-10', breaksToday: 0 }, at('2026-10-10', 11)).send, null, 'sábado: sin pausas');
+  assert.equal(due({ breaksToday: 3 }, at('2026-10-08', 11)).send.kind, 'break-1', 'el conteo de ayer no cuenta hoy');
+  assert.equal(due({}, at('2026-10-07', 11), {}, { ...prefs, breaks: false }).send, null);
+});

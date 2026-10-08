@@ -21,6 +21,7 @@ export const STORAGE_KEYS = {
   savedMeals: "pulso:saved-meals",
   challenges: "pulso:challenges",
   fitnessTests: "pulso:fitness-tests",
+  breaks: "pulso:breaks",
 } as const;
 
 export type StorageKeyName = keyof typeof STORAGE_KEYS;

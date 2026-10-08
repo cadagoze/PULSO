@@ -1,0 +1,68 @@
+/* PULSO — Pausas activas: lista, reproductor guiado (oscuro, como la sesión) y fila en Inicio. */
+
+/* ─── Lista ──────────────────────────────────────────────────────────── */
+.brk-page { display: flex; flex-direction: column; gap: 22px; }
+.brk-today { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.brk-today-num { font-size: 56px; color: var(--accent-text); line-height: .9; }
+.brk-today .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.brk-today strong { font-size: 16px; font-weight: 600; }
+.brk-today small { font-size: 13px; color: var(--ink-2); }
+.brk-hero { position: relative; display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 16px 14px 10px; border-radius: var(--radius-l); background: var(--bg); box-shadow: var(--shadow), inset 0 0 0 1px var(--line); color: var(--ink); overflow: hidden; isolation: isolate; }
+.brk-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(80% 90% at 0% 50%, rgb(var(--accent-rgb) / 18%), transparent 70%); }
+.brk-hero-ill { display: block; width: 112px; aspect-ratio: 120 / 130; }
+.brk-hero-ill svg { width: 100%; height: 100%; }
+.brk-hero-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.brk-hero-body strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 26px; font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; }
+.brk-hero-body small { font-size: 13px; color: var(--ink-2); }
+.brk-hero-play { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
+.brk-hero:active { transform: scale(.985); }
+.brk-list-min { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 800; line-height: 1; }
+.brk-list-min small { font-family: var(--font-sans); font-stretch: normal; font-size: 9.5px; font-weight: 600; color: var(--ink-2); }
+.brk-list .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.brk-list strong { font-size: 15px; font-weight: 600; }
+.brk-list small { font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brk-remind { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.brk-remind .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.brk-remind strong { font-size: 15px; font-weight: 600; }
+.brk-remind small { font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+
+/* ─── Antes de empezar ───────────────────────────────────────────────── */
+.brk-intro { gap: 24px; }
+.brk-moves { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.brk-move { display: flex; align-items: center; gap: 12px; padding: 8px 14px 8px 8px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--ring); }
+.brk-move-ill { display: block; flex: none; width: 58px; aspect-ratio: 120 / 130; border-radius: var(--radius-xs); background: var(--surface-2); }
+.brk-move-ill svg { width: 100%; height: 100%; }
+.brk-move .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.brk-move strong { font-size: 15px; font-weight: 600; }
+.brk-move small { font-size: 12.5px; color: var(--ink-2); }
+
+/* ─── Reproductor ────────────────────────────────────────────────────── */
+.brk-run { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+.brk-run-top { position: absolute; z-index: 3; top: 0; left: 0; right: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: calc(var(--safe-t) + 12px) var(--gutter) 0; }
+.brk-run-top > :first-child { justify-self: start; }
+.brk-run-top > :last-child { justify-self: end; }
+.brk-steps { display: flex; gap: 5px; }
+.brk-steps i { width: 14px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 18%, transparent); transition: width var(--motion-base) var(--ease-standard), background-color var(--motion-base); }
+.brk-steps i.is-done { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.brk-steps i.is-current { width: 26px; background: var(--accent); }
+.brk-visual.exercise-visual-immersive { position: relative; flex: none; height: clamp(220px, 38svh, 420px); }
+.brk-visual.exercise-visual-ill { padding: calc(var(--safe-t) + 62px) 22px 14px; }
+.brk-run-body { flex: 1; display: flex; flex-direction: column; gap: 8px; width: min(100%, 560px); min-height: 0; margin: 0 auto; padding: 14px var(--gutter) 0; }
+.brk-run.is-resting .brk-run-body .meta { color: var(--accent-text); }
+.brk-run.is-paused .brk-run-body .meta { color: var(--warning); }
+.brk-run-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 9vw, 48px); font-weight: 800; letter-spacing: .012em; line-height: .98; text-transform: uppercase; text-wrap: balance; }
+.brk-cues { display: flex; flex-direction: column; gap: 4px; margin: 2px 0 0; padding: 0; list-style: none; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
+.brk-run-clock { display: flex; align-items: center; gap: 18px; margin-top: auto; padding: 10px 0 4px; }
+.brk-timer circle { stroke-width: 3.2; }
+.brk-run:not(.is-resting) .brk-timer .workout-timer-value { stroke: var(--accent); }
+.brk-run.is-paused .brk-timer { opacity: .55; }
+.brk-run-left b { color: var(--ink); font-weight: 600; letter-spacing: .04em; }
+.brk-controls { padding: 10px var(--gutter) calc(18px + var(--safe-b)); }
+
+/* ─── Inicio ─────────────────────────────────────────────────────────── */
+.home-break .grow { gap: 2px; }
+
+@media (max-height: 700px) {
+  .brk-visual.exercise-visual-immersive { height: 30svh; }
+  .brk-cues li + li { display: none; }
+}
