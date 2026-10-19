@@ -1193,3 +1193,19 @@ test('bienestar: un registro por día, combinable, y promedios de 7 días', () =
   const old = wellness.upsertWellness([{ date: '2026-01-01', sleepHours: 8, updatedAt: 'x' }], '2026-10-19', { mood: 3 }, 't6');
   assert.equal(old.length, 1, 'se conservan sólo 120 días');
 });
+
+test('gráficos propios: curva monótona, marcas y etiquetas sin montarse', () => {
+  const chart = load('src/lib/chart.ts');
+  assert.equal(chart.monotonePath([]), '');
+  assert.equal(chart.monotonePath([[0, 10]]), 'M0,10');
+  assert.equal(chart.monotonePath([[0, 10], [10, 0]]), 'M0,10L10,0');
+  const path = chart.monotonePath([[0, 10], [10, 0], [20, 0], [30, 5]]);
+  assert.match(path, /^M0,10C/);
+  // Tramo plano (10→20 en y=0): los puntos de control no bajan del valor (no inventa valles).
+  const controls = [...path.matchAll(/C([\d.-]+),([\d.-]+) ([\d.-]+),([\d.-]+) /g)][1];
+  assert.equal(Number(controls[2]), 0);
+  assert.equal(Number(controls[4]), 0);
+  assert.deepEqual([...chart.integerTicks([10, 20])], [10, 14, 18]);
+  assert.deepEqual([...chart.labelIndexes(10, 320)], [1, 3, 5, 7, 9]);
+  assert.deepEqual([...chart.labelIndexes(3, 320)], [0, 1, 2]);
+});

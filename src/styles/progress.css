@@ -237,9 +237,6 @@
 .prog-weight-legend .dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ink-3); }
 .prog-weight-legend .line { width: 16px; height: 3px; border-radius: 2px; background: var(--accent-text); }
 .prog-calm { font-size: 13px; color: var(--ink-2); padding: 12px 14px; border-radius: var(--radius-s); background: var(--accent-soft); }
-.prog-tooltip { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px; background: var(--carbon); color: var(--on-carbon); font-size: 12px; box-shadow: var(--shadow-float); }
-.prog-tooltip span { color: var(--on-carbon-2); }
-.prog-tooltip strong { font-size: 16px; font-weight: 600; }
 .prog-form-sheet .field input { font-size: 16px; }
 .prog-measure-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .prog-measures { padding: 6px 20px 16px; }

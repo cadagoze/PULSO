@@ -216,10 +216,6 @@
 .lib-delta { display: inline-flex; align-items: center; margin-right: 2px; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
 .lib-delta.is-down { background: var(--surface-2); color: var(--ink-2); }
 .lib-chart-wrap { margin-top: 4px; padding: 14px 10px 8px 0; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
-.lib-chart { width: 100%; height: 200px; min-width: 0; }
-.lib-chart .recharts-surface { overflow: visible; }
-.lib-chart .recharts-area { transform-box: fill-box; transform-origin: 50% 100%; animation: bar-y-in var(--motion-slow) var(--ease-standard) backwards; }
-.lib-chart .recharts-area-dots { animation: fade-in var(--motion-base) var(--ease-standard) 260ms backwards; }
 .lib-chart-note { padding: 6px 18px 10px; font-size: 14px; color: var(--ink-3); }
 
 .lib-marks { display: flex; flex-direction: column; gap: 10px; }
@@ -296,7 +292,6 @@
   .lib-marks-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .lib-mark, .lib-mark:nth-child(even) { padding: 14px 14px 14px 16px; border-left: 1px solid var(--line); }
   .lib-mark:first-child { padding-left: 0; border-left: 0; }
-  .lib-chart { height: 240px; }
 }
 
 @media (min-width: 1024px) {

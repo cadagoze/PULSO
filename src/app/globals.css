@@ -593,3 +593,21 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .state-mark { height: 56px; margin-bottom: 10px; animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
 .state-text { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin-bottom: 10px; }
 .state-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ─── Gráfico de línea propio (TrendChart) ──────────────────────────────── */
+.trend { position: relative; width: 100%; min-width: 0; touch-action: pan-y; outline: none; -webkit-tap-highlight-color: transparent; }
+.trend:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
+.trend svg { display: block; overflow: visible; }
+.trend-grid { stroke: var(--line); }
+.trend-label { fill: var(--ink-3); font-family: var(--font-mono); font-size: 11px; }
+.trend-cursor { stroke: var(--line-strong); }
+.trend-line { fill: none; stroke: var(--accent-text); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: trend-draw 700ms var(--ease-standard) backwards; }
+.trend-area { animation: fade-in var(--motion-slow) var(--ease-standard) 220ms backwards; }
+.trend-dot { fill: var(--surface); stroke: var(--accent-text); stroke-width: 2; }
+.trend-dot.is-plain { stroke: var(--ink-3); }
+.trend-dot.is-active { fill: var(--accent); stroke: var(--surface); }
+.trend-tooltip { position: absolute; top: 0; transform: translateX(-50%); z-index: 2; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px; background: var(--carbon); color: var(--on-carbon); font-size: 12px; white-space: nowrap; box-shadow: var(--shadow-float); pointer-events: none; }
+.trend-tooltip span { color: var(--on-carbon-2); }
+.trend-tooltip strong { font-size: 16px; font-weight: 600; }
+@keyframes trend-draw { from { stroke-dashoffset: 1; } }
+
