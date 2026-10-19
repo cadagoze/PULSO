@@ -19,7 +19,7 @@ export function CalorieAdjust({ profile, weightKg, onSave }: { profile: Nutritio
         <Stepper value={kcal} onChange={setKcal} min={calorieFloor[profile.sex]} max={6000} step={50} label="calorías" format={formatKcal} />
       </div>
       <div className="nut-detail-values">
-        <NumberMetric size="l" value={formatKcal(preview.kcal)} unit="kcal" />
+        <NumberMetric size="l" value={formatKcal(preview.kcal)} unit="kcal" animate={false} />
         <MetaLine items={[`${preview.protein} g proteína`, `${preview.carbs} g carbohidratos`, `${preview.fat} g grasa`]} />
       </div>
       <Button size="l" block onClick={() => onSave(kcal === automatic.kcal ? undefined : kcal)}><Check size={18} />Guardar</Button>

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { NumberMetric } from "@/components/ui";
+import { CountUp } from "@/components/ui/count-up";
 import { minutesLabel, minutesParts, volumeLabel, volumeParts, type Unit } from "@/components/progress/format";
 import { useFirstReveal } from "@/components/progress/motion";
 import type { PeriodSummary } from "@/components/progress/period";
@@ -62,7 +63,7 @@ export function KeyMetrics({ summary, goal, unit }: { summary: PeriodSummary; go
         <div className="prog-hero-number">
           <NumberMetric
             size="xl"
-            value={week ? <>{totals.sessions}<span className="nmetric-soft">/{goal}</span>{met && <GoalCheck weekStart={summary.start} />}</> : totals.sessions.toLocaleString("es-CL")}
+            value={week ? <><CountUp value={totals.sessions} /><span className="nmetric-soft">/{goal}</span>{met && <GoalCheck weekStart={summary.start} />}</> : totals.sessions.toLocaleString("es-CL")}
             label={
               <>
                 {met ? "Meta de la semana cumplida" : heroLabels[period]}

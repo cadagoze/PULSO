@@ -74,7 +74,7 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
         </div>
         <AmountInput portion={selected.portion} value={amount} onChange={setAmount} hint={usual} />
         <div className="nut-detail-values">
-          <NumberMetric size="l" value={formatKcal(selected.kcal * factor)} unit="kcal" />
+          <NumberMetric size="l" value={formatKcal(selected.kcal * factor)} unit="kcal" animate={false} />
           <MetaLine items={[`${Math.round(selected.protein * factor)} g proteína`, `${Math.round(selected.carbs * factor)} g carbohidratos`, `${Math.round(selected.fat * factor)} g grasa`]} />
         </div>
         {scanned && isNew && <p className="scan-source">Datos de Open Food Facts: revisa que coincidan con la etiqueta. Queda guardado en «Mis alimentos».</p>}

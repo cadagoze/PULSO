@@ -20,7 +20,7 @@ export function EntryEditor({ entry, onSave, onDelete }: { entry: FoodEntry; onS
       </div>
       <AmountInput portion={entry.portion} value={amount} onChange={setAmount} />
       <div className="nut-detail-values">
-        <NumberMetric size="l" value={formatKcal(entry.kcal * factor)} unit="kcal" />
+        <NumberMetric size="l" value={formatKcal(entry.kcal * factor)} unit="kcal" animate={false} />
         <MetaLine items={[`${Math.round(entry.protein * factor)} g proteína`, `${Math.round(entry.carbs * factor)} g carbohidratos`, `${Math.round(entry.fat * factor)} g grasa`]} />
       </div>
       <Button size="l" block disabled={!resolved} onClick={() => resolved && onSave(resolved)}><Check size={18} />Guardar</Button>

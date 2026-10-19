@@ -4,6 +4,7 @@ import Link from "@/components/ui/app-link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { AnchorHTMLAttributes, AnimationEvent, ButtonHTMLAttributes, CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, Minus, Plus, X } from "lucide-react";
+import { CountUp } from "@/components/ui/count-up";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({ eyebrow, meta, title, subtitle, backHref, actions }: { eyebrow?: string; meta?: ReactNode; title: string; subtitle?: string; backHref?: string; actions?: ReactNode }) {
@@ -88,12 +89,14 @@ export function ProgressRing({ value, size = 112, stroke, color, children, label
 
 /**
  * Número protagonista (tipografía editorial). Para fracciones como 2/3, pasa el divisor atenuado:
- * `value={<>2<span className="nmetric-soft">/3</span></>}`.
+ * `value={<>2<span className="nmetric-soft">/3</span></>}`. Un número simple sube desde cero al aparecer
+ * (`animate={false}` en valores que se editan en vivo).
  */
-export function NumberMetric({ value, unit, label, size = "m", className }: { value: ReactNode; unit?: ReactNode; label?: ReactNode; size?: "xl" | "l" | "m" | "s"; className?: string }) {
+export function NumberMetric({ value, unit, label, size = "m", className, animate = true }: { value: ReactNode; unit?: ReactNode; label?: ReactNode; size?: "xl" | "l" | "m" | "s"; className?: string; animate?: boolean }) {
+  const counted = animate && (typeof value === "string" || typeof value === "number") ? <CountUp value={value} /> : value;
   return (
     <div className={cn("nmetric", `nmetric-${size}`, className)}>
-      <span className="nmetric-value">{value}{unit !== undefined && <span className="nmetric-unit">{unit}</span>}</span>
+      <span className="nmetric-value">{counted}{unit !== undefined && <span className="nmetric-unit">{unit}</span>}</span>
       {label && <span className="nmetric-label">{label}</span>}
     </div>
   );

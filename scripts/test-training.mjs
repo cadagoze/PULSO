@@ -1132,3 +1132,18 @@ test('avisos: pausas activas a las 11:00 y 16:00 de lunes a viernes', () => {
   assert.equal(due({ breaksToday: 3 }, at('2026-10-08', 11)).send.kind, 'break-1', 'el conteo de ayer no cuenta hoy');
   assert.equal(due({}, at('2026-10-07', 11), {}, { ...prefs, breaks: false }).send, null);
 });
+
+test('conteo de cifras: lee y escribe números en formato chileno', () => {
+  const count = load('src/lib/count.ts');
+  const parsed = (text) => { const value = count.parseCount(text); return value && { ...value }; };
+  assert.deepEqual(parsed('8.420'), { value: 8420, digits: 0, pad: 0 });
+  assert.deepEqual(parsed('72,4'), { value: 72.4, digits: 1, pad: 0 });
+  assert.deepEqual(parsed('05'), { value: 5, digits: 0, pad: 2 });
+  assert.deepEqual(parsed('1.234,56'), { value: 1234.56, digits: 2, pad: 0 });
+  assert.equal(count.parseCount('2/3'), null);
+  assert.equal(count.parseCount('—'), null);
+  assert.equal(count.parseCount('12 kg'), null);
+  assert.equal(count.formatCount(8420, 0), '8.420');
+  assert.equal(count.formatCount(36.2, 1), '36,2');
+  assert.equal(count.formatCount(3, 0, 2), '03');
+});

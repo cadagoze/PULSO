@@ -3,6 +3,7 @@
 import Link from "@/components/ui/app-link";
 import { ArrowRight, Check, Flame } from "lucide-react";
 import { NumberMetric } from "@/components/ui";
+import { CountUp } from "@/components/ui/count-up";
 import { weekStreak } from "@/lib/analytics";
 import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
 import { cleanDays, nextTrainingDay } from "@/lib/training-days";
@@ -63,7 +64,7 @@ export function WeekStrip({ now }: { now: number }) {
       </div>
       <h2 id="home-week-title" className="sr-only">Tu semana: {currentCount} de {goal} sesiones</h2>
       <div className="home-week-body">
-        <NumberMetric size="xl" value={<>{currentCount}<span className="nmetric-soft">/{goal}</span></>} label={currentMet ? "Meta de la semana cumplida" : "sesiones esta semana"} />
+        <NumberMetric size="xl" value={<><CountUp value={currentCount} /><span className="nmetric-soft">/{goal}</span></>} label={currentMet ? "Meta de la semana cumplida" : "sesiones esta semana"} />
         <ol className="home-days">
           {days.map((day) => (
             <li
