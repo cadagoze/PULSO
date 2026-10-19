@@ -799,7 +799,7 @@ test('resumen semanal: semana en números y texto para compartir', () => {
   assert.match(text, /^Mi semana en PULSO · 5 oct – 11 oct/);
   assert.match(text, /2 entrenamientos \(meta: 3\) · 75 min/);
   assert.match(text, /7\.400 kg levantados · 2 récords/);
-  assert.match(text, /Nutrición: 1\.500 kcal · 100 g proteína al día/);
+  assert.match(text, /Comidas: 1\.500 kcal · 100 g proteína al día/);
   assert.match(text, /Agua: meta cumplida 1 de 2 días/);
   assert.ok(!text.includes('Peso'), 'el peso sólo si se elige');
   assert.match(shareLib.recapText(current, 'kg', { nutrition: false, water: false, weight: true }), /Peso: −0,6 kg en la semana/);
