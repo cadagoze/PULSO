@@ -6,6 +6,7 @@ import { ChartNoAxesColumn, Dumbbell, House, Pause, Play, Salad, Square, UserRou
 import { useState, type CSSProperties } from "react";
 import { clockLabel, completedSets, durationSeconds, totalSets } from "@/lib/training";
 import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
+import { Isotype } from "@/components/brand/logo";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; match?: string[]
 const items: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
   { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios", "/pausas"] },
-  { href: "/comidas", label: "Nutrición", icon: Salad },
+  { href: "/comidas", label: "Comidas", icon: Salad },
   { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
   { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia"] },
 ];
@@ -35,6 +36,8 @@ export function BottomNavigation() {
     <>
       <ResumeBanner />
       <nav className="bottom-nav on-dark" aria-label="Navegación principal">
+        {/* En computador la barra pasa a un riel lateral con el isotipo arriba. */}
+        <Link href="/" className="nav-brand" aria-label="PULSO, ir a Inicio"><Isotype /></Link>
         <div className="bottom-nav-inner" style={{ "--index": Math.max(0, active) } as CSSProperties}>
           <span className={cn("nav-indicator", active < 0 && "is-hidden")} aria-hidden="true" />
           {items.map((item, index) => {

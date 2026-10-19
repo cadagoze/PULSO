@@ -285,7 +285,7 @@ export default function NutritionPage() {
   return (
     <div className="page cnt-page cnt-split nut-page">
       <div className="cnt-lead">
-        <PageHeader meta={formatLongDate(new Date(now))} title="Nutrición" subtitle={subtitle} />
+        <PageHeader meta={formatLongDate(new Date(now))} title="Comidas" subtitle={subtitle} />
         {!targets && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
         {counting && targets ? <CalorieSummary targets={targets} totals={totals} /> : <DayProgress meals={meals} habitsDone={habitsDone} habitsTotal={habits.length} />}
         <WaterTracker className="nut-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />

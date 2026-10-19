@@ -30,7 +30,7 @@ export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: 
           <RowBody icon={<Bell size={19} />} title="Notificaciones" detail="Hora de entrenar, racha, comidas y agua." />
         </Link>
         <Link href="/comidas" className="list-row">
-          <RowBody icon={<Utensils size={19} />} title="Nutrición" detail="Calorías, agua, comidas y hábitos del día." />
+          <RowBody icon={<Utensils size={19} />} title="Comidas" detail="Lo que comes, proteína, agua y hábitos del día." />
         </Link>
         <Link href="/guia" className="list-row">
           <RowBody icon={<BookOpen size={19} />} title="Guía" detail="Lecturas breves sobre fuerza, descanso y alimentación." />

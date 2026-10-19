@@ -413,8 +413,20 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .draft-end-confirm p { font-size: 13.5px; line-height: 1.45; color: var(--danger); font-weight: 600; }
 @media (min-width: 1024px) {
   .page-container { padding-left: 40px; padding-right: 40px; }
-  :root { --gutter: 40px; --nav-gap: 20px; }
+  :root { --gutter: 40px; --nav-gap: 20px; --rail-w: 88px; }
   .toast { bottom: calc(var(--nav-h) + var(--nav-gap) + 20px); }
+  /* Riel lateral: la misma navegación, vertical, con el isotipo arriba y el indicador que se desliza hacia abajo. */
+  .app-shell:has(> .bottom-nav) { padding-left: calc(var(--rail-w) + 20px); }
+  .app-shell:has(> .bottom-nav) .page-container { padding-bottom: 56px; }
+  .bottom-nav { left: 20px; top: 20px; bottom: 20px; width: var(--rail-w); height: auto; display: flex; flex-direction: column; align-items: stretch; padding: 18px 8px; border-radius: 30px; transform: none; }
+  .nav-brand { display: grid; place-items: center; height: 48px; margin-bottom: 22px; font-size: 30px; border-radius: var(--radius-pill); transition: transform var(--motion-fast) var(--ease-standard); }
+  .nav-brand:active { transform: scale(.94); }
+  .bottom-nav-inner { display: flex; flex-direction: column; height: auto; }
+  .nav-item { height: 70px; gap: 5px; font-size: 11px; }
+  .nav-indicator { right: 0; bottom: auto; width: auto; height: 70px; padding: 0; background-clip: border-box; border-radius: 22px; transform: translateY(calc(var(--index, 0) * 100%)); }
+  .app-shell:has(> .bottom-nav) .toast, .app-shell:has(> .bottom-nav) .nav-resume { left: calc(50% + (var(--rail-w) + 20px) / 2); }
+  .app-shell:has(> .bottom-nav) .toast { bottom: 28px; }
+  .nav-resume { bottom: 24px; }
 }
 
 /* ─── Marca ────────────────────────────────────────────────────────────── */

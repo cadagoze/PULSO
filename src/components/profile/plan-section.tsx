@@ -173,7 +173,7 @@ function NutritionLine() {
   return (
     <Link href="/comidas" className="prof-plan-program prof-plan-food pressable">
       <span className="prof-plan-program-text">
-        <span className="meta">Nutrición</span>
+        <span className="meta">Comidas</span>
         {targets ? (
           <>
             <strong><span className="num">{formatKcal(targets.kcal)}</span> kcal al día</strong>

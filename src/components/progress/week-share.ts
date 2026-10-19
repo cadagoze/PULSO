@@ -19,7 +19,7 @@ export function signedWeight(kg: number, unit: Unit) {
 /** Las líneas opcionales, iguales en la imagen y en el texto. */
 export function extraLines(recap: WeekRecap, unit: Unit, parts: ShareParts) {
   const lines: Array<{ label: string; value: string }> = [];
-  if (parts.nutrition && recap.nutrition) lines.push({ label: "Nutrición", value: `${recap.nutrition.kcal.toLocaleString("es-CL")} kcal · ${recap.nutrition.protein} g proteína al día` });
+  if (parts.nutrition && recap.nutrition) lines.push({ label: "Comidas", value: `${recap.nutrition.kcal.toLocaleString("es-CL")} kcal · ${recap.nutrition.protein} g proteína al día` });
   if (parts.water && recap.water) lines.push({ label: "Agua", value: `meta cumplida ${recap.water.met} de ${plural(recap.water.days, "día", "días")}` });
   if (parts.weight && recap.weight) lines.push({ label: "Peso", value: `${signedWeight(recap.weight.change, unit)} en la semana` });
   return lines;

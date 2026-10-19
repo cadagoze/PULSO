@@ -108,7 +108,7 @@ export function WeekShareSheet({ open, onClose, now }: { open: boolean; onClose:
   }
 
   const optional = [
-    { key: "nutrition" as const, label: "Nutrición", available: Boolean(recap.nutrition) },
+    { key: "nutrition" as const, label: "Comidas", available: Boolean(recap.nutrition) },
     { key: "water" as const, label: "Agua", available: Boolean(recap.water) },
     { key: "weight" as const, label: "Peso", available: Boolean(recap.weight) },
   ].filter((item) => item.available);

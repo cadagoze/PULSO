@@ -86,7 +86,7 @@ export function GoalWeek({ now, bare = false }: { now: number; bare?: boolean })
             ? <>≈ <b className="num">{formatKcal(kcal)}</b> kcal en tus entrenamientos</>
             : nutrition ? "Tus calorías y macros de hoy" : "Calcula cuánto comer para tu objetivo"}
         </span>
-        <span className="goal-week-foot-link">{nutrition ? "Nutrición" : "Calcular"}<ArrowRight size={16} aria-hidden="true" /></span>
+        <span className="goal-week-foot-link">{nutrition ? "Comidas" : "Calcular"}<ArrowRight size={16} aria-hidden="true" /></span>
       </Link>
     </section>
   );
