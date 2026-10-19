@@ -17,7 +17,7 @@ const items: NavItem[] = [
   { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios", "/pausas"] },
   { href: "/comidas", label: "Comidas", icon: Salad },
   { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
-  { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia"] },
+  { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia", "/bienestar"] },
 ];
 
 /** Pantallas a pantalla completa, sin navegación. */

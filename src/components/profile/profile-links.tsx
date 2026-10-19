@@ -2,7 +2,7 @@
 
 import Link from "@/components/ui/app-link";
 import type { CSSProperties, ReactNode } from "react";
-import { Bell, BookOpen, ChevronRight, ClipboardCheck, Dumbbell, Palette, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
+import { Bell, BookOpen, ChevronRight, ClipboardCheck, Dumbbell, HeartPulse, Palette, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
 
 function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -17,7 +17,7 @@ function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; deta
   );
 }
 
-/** Preferencias agrupadas (entrenamiento, apariencia, datos y privacidad) y, debajo, lo demás. */
+/** Preferencias agrupadas (entrenamiento, apariencia, bienestar, avisos, datos y privacidad) y, debajo, lo demás. */
 export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: boolean; onAssess: () => void; onInstall?: () => void }) {
   return (
     <>
@@ -29,6 +29,9 @@ export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: 
           </Link>
           <Link href="/ajustes#apariencia" className="list-row">
             <RowBody icon={<Palette size={19} />} title="Apariencia" detail="Tema, color y fotos." />
+          </Link>
+          <Link href="/bienestar" className="list-row">
+            <RowBody icon={<HeartPulse size={19} />} title="Bienestar" detail="Sueño, pasos, ánimo, agua y hábitos." />
           </Link>
           <Link href="/ajustes#avisos" className="list-row">
             <RowBody icon={<Bell size={19} />} title="Notificaciones" detail="Hora de entrenar, racha, comidas y agua." />

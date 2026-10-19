@@ -8,13 +8,13 @@
  *
  * Sube VERSION si cambias este archivo de forma incompatible.
  */
-const VERSION = "pulso-v5";
+const VERSION = "pulso-v6";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 
 const ROUTES = [
   "/", "/entrenar", "/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/pausas", "/ejercicios",
-  "/progreso", "/perfil", "/ajustes", "/guia", "/comidas",
+  "/progreso", "/perfil", "/ajustes", "/guia", "/comidas", "/bienestar",
 ];
 const STATIC_FILES = [
   "/offline.html", "/manifest.webmanifest", "/icon/192", "/icon/512", "/apple-icon",

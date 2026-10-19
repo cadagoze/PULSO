@@ -1173,3 +1173,23 @@ test('medios de ejercicios: capa propia, local y sin conexión', () => {
   const photo = exerciseMedia(exercises.find((exercise) => exercise.image));
   assert.match(photo.frames.start, /^\/images\/editorial\/.+-start\.webp$/);
 });
+
+test('bienestar: un registro por día, combinable, y promedios de 7 días', () => {
+  const wellness = load('src/lib/wellness.ts');
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  let entries = wellness.upsertWellness([], '2026-10-19', { sleepHours: 7.5 }, 't1');
+  entries = wellness.upsertWellness(entries, '2026-10-19', { steps: 8200, mood: 4 }, 't2');
+  assert.deepEqual(plain(entries), [{ date: '2026-10-19', sleepHours: 7.5, steps: 8200, mood: 4, updatedAt: 't2' }]);
+  entries = wellness.upsertWellness(entries, '2026-10-19', { steps: null }, 't3');
+  assert.equal(entries[0].steps, undefined, 'null borra el dato');
+  entries = wellness.upsertWellness(entries, '2026-10-17', { sleepHours: 6.5, mood: 2 }, 't4');
+  entries = wellness.upsertWellness(entries, '2026-10-10', { sleepHours: 4 }, 't5');
+  assert.deepEqual(plain(entries.map((entry) => entry.date)), ['2026-10-10', '2026-10-17', '2026-10-19']);
+  const week = wellness.weekWellness(entries, '2026-10-19');
+  assert.equal(week.days, 2, 'el 10 queda fuera de los 7 días');
+  assert.equal(week.sleep, 7);
+  assert.equal(week.mood, 3);
+  assert.equal(week.steps, null);
+  const old = wellness.upsertWellness([{ date: '2026-01-01', sleepHours: 8, updatedAt: 'x' }], '2026-10-19', { mood: 3 }, 't6');
+  assert.equal(old.length, 1, 'se conservan sólo 120 días');
+});

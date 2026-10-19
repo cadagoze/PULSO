@@ -13,6 +13,7 @@ import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { ChallengeEntry } from "@/lib/challenges";
 import type { FitnessTestEntry } from "@/lib/fitness-test";
 import type { BreakEntry } from "@/lib/active-breaks";
+import type { WellnessEntry } from "@/lib/wellness";
 
 /** Claves de almacenamiento local. Se conservan las anteriores para no perder registros. */
 export { STORAGE_KEYS };
@@ -45,6 +46,7 @@ const emptyWater: WaterEntry[] = [];
 const emptyChallenges: ChallengeEntry[] = [];
 const emptyFitnessTests: FitnessTestEntry[] = [];
 const emptyBreaks: BreakEntry[] = [];
+const emptyWellness: WellnessEntry[] = [];
 const emptySavedMeals: SavedMeal[] = [];
 /** Plantilla diaria de comidas: todas pendientes. */
 const mealTemplate: Meal[] = initialMeals.map((meal) => ({ id: meal.id, name: meal.name, time: meal.time, status: "Pendiente" as const }));
@@ -159,6 +161,10 @@ export function useBreaks() {
   return usePersistentState<BreakEntry[]>(STORAGE_KEYS.breaks, emptyBreaks);
 }
 
+export function useWellness() {
+  return usePersistentState<WellnessEntry[]>(STORAGE_KEYS.wellness, emptyWellness);
+}
+
 /** Vasos de agua por día (historial de 120 días). */
 export function useWater() {
   return usePersistentState<WaterEntry[]>(STORAGE_KEYS.water, emptyWater);
@@ -207,8 +213,8 @@ export function readAllData(): Record<string, unknown> {
 
 type Shape = "array" | "object" | "object-or-null" | "array-or-null";
 
-/** Forma esperada de cada clave, para rechazar respaldos dañados antes de escribir. */
-const keyShapes: Record<string, Shape> = {
+/** Forma esperada de cada clave (todas: una clave nueva sin forma no compila), para rechazar respaldos dañados antes de escribir. */
+const keyShapes: Record<(typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS], Shape> = {
   [STORAGE_KEYS.profile]: "object-or-null",
   [STORAGE_KEYS.workouts]: "array",
   [STORAGE_KEYS.draft]: "object-or-null",
@@ -228,12 +234,16 @@ const keyShapes: Record<string, Shape> = {
   [STORAGE_KEYS.customFoods]: "array",
   [STORAGE_KEYS.water]: "array",
   [STORAGE_KEYS.savedMeals]: "array",
+  [STORAGE_KEYS.challenges]: "array",
+  [STORAGE_KEYS.fitnessTests]: "array",
+  [STORAGE_KEYS.breaks]: "array",
+  [STORAGE_KEYS.wellness]: "array",
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
 function matchesShape(key: string, value: unknown) {
-  const shape = keyShapes[key];
+  const shape = (keyShapes as Record<string, Shape | undefined>)[key];
   if (shape === "array") return Array.isArray(value);
   if (shape === "array-or-null") return value === null || Array.isArray(value);
   if (shape === "object-or-null") return value === null || isObject(value);

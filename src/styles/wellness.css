@@ -1,0 +1,27 @@
+/* PULSO — Bienestar: sueño, pasos, ánimo y agua de hoy; recuperación, hábitos y la semana. */
+
+.well-page { display: flex; flex-direction: column; gap: 26px; }
+.well-page .section { display: flex; flex-direction: column; gap: 12px; }
+.well-skeleton { height: 420px; border-radius: var(--radius-l); background: var(--surface); }
+.well-card { display: flex; flex-direction: column; gap: 16px; padding: 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); }
+.well-row { display: flex; align-items: center; gap: 12px; }
+.well-row + .well-row, .well-water { padding-top: 16px; box-shadow: inset 0 1px 0 var(--line); }
+.well-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.well-row strong { font-size: 15px; font-weight: 600; }
+.well-row small { font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+.well-row .icon-tile { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); }
+.well-steps { width: 96px; min-height: 44px; padding: 0 12px; border-radius: var(--radius); border: 0; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font-size: 17px; font-weight: 600; text-align: right; }
+.well-steps:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.well-row-mood { flex-wrap: wrap; }
+.well-moods { display: flex; gap: 6px; }
+.well-mood { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); color: var(--ink-2); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast), color var(--motion-fast); }
+.well-mood:active { transform: scale(.92); }
+.well-mood.is-on { background: var(--accent); color: var(--accent-ink); }
+.well-recovery { flex-direction: row; align-items: center; gap: 14px; transition: transform var(--motion-fast) var(--ease-standard); }
+.well-recovery:active { transform: scale(.985); }
+.well-recovery .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.well-recovery strong { font-size: 15px; font-weight: 600; }
+.well-recovery small { font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.well-recovery b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 600; }
+.well-week .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 380px) { .well-row-mood .well-moods { width: 100%; justify-content: space-between; } }

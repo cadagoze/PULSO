@@ -14,6 +14,7 @@ import "@/styles/nutrition.css";
 import "@/styles/cloud.css";
 import "@/styles/fitness-test.css";
 import "@/styles/breaks.css";
+import "@/styles/wellness.css";
 import "@/styles/accents.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
