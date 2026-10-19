@@ -77,14 +77,14 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-rest-done { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 0 24px; }
 .ses-rest-mark { display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 4px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring) backwards; }
 .ses-rest-mark svg path { stroke-dasharray: 24; animation: check-draw var(--motion-slow) var(--ease-standard) 90ms backwards; }
-.ses-rest-done-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.05; }
+.ses-rest-done-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.05; }
 
 /* ─── Panel: nombre, serie actual, botón y lista ──────────────────────── */
 .ses-panel { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 16px; width: min(100%, 600px); margin: 0 auto; padding: 0 var(--gutter) calc(128px + var(--safe-b)); }
 .ses-head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: -84px; animation: ses-head-in var(--motion-slow) var(--ease-standard) backwards; }
 .ses-head.from-prev { animation-name: ses-head-in-prev; }
 .ses-head-tag { margin-bottom: 4px; }
-.ses-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 42px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; text-wrap: balance; overflow-wrap: anywhere; }
+.ses-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 42px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; text-wrap: balance; overflow-wrap: anywhere; }
 .ses-muscles { font-size: 14.5px; }
 .ses-head-note { display: flex; gap: 8px; align-items: flex-start; max-width: 46ch; font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
 .ses-head-note svg { flex: none; margin-top: 2px; }
@@ -140,7 +140,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-block-error { margin: 0; animation: ses-shake 360ms var(--ease-standard); }
 .ses-block.is-complete { gap: 14px; padding-top: 18px; }
 .ses-complete { display: flex; align-items: center; gap: 12px; }
-.ses-complete h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 26px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.04; }
+.ses-complete h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 26px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.04; }
 .ses-complete-mark { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring) backwards; }
 .ses-block.is-complete .meta-dots b { color: var(--ink); font-weight: 600; }
 .ses-block.is-complete .ses-ghost { align-self: flex-start; }
@@ -162,7 +162,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 /* ─── Lista de series (debajo del pliegue) ─────────────────────────────── */
 .ses-sets { display: flex; flex-direction: column; gap: 14px; padding-top: 12px; animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
 .ses-sets-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.ses-sets-head h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.1; }
+.ses-sets-head h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.1; }
 .ses-hint { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; color: var(--accent-text); }
 .ses-hint svg { flex: none; margin-top: 2px; }
 .ses-hint.hint-start, .ses-hint.hint-hold { color: var(--ink-2); }
@@ -204,7 +204,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 /* Ver sesión */
 .ses-plan-sheet { gap: 16px; }
 .ses-plan-intro { display: flex; flex-direction: column; gap: 10px; }
-.ses-plan-name { width: 100%; min-height: 48px; margin: 0 -10px; padding: 4px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 28px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; text-overflow: ellipsis; box-sizing: content-box; max-width: 100%; transition: box-shadow var(--motion-fast), background-color var(--motion-fast); }
+.ses-plan-name { width: 100%; min-height: 48px; margin: 0 -10px; padding: 4px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 28px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); text-overflow: ellipsis; box-sizing: content-box; max-width: 100%; transition: box-shadow var(--motion-fast), background-color var(--motion-fast); }
 .ses-plan-name:focus { outline: none; background: var(--surface-2); box-shadow: 0 0 0 2px var(--accent); }
 .ses-plan-intro .meta-dots b { color: var(--ink); font-weight: 600; }
 .ses-plan-intro .progress-track { background: var(--surface-3); }
@@ -307,7 +307,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-summary-mark { display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 12px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 10px var(--accent-soft); animation: pop var(--motion-slow) var(--ease-spring) backwards; }
 .ses-summary-mark svg path { stroke-dasharray: 24; animation: check-draw 420ms var(--ease-standard) 160ms backwards; }
 .ses-summary-hero .meta { color: var(--ink-2); }
-.ses-summary-hero h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10vw, 56px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .96; text-wrap: balance; overflow-wrap: anywhere; }
+.ses-summary-hero h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10vw, 56px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; text-wrap: balance; overflow-wrap: anywhere; }
 .ses-summary-sub { max-width: 40ch; font-size: 16px; color: var(--ink-2); }
 .ses-summary-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 18px; margin: 0; padding-top: 24px; box-shadow: inset 0 1px 0 var(--line-strong); }
 .ses-summary-figure { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -340,7 +340,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-empty-back { align-self: flex-start; }
 .ses-empty-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding-top: 24px; }
 .ses-empty-clock { margin-bottom: 14px; font-size: clamp(92px, 30vw, 168px); color: color-mix(in srgb, var(--ink) 12%, transparent); animation: fade-in var(--motion-slow) var(--ease-standard) backwards; }
-.ses-empty-body h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10vw, 54px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .96; }
+.ses-empty-body h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10vw, 54px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; }
 .ses-empty-text { max-width: 38ch; font-size: 16px; color: var(--ink-2); }
 .ses-empty-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
 .ses-skeleton { display: flex; flex-direction: column; gap: 18px; min-height: 100svh; }
@@ -353,7 +353,7 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-iv { display: flex; flex-direction: column; gap: 30px; width: min(100%, 720px); margin: 0 auto; padding: calc(var(--safe-t) + 14px) var(--gutter) calc(128px + var(--safe-b)); }
 .ses-iv-head { display: flex; flex-direction: column; gap: 10px; }
 .ses-iv-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.ses-iv-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(42px, 12vw, 64px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .92; }
+.ses-iv-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(42px, 12vw, 64px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; }
 .ses-iv-lead { max-width: 40ch; font-size: 16px; color: var(--ink-2); }
 .ses-iv-section { display: flex; flex-direction: column; gap: 12px; }
 .ses-iv-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

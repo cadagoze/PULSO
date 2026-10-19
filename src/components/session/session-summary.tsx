@@ -6,6 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Activity, Check, ClipboardCopy, Flame, Trophy } from "lucide-react";
 import { MuscleMap } from "@/components/ui/muscle-map";
 import { weekStreak, workoutMuscleSets } from "@/lib/analytics";
+import { APP_TAGLINE } from "@/lib/constants";
 import { sessionCalories } from "@/lib/energy";
 import { formatKcal } from "@/lib/nutrition";
 import { recordKindLabels } from "@/lib/progression";
@@ -79,7 +80,7 @@ export function SessionSummary({ entry, workouts, settings }: { entry: WorkoutEn
       `${minutesLabel(entry.durationMinutes)} · ${entry.sets} series · ${volumeLabel(entry.volume ?? 0, unit)}${kcal > 0 ? ` · ≈ ${formatKcal(kcal)} kcal` : ""}`,
       ...bestSetLine(entry, unit),
       ...(prs.length ? ["Récords:", ...prs.map((hit) => `★ ${exerciseById(hit.exerciseId)?.name ?? "Ejercicio"}: ${recordKindLabels[hit.kind]} ${recordValueLabel(hit.kind, hit.value, unit)}`)] : []),
-      "Tu salud en movimiento.",
+      APP_TAGLINE,
     ];
     try {
       await navigator.clipboard.writeText(lines.join("\n"));

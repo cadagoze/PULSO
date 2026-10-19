@@ -39,7 +39,7 @@
 .train-hero-meta { display: inline-flex; align-items: center; gap: 8px; }
 .train-hero .train-hero-context { max-width: 22ch; font-size: 14px; line-height: 1.35; color: var(--ink-2); }
 .train-hero-main { display: flex; flex-direction: column; gap: 8px; }
-.train-hero .train-hero-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; color: var(--ink); text-wrap: balance; overflow-wrap: anywhere; }
+.train-hero .train-hero-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; color: var(--ink); text-wrap: balance; overflow-wrap: anywhere; }
 .train-hero-details { font-size: 14.5px; color: var(--ink-2); }
 .train-hero-details b { color: var(--ink); font-weight: 600; }
 .train-hero .train-hero-note { max-width: 44ch; font-size: 13.5px; color: var(--ink-2); }
@@ -253,7 +253,7 @@
 .train-cover .train-cover-number { display: flex; align-items: flex-end; gap: 12px; color: var(--ink); }
 .train-cover-number .num-display { font-size: clamp(92px, 28vw, 150px); }
 .train-cover .train-cover-number .meta { padding-bottom: 6px; color: var(--ink); opacity: .78; }
-.train-cover-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(32px, 9vw, 46px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; color: var(--ink); text-wrap: balance; }
+.train-cover-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(32px, 9vw, 46px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; color: var(--ink); text-wrap: balance; }
 .train-cover-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .train-cover-tags .train-live-dot { margin-right: 2px; }
 .train-detail-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }

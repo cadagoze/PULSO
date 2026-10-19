@@ -8,6 +8,10 @@
  * `.on-dark` aplica los colores oscuros a una zona (sesión, fotos, barra de navegación) sin cambiar el tema.
  */
 :root {
+  /* Marca fija (logo, ícono, portada): no cambia con el acento alternativo ni con el tema. */
+  --brand: #ff351f;
+  --brand-warm: #ff7a2f;
+  --brand-gradient: linear-gradient(135deg, #ff351f 0%, #ff7a2f 100%);
   --bg: #f4f3ee;
   --bg-2: #ebe8df;
   --surface: #ffffff;
@@ -76,7 +80,11 @@
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --font-num: var(--font-sans);
   /* Títulos y números en Archivo angosto y pesado: tono deportivo, rudo. */
-  --stretch-title: 78%;
+  --stretch-title: 80%;
+  /* Títulos: seminegrita y en tipo oración (editorial, sin gritar); las etiquetas .meta siguen en mayúsculas. */
+  --title-weight: 650;
+  --title-tracking: -.014em;
+  --title-case: none;
   --stretch-display: 76%;
 
   --motion-fast: 140ms;
@@ -139,9 +147,9 @@ img, svg { display: block; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 
 /* ─── Tipografía ───────────────────────────────────────────────────────── */
-.display { font-family: var(--font-display); font-stretch: var(--stretch-title); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1; }
-.title-xl { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(34px, 9.4vw, 54px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .98; }
-.title-l { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 28px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.04; }
+.display { font-family: var(--font-display); font-stretch: var(--stretch-title); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; }
+.title-xl { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(34px, 9.4vw, 54px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; }
+.title-l { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 28px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.04; }
 .title-m { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 600; letter-spacing: -.008em; line-height: 1.1; }
 .num { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .num-display { font-family: var(--font-display); font-stretch: var(--stretch-display); font-variant-numeric: tabular-nums lining-nums; font-weight: 700; letter-spacing: -.008em; line-height: .84; }
@@ -165,12 +173,12 @@ img, svg { display: block; }
 .page, .page-stack { display: flex; flex-direction: column; gap: 32px; padding-top: calc(18px + var(--safe-t)); }
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 6px; }
 .page-header > div { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.page-header h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 9.6vw, 54px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .96; }
+.page-header h1 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 9.6vw, 54px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; }
 .page-header .page-subtitle, .page-subtitle { color: var(--ink-2); font-size: 15px; max-width: 58ch; }
 .page-header .back { margin-bottom: 6px; }
 .section { display: flex; flex-direction: column; gap: 14px; }
 .section-head, .section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.section-head h2, .section-header h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.1; }
+.section-head h2, .section-header h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.1; }
 .section-head a, .section-head .link, .section-header a { display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); transition: color var(--motion-fast); }
 .section-head a:hover, .section-header a:hover { color: var(--ink); }
 .grid-2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
@@ -349,7 +357,7 @@ button.list-row:active, a.list-row:active { background: var(--surface-2); }
 .sheet-handle, .modal-handle { width: 40px; height: 5px; border-radius: 9px; background: var(--surface-3); flex: none; }
 .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .sheet-head > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.sheet-head h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 25px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.05; }
+.sheet-head h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 25px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.05; }
 @media (min-width: 720px) {
   .sheet-backdrop, .modal-backdrop { align-items: center; padding: 24px; }
   .sheet, .sheet-modal { border-radius: var(--radius-xl); padding-bottom: 24px; animation-name: dialog-in; }
@@ -412,7 +420,7 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 /* ─── Marca ────────────────────────────────────────────────────────────── */
 /* Logo: isotipo del color de acento y «PULSO» en Archivo ancho (125 %). Se escala con font-size. */
 .logo { display: inline-flex; align-items: center; gap: .42em; font-size: 19px; line-height: 1; }
-.isotype { flex: none; width: auto; height: 1.12em; fill: var(--accent); }
+.isotype { flex: none; width: auto; height: 1.12em; fill: var(--brand); }
 .wordmark { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; letter-spacing: .03em; line-height: 1; }
 
 /* ─── Mapa muscular ───────────────────────────────────────────────────── */
@@ -517,7 +525,7 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .routine-card-number .num-display { font-size: clamp(64px, 18vw, 92px); }
 .routine-card-body { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
 .routine-card-eyebrow { color: var(--ink-2); }
-.routine-card-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.05; }
+.routine-card-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.05; }
 .routine-card-l .routine-card-title { font-size: 30px; }
 .routine-card-meta { font-size: 13px; }
 .routine-card-action { display: flex; gap: 8px; }

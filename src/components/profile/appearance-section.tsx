@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 import { Check, Mars, Sparkles, UsersRound, Venus, type LucideIcon } from "lucide-react";
 import { SegmentedControl } from "@/components/ui";
-import { accentFor, accentOptions, photoOptions, type AccentName, type Identity, type PhotoPreference } from "@/lib/personalize";
+import { accentOptions, photoOptions, type AccentName, type PhotoPreference } from "@/lib/personalize";
 import { cn } from "@/lib/utils";
 import type { Settings } from "@/types";
 import { SettingRow, SettingsGroup } from "./settings-group";
@@ -30,16 +30,15 @@ const photoHelp: Record<PhotoPreference, string> = {
 };
 
 /**
- * Tema, color de acento y fotos. El color y las fotos son automáticos según cómo te identificas
- * hasta que eliges otros; todo se aplica al instante.
+ * Tema, color de acento y fotos. El color es el rojo PULSO salvo que elijas otro (el logo sigue rojo);
+ * las fotos son automáticas según cómo te identificas. Todo se aplica al instante.
  */
-export function AppearanceSection({ settings, identity, update, order }: { settings: Settings; identity: Identity; update: (patch: Partial<Settings>) => void; order?: number }) {
-  const automatic = accentFor(undefined, identity);
-  const automaticLabel = accentOptions.find((option) => option.value === automatic)?.label ?? "Fuego";
+export function AppearanceSection({ settings, update, order }: { settings: Settings; update: (patch: Partial<Settings>) => void; order?: number }) {
+  const accent = settings.accent ?? "fire";
   const photos = settings.photos ?? "auto";
 
-  function chooseAccent(value: AccentName | undefined) {
-    update({ accent: value });
+  function chooseAccent(value: AccentName) {
+    update({ accent: value === "fire" ? undefined : value });
   }
 
   return (
@@ -51,15 +50,11 @@ export function AppearanceSection({ settings, identity, update, order }: { setti
       />
       <SettingRow
         title="Color"
-        helper={settings.accent ? "Elegido por ti." : `Automático: ${automaticLabel.toLowerCase()} según tu perfil.`}
+        helper={accent === "fire" ? "El rojo PULSO, el color de la marca." : "Color alternativo elegido por ti. El logo sigue en rojo PULSO."}
         below={
           <div className="accent-picker" role="radiogroup" aria-label="Color de acento">
-            <button type="button" role="radio" aria-checked={!settings.accent} className={cn("accent-swatch", !settings.accent && "is-selected")} onClick={() => chooseAccent(undefined)}>
-              <span className="accent-dot is-auto" style={{ "--swatch": accentOptions.find((option) => option.value === automatic)?.swatch } as CSSProperties} aria-hidden="true"><Sparkles size={14} /></span>
-              <span>Auto</span>
-            </button>
             {accentOptions.map((option) => {
-              const selected = settings.accent === option.value;
+              const selected = accent === option.value;
               return (
                 <button key={option.value} type="button" role="radio" aria-checked={selected} className={cn("accent-swatch", selected && "is-selected")} onClick={() => chooseAccent(option.value)}>
                   <span className="accent-dot" style={{ "--swatch": option.swatch } as CSSProperties} aria-hidden="true">{selected && <Check size={15} strokeWidth={3} />}</span>

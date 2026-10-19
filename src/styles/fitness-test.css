@@ -9,7 +9,7 @@
 .ft-plan-item .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ft-plan-item strong { font-size: 15px; font-weight: 600; }
 .ft-plan-item small { font-size: 13px; color: var(--ink-2); }
-.ft-plan-num { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 17px; font-weight: 800; color: var(--accent-text); }
+.ft-plan-num { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 17px; font-weight: 700; color: var(--accent-text); }
 .ft-plan-done { flex: none; color: var(--accent-text); }
 .ft-intro-box { display: flex; flex-direction: column; gap: 6px; padding: 6px 18px 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--ring); }
 .ft-intro-box .toggle-row > span { display: flex; flex-direction: column; gap: 2px; }
@@ -34,7 +34,7 @@
 .ft-visual.exercise-visual-immersive { position: relative; height: clamp(230px, 36svh, 400px); }
 .ft-visual.exercise-visual-ill { padding: calc(var(--safe-t) + 62px) 22px 20px; }
 .ft-brief-body { display: flex; flex-direction: column; gap: 14px; width: min(100%, 640px); margin: 0 auto; padding: 18px var(--gutter) 0; }
-.ft-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10.5vw, 58px); font-weight: 800; letter-spacing: .012em; line-height: .96; text-transform: uppercase; text-wrap: balance; }
+.ft-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(36px, 10.5vw, 58px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); text-wrap: balance; }
 .ft-rest { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .ft-rest b { color: var(--ink); letter-spacing: .03em; }
 .ft-rest.is-ready { background: var(--accent-soft); color: var(--accent-text); }
@@ -67,7 +67,7 @@
 /* ─── Anotar el resultado ────────────────────────────────────────────── */
 .ft-record { display: flex; flex-direction: column; min-height: 100svh; }
 .ft-record-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: min(100%, 560px); margin: 0 auto; padding: 24px var(--gutter) calc(130px + var(--safe-b)); text-align: center; }
-.ft-question { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 44px); font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.ft-question { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 44px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); text-wrap: balance; }
 .ft-value { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
 .ft-value-btn { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
 .ft-value-btn:active { transform: scale(.92); }
@@ -83,7 +83,7 @@
 .ft-score-num .num-display { font-size: clamp(88px, 28vw, 140px); color: var(--accent-text); }
 .ft-score-num small { font-size: 20px; font-weight: 600; color: var(--ink-3); }
 .ft-score-level { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.ft-score-level strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; }
+.ft-score-level strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); }
 .ft-score-note { max-width: 42ch; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 .ft-delta { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
 .ft-delta.is-up { background: var(--accent-soft); color: var(--accent-text); }
@@ -98,7 +98,7 @@
 .ft-meter i { height: 6px; border-radius: 6px; background: var(--surface-3); }
 .ft-meter i.is-on { background: var(--accent); }
 .ft-focus { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--ring), inset 3px 0 0 var(--accent); }
-.ft-focus strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; }
+.ft-focus strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 24px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); }
 .ft-focus p { font-size: 14px; line-height: 1.45; color: var(--ink-2); margin-bottom: 6px; }
 .ft-refs { padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 .ft-refs summary { cursor: pointer; font-weight: 600; color: var(--ink); }
@@ -109,7 +109,7 @@
 
 /* ─── Progreso → Test físico ─────────────────────────────────────────── */
 .ft-start { display: flex; flex-direction: column; gap: 14px; }
-.ft-start-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.4vw, 40px); font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.ft-start-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.4vw, 40px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); text-wrap: balance; }
 .ft-next { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
 .ft-next .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ft-next strong { font-size: 15px; font-weight: 600; }
@@ -122,7 +122,7 @@
 .ft-history-row strong { font-size: 14.5px; font-weight: 600; }
 .ft-history-row small { font-size: 12.5px; color: var(--ink-2); }
 .ft-history-score { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.ft-history-score b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 24px; font-weight: 800; line-height: 1; }
+.ft-history-score b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 24px; font-weight: 700; line-height: 1; }
 .ft-history-row .icon-button { box-shadow: none; background: transparent; color: var(--ink-3); }
 
 /* ─── Inicio ─────────────────────────────────────────────────────────── */

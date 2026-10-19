@@ -2,7 +2,7 @@ import { useId } from "react";
 import { isotype } from "@/components/brand/isotype";
 import { cn } from "@/lib/utils";
 
-/** Isotipo en línea: del color de acento o, en la portada, con el gradiente de marca. */
+/** Isotipo en línea: siempre rojo PULSO (no sigue al acento alternativo); en la portada, con el gradiente de marca. */
 export function Isotype({ gradient = false, className }: { gradient?: boolean; className?: string }) {
   const id = useId();
   return (
@@ -10,8 +10,8 @@ export function Isotype({ gradient = false, className }: { gradient?: boolean; c
       {gradient && (
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" style={{ stopColor: "var(--accent)" }} />
-            <stop offset="1" style={{ stopColor: "var(--accent-bright)" }} />
+            <stop offset="0" style={{ stopColor: "var(--brand)" }} />
+            <stop offset="1" style={{ stopColor: "var(--brand-warm)" }} />
           </linearGradient>
         </defs>
       )}

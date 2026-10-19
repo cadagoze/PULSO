@@ -1,8 +1,9 @@
 import type { Settings } from "@/types";
 
 /**
- * Personalización visual: qué fotos mostrar y qué color de acento usar. Por defecto se decide según
- * cómo te identificas (evaluación o, si no, el cálculo de calorías) y siempre se puede cambiar en Ajustes.
+ * Personalización visual: qué fotos mostrar y qué color de acento usar. Las fotos se eligen según cómo
+ * te identificas (evaluación o, si no, el cálculo de calorías); el color es el rojo PULSO salvo que elijas
+ * otro en Ajustes. El logo es siempre rojo PULSO.
  */
 
 export type Identity = "female" | "male" | "unspecified";
@@ -11,7 +12,7 @@ export type AccentName = "fire" | "magenta" | "violet" | "lime" | "electric";
 export type PhotoPreference = "auto" | "female" | "male" | "mixed";
 
 export const accentOptions: Array<{ value: AccentName; label: string; swatch: string }> = [
-  { value: "fire", label: "Fuego", swatch: "#ff351f" },
+  { value: "fire", label: "PULSO", swatch: "#ff351f" },
   { value: "magenta", label: "Magenta", swatch: "#ff2e88" },
   { value: "violet", label: "Violeta", swatch: "#9b6bff" },
   { value: "lime", label: "Lima", swatch: "#c9ff68" },
@@ -35,9 +36,9 @@ export function audienceFor(preference: PhotoPreference | undefined, identity: I
   return identity === "unspecified" ? "mixed" : identity;
 }
 
-/** Color automático: magenta para mujeres, fuego para el resto; lo elegido en Ajustes manda. */
-export function accentFor(choice: AccentName | undefined, identity: Identity): AccentName {
-  return choice ?? (identity === "female" ? "magenta" : "fire");
+/** El rojo PULSO para todos; un color alternativo sólo si lo eliges en Ajustes. */
+export function accentFor(choice: AccentName | undefined): AccentName {
+  return choice ?? "fire";
 }
 
 /** Elige una foto de la lista que corresponde; las mixtas intercalan ambas y cambian cada día. */

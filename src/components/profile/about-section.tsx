@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { HeartPulse, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { APP_TAGLINE } from "@/lib/constants";
 
 export const appVersion = "2.0";
 
@@ -14,8 +15,8 @@ export function AboutSection({ order = 0 }: { order?: number }) {
       <div className="prof-about-body">
         <Logo className="prof-about-mark" />
         <div className="prof-about-lead">
-          <p className="prof-about-tagline">Tu salud en movimiento.</p>
-          <p className="prof-about-idea">Entrenamiento que se adapta a tu vida.</p>
+          <p className="prof-about-tagline">{APP_TAGLINE}</p>
+          <p className="prof-about-idea">Fuerza, comidas y bienestar, en casa o en el gimnasio.</p>
         </div>
         <p className="prof-about-line">
           <ShieldCheck size={16} aria-hidden="true" />

@@ -24,7 +24,7 @@
 .onb-num-total { padding-bottom: 3px; font-family: var(--font-display); font-stretch: var(--stretch-display); font-variant-numeric: tabular-nums lining-nums; font-size: clamp(20px, 5.6vw, 26px); font-weight: 600; letter-spacing: -.008em; line-height: 1; color: var(--ink-3); }
 .onb-step-index .meta { padding-bottom: 5px; text-align: right; }
 .onb-step-copy { display: flex; flex-direction: column; gap: 12px; animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; }
-.onb-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(31px, 8.8vw, 46px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1; text-wrap: balance; }
+.onb-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(31px, 8.8vw, 46px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; text-wrap: balance; }
 .onb-title:focus, .onb-splash-title:focus, .onb-result-title:focus { outline: none; }
 .onb-description { max-width: 42ch; font-size: 15.5px; line-height: 1.45; color: var(--ink-2); }
 .onb-disclaimer { margin-top: auto; padding-top: 10px; max-width: 52ch; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); animation: fade-in var(--motion-slow) var(--ease-standard) 120ms backwards; }
@@ -63,7 +63,7 @@
 .onb-options-two .onb-check { position: absolute; top: 16px; right: 16px; }
 .onb-equipment { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: var(--radius-l); background: var(--surface-2); animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
 .onb-equipment-head { display: flex; flex-direction: column; gap: 6px; }
-.onb-equipment h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: 1.1; }
+.onb-equipment h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.1; }
 .onb-equipment p { font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 .onb-equipment .chip { min-height: 44px; }
 
@@ -81,7 +81,7 @@
 .onb-next { flex: 1; }
 
 /* ─── Portada: gimnasio en penumbra, luz de ventana y la frase de marca ── */
-.onb-splash { --onb-accent: var(--accent); position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; overflow: hidden; background: #0a0a0a; color: #fff; }
+.onb-splash { --onb-accent: var(--brand); position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; overflow: hidden; background: #0a0a0a; color: #fff; }
 .onb-splash.grain::before { opacity: .22; }
 .onb-splash-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 /* Muro: luz difusa que entra desde la ventana (derecha). */
@@ -125,7 +125,7 @@
 .onb-result-side { display: flex; flex-direction: column; gap: 22px; }
 .onb-result-head { display: flex; flex-direction: column; gap: 12px; }
 .onb-result-head .meta { color: var(--accent); }
-.onb-result-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(38px, 11vw, 64px); font-weight: 800; letter-spacing: .012em; text-transform: uppercase; line-height: .95; text-wrap: balance; }
+.onb-result-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(38px, 11vw, 64px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; text-wrap: balance; }
 .onb-result-message { max-width: 40ch; font-size: 16px; line-height: 1.45; color: var(--ink-2); }
 .onb-result-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding-top: 22px; border-top: 1px solid var(--line-strong); }
 .onb-result-metrics .nmetric { gap: 12px; }

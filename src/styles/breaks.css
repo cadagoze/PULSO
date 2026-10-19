@@ -12,11 +12,11 @@
 .brk-hero-ill { display: block; width: 112px; aspect-ratio: 120 / 130; }
 .brk-hero-ill svg { width: 100%; height: 100%; }
 .brk-hero-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.brk-hero-body strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 26px; font-weight: 800; letter-spacing: .012em; line-height: 1; text-transform: uppercase; }
+.brk-hero-body strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 26px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); }
 .brk-hero-body small { font-size: 13px; color: var(--ink-2); }
 .brk-hero-play { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
 .brk-hero:active { transform: scale(.985); }
-.brk-list-min { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 800; line-height: 1; }
+.brk-list-min { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 18px; font-weight: 700; line-height: 1; }
 .brk-list-min small { font-family: var(--font-sans); font-stretch: normal; font-size: 9.5px; font-weight: 600; color: var(--ink-2); }
 .brk-list .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .brk-list strong { font-size: 15px; font-weight: 600; }
@@ -50,7 +50,7 @@
 .brk-run-body { flex: 1; display: flex; flex-direction: column; gap: 8px; width: min(100%, 560px); min-height: 0; margin: 0 auto; padding: 14px var(--gutter) 0; }
 .brk-run.is-resting .brk-run-body .meta { color: var(--accent-text); }
 .brk-run.is-paused .brk-run-body .meta { color: var(--warning); }
-.brk-run-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 9vw, 48px); font-weight: 800; letter-spacing: .012em; line-height: .98; text-transform: uppercase; text-wrap: balance; }
+.brk-run-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 9vw, 48px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; text-transform: var(--title-case); text-wrap: balance; }
 .brk-cues { display: flex; flex-direction: column; gap: 4px; margin: 2px 0 0; padding: 0; list-style: none; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
 .brk-run-clock { display: flex; align-items: center; gap: 18px; margin-top: auto; padding: 10px 0 4px; }
 .brk-timer circle { stroke-width: 3.2; }

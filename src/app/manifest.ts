@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "PULSO",
     short_name: "PULSO",
-    description: "Tu salud en movimiento.",
+    description: "Entrenamiento que se adapta a tu vida.",
     start_url: "/",
     scope: "/",
     display: "standalone",

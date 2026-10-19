@@ -262,19 +262,6 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
     return () => { document.body.style.overflow = overflow; };
   }, []);
 
-  // Vista previa del color automático mientras se responde (si no hay uno elegido en Ajustes).
-  useEffect(() => {
-    if (settings.accent || !extras.sex) return;
-    const root = document.documentElement;
-    const previous = root.getAttribute("data-accent");
-    if (extras.sex === "female") root.setAttribute("data-accent", "magenta");
-    else root.removeAttribute("data-accent");
-    return () => {
-      if (previous) root.setAttribute("data-accent", previous);
-      else root.removeAttribute("data-accent");
-    };
-  }, [extras.sex, settings.accent]);
-
   // Cada pregunta nueva recibe el foco en su título (lectores de pantalla y teclado).
   useEffect(() => {
     if (intro === "closed" && !showingResult) titleRef.current?.focus({ preventScroll: true });
@@ -350,7 +337,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
         <Image src={sidePhoto} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="photo-img" />
         <div className="onb-media-top photo-content">
           <span className="meta">PULSO · Evaluación inicial</span>
-          <span className="meta">Tu salud en movimiento.</span>
+          <span className="meta">Entrenamiento que se adapta a tu vida.</span>
         </div>
         <p key={stepIndex} className="onb-media-num photo-content">
           <span className="num-display">{pad(stepIndex + 1)}</span>

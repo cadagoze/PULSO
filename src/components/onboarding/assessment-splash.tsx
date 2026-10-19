@@ -43,7 +43,7 @@ export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: n
           <p className="onb-splash-kicker rise" style={{ "--i": 2 } as CSSProperties}>Disciplina</p>
           <span className="onb-splash-rule rise" style={{ "--i": 2 } as CSSProperties} aria-hidden="true" />
           <h1 id="onb-splash-title" ref={titleRef} tabIndex={-1} className="onb-splash-title rise" style={{ "--i": 3 } as CSSProperties}>
-            <span>Tu salud</span> <span className="onb-splash-accent">en movimiento</span>
+            <span>Entrenamiento</span> <span>que se adapta</span> <span className="onb-splash-accent">a tu vida</span>
           </h1>
           <span className="onb-splash-rule rise" style={{ "--i": 4 } as CSSProperties} aria-hidden="true" />
           <p className="onb-splash-kicker rise" style={{ "--i": 4 } as CSSProperties}>Entrena · Come bien · Avanza</p>

@@ -571,9 +571,8 @@ test('personalización: fotos y color según cómo te identificas, con elección
   assert.equal(personalize.audienceFor('auto', 'female'), 'female');
   assert.equal(personalize.audienceFor(undefined, 'unspecified'), 'mixed');
   assert.equal(personalize.audienceFor('male', 'female'), 'male');
-  assert.equal(personalize.accentFor(undefined, 'female'), 'magenta');
-  assert.equal(personalize.accentFor(undefined, 'male'), 'fire');
-  assert.equal(personalize.accentFor('lime', 'female'), 'lime');
+  assert.equal(personalize.accentFor(undefined), 'fire');
+  assert.equal(personalize.accentFor('lime'), 'lime');
   const sets = { female: ['f1', 'f2'], male: ['m1'] };
   assert.equal(personalize.pickPhoto(sets, 'female', 1), 'f2');
   assert.equal(personalize.pickPhoto(sets, 'male', 5), 'm1');

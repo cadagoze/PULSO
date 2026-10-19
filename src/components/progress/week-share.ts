@@ -1,5 +1,6 @@
 import { isotype } from "@/components/brand/isotype";
 import { volumeLabel, type Unit } from "@/components/progress/format";
+import { APP_TAGLINE } from "@/lib/constants";
 import type { WeekRecap } from "@/lib/week-recap";
 import { formatShortDate, toDisplayWeight } from "@/lib/utils";
 
@@ -32,7 +33,7 @@ export function recapText(recap: WeekRecap, unit: Unit, parts: ShareParts) {
   if (lift.length) lines.push(lift.join(" · "));
   if (recap.streak > 0) lines.push(`Racha: ${plural(recap.streak, "semana", "semanas")} cumpliendo la meta`);
   for (const line of extraLines(recap, unit, parts)) lines.push(`${line.label}: ${line.value}`);
-  lines.push("Tu salud en movimiento.");
+  lines.push(APP_TAGLINE);
   return lines.join("\n");
 }
 
@@ -217,7 +218,7 @@ export async function recapImage(recap: WeekRecap, unit: Unit, parts: ShareParts
   // Pie.
   ctx.fillStyle = "rgba(255, 255, 255, .42)";
   font(600, 24, body, "normal", 1);
-  ctx.fillText("Tu salud en movimiento.", P, H - 52);
+  ctx.fillText(APP_TAGLINE, P, H - 52);
 
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Sin imagen"))), "image/png"));
 }

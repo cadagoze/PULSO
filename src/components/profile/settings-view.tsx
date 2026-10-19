@@ -12,12 +12,10 @@ import { NotificationsSection } from "./notifications-section";
 import { StreakSection } from "./streak-section";
 import { Toast, useToast } from "@/components/ui/toast";
 import { TrainingSection } from "./training-section";
-import { usePersonalization } from "@/lib/use-personalize";
 
 /** Ajustes: apariencia, entrenamiento, avisos, racha, datos y acerca de, en grupos editoriales. */
 export function SettingsView() {
   const [settings, update] = useSettings();
-  const { identity } = usePersonalization();
   const [workouts] = useWorkouts();
   const now = useNow();
   const ready = now !== 0;
@@ -54,7 +52,7 @@ export function SettingsView() {
       {ready ? (
         <div className="prof-settings-grid">
           <div className="prof-settings-col">
-            <AppearanceSection settings={settings} identity={identity} update={update} order={0} />
+            <AppearanceSection settings={settings} update={update} order={0} />
             <TrainingSection settings={settings} update={update} order={1} />
           </div>
           <div className="prof-settings-col">
