@@ -60,7 +60,6 @@
 .brk-controls { padding: 10px var(--gutter) calc(18px + var(--safe-b)); }
 
 /* ─── Inicio ─────────────────────────────────────────────────────────── */
-.home-break .grow { gap: 2px; }
 
 @media (max-height: 700px) {
   .brk-visual.exercise-visual-immersive { height: 30svh; }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
+import type { ReactNode } from "react";
 import { Calculator, ChevronRight, Lightbulb, Plus, Scale } from "lucide-react";
 import { ButtonLink, ProgressRing } from "@/components/ui";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
@@ -13,10 +14,10 @@ import { useNutritionDay, useWaterToday, useWeeklyReview } from "@/lib/use-nutri
 import { cn } from "@/lib/utils";
 
 /**
- * Lo que comes y bebes hoy, a la vista en Inicio: calorías restantes y proteína (si cuentas calorías),
- * comidas registradas (si no) y el contador de agua, con registro directo.
+ * «Tu día» en Inicio, en un solo bloque: el chequeo antes de entrenar (si toca), las comidas (calorías y
+ * proteína si cuentas calorías; si no, cuántas registraste) y el agua, con registro directo.
  */
-export function DayFuel({ now }: { now: number }) {
+export function DayFuel({ now, readiness }: { now: number; readiness?: ReactNode }) {
   const { profile, targets, totals, counting } = useNutritionDay(now);
   const water = useWaterToday(now);
   const [meals] = useMeals();
@@ -30,14 +31,15 @@ export function DayFuel({ now }: { now: number }) {
   return (
     <section className="section home-fuel" aria-labelledby="home-fuel-title">
       <div className="home-fuel-head">
-        <h2 id="home-fuel-title" className="meta">Nutrición de hoy</h2>
-        <Link href="/comidas" className="home-fuel-link">Ver día<ChevronRight size={15} aria-hidden="true" /></Link>
+        <h2 id="home-fuel-title" className="meta">Tu día</h2>
+        <Link href="/comidas" className="home-fuel-link">Comidas<ChevronRight size={15} aria-hidden="true" /></Link>
       </div>
       <div className="home-fuel-card">
+        {readiness && <div className="home-fuel-ready">{readiness}</div>}
         {counting && targets ? <Calories kcal={totals.kcal} protein={totals.protein} targetKcal={targets.kcal} targetProtein={targets.protein} /> : profile ? (
           <div className="home-fuel-simple">
-            <p><b className="num">{meals.filter(isLogged).length}</b> de <span className="num">{meals.length}</span> comidas registradas</p>
-            <ButtonLink href="/comidas?registrar=1" variant="secondary" size="s"><Plus size={16} />Registrar</ButtonLink>
+            <p><b>Comidas</b> <span className="num">{meals.filter(isLogged).length}</span> de <span className="num">{meals.length}</span> registradas</p>
+            <ButtonLink href="/comidas?registrar=1" variant="secondary" size="s"><Plus size={16} />Añadir</ButtonLink>
           </div>
         ) : (
           <div className="home-fuel-simple">
@@ -65,26 +67,21 @@ export function DayFuel({ now }: { now: number }) {
   );
 }
 
+/** Una fila compacta: el anillo del día, lo que queda y la proteína; el detalle vive en Comidas. */
 function Calories({ kcal, protein, targetKcal, targetProtein }: { kcal: number; protein: number; targetKcal: number; targetProtein: number }) {
   const remaining = Math.round(targetKcal - kcal);
   const over = remaining < 0;
   const percent = Math.round((kcal / targetKcal) * 100);
   return (
     <div className="home-fuel-kcal">
-      <div className="grow">
-        <p className={cn("home-fuel-number", over && "is-over")}>
-          <span className="num-display">{formatKcal(Math.abs(remaining))}</span>
-          <span>kcal {over ? "sobre tu objetivo" : "restantes"}</span>
-        </p>
-        <p className="home-fuel-line">
-          <span><b className="num">{formatKcal(kcal)}</b> de <span className="num">{formatKcal(targetKcal)}</span> kcal consumidas</span>
-          <span>Proteína <b className="num">{Math.round(protein)}</b> de <span className="num">{targetProtein}</span> g</span>
-        </p>
-        <ButtonLink href="/comidas?registrar=1" variant="secondary" size="s" className="home-fuel-add"><Plus size={16} />Registrar comida</ButtonLink>
-      </div>
-      <ProgressRing value={percent} size={88} stroke={9} color={over ? "var(--gold)" : undefined} label={`${percent} % de tus calorías del día`}>
+      <ProgressRing value={percent} size={52} stroke={6} color={over ? "var(--gold)" : undefined} label={`${percent} % de tus calorías del día`}>
         <span className="home-fuel-percent num">{percent}<small>%</small></span>
       </ProgressRing>
+      <p className={cn("grow home-fuel-number", over && "is-over")}>
+        <strong><span className="num">{formatKcal(Math.abs(remaining))}</span> kcal {over ? "sobre tu objetivo" : "restantes"}</strong>
+        <small>Proteína <b className="num">{Math.round(protein)}</b> de <span className="num">{targetProtein}</span> g</small>
+      </p>
+      <ButtonLink href="/comidas?registrar=1" variant="secondary" size="s"><Plus size={16} />Añadir</ButtonLink>
     </div>
   );
 }
