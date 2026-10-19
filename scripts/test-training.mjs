@@ -1232,3 +1232,13 @@ test('evaluación con «Tu cuerpo»: validación y plan de calorías seguro', ()
   assert.equal(tca.mode, 'simple', 'con antecedente de TCA no se cuentan calorías');
   assert.equal(nutrition.nutritionTargets(tca, 60, now).limited, 'special');
 });
+
+test('versión de la app: detecta una publicación nueva por el archivo principal', () => {
+  const version = load('src/lib/app-version.ts');
+  const page = (hash) => `<head><link rel="modulepreload" href="/_next/static/chunks/index-${hash}.js"><script src="/_next/static/chunks/framework-2k-VFE-j.js"></script></head>`;
+  assert.equal(version.entryChunk(page('CTTfcN2o')), '/_next/static/chunks/index-CTTfcN2o.js');
+  assert.equal(version.hasNewVersion(page('CTTfcN2o'), page('Ab12_cd-')), true);
+  assert.equal(version.hasNewVersion(page('CTTfcN2o'), page('CTTfcN2o')), false);
+  assert.equal(version.hasNewVersion('<html></html>', page('CTTfcN2o')), false, 'sin referencia actual, no recarga');
+  assert.equal(version.hasNewVersion(page('CTTfcN2o'), '<html>error</html>'), false, 'respuesta rara, no recarga');
+});
