@@ -12,8 +12,8 @@ import { newId } from "@/lib/training";
 import { toDisplayWeight } from "@/lib/utils";
 import type { ExerciseRecord, SetRecord, WorkoutEntry } from "@/types";
 import { confirmAction } from "@/lib/confirm";
+import { effortLabels } from "@/components/session/session-utils";
 
-const effortLabels = ["", "Muy suave", "Suave", "Moderado", "Duro", "Máximo"];
 
 function freshRecords(records: ExerciseRecord[]) {
   return records.map((record) => ({ ...record, sets: record.sets.map((set) => ({ ...set, done: false })) }));
@@ -96,7 +96,7 @@ export function WorkoutDetailSheet({ workout, onClose }: { workout: WorkoutEntry
             <div className="prog-detail-feedback">
               <p>
                 <span className="subtle">Esfuerzo</span>
-                <strong>{workout.effort ? `${workout.effort}/5 · ${effortLabels[workout.effort]}` : "Sin registrar"}</strong>
+                <strong>{workout.effort ? effortLabels[workout.effort] : "Sin registrar"}</strong>
               </p>
               {workout.feltPain && (
                 <p className="notice warn">

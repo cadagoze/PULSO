@@ -1,28 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CircleAlert, Trophy } from "lucide-react";
 import { Sheet, Switch } from "@/components/ui";
+import { clockLabel, completedSets, durationSeconds, exerciseById, recordsVolume, totalSets } from "@/lib/training";
+import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { effortOptions } from "./session-utils";
-import type { Effort } from "./session-utils";
+import type { TrainingDraft, WorkoutEntry } from "@/types";
+import { buildWorkoutEntry, effortChoices, volumeLabel } from "./session-utils";
+import type { Effort, WeightUnit } from "./session-utils";
 
-/** Selector de esfuerzo percibido 1–5, compartido con el temporizador de intervalos. */
+/** ¿Cómo te sentiste? Fácil, Bien o Difícil (se guarda como esfuerzo 2, 3 o 4). Lo comparten los intervalos. */
 export function EffortPicker({ value, onChange }: { value: Effort; onChange: (value: Effort) => void }) {
   return (
     <fieldset className="ses-effort">
-      <legend>¿Cómo se sintió?</legend>
+      <legend>¿Cómo te sentiste?</legend>
       <div className="ses-effort-grid">
-        {effortOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className={cn("ses-effort-chip", `effort-${option.value}`)}
-            aria-pressed={value === option.value}
-            onClick={() => onChange(option.value)}
-          >
-            <b className="num">{option.value}</b>
-            <span>{option.label}</span>
+        {effortChoices.map((option) => (
+          <button key={option.value} type="button" className="ses-effort-chip" aria-pressed={value === option.value} onClick={() => onChange(option.value)}>
+            {option.label}
           </button>
         ))}
       </div>
@@ -30,31 +26,44 @@ export function EffortPicker({ value, onChange }: { value: Effort; onChange: (va
   );
 }
 
-export function FinishSheet({ open, onClose, duration, done, total, volume, onSave }: {
+/**
+ * El cierre en una sola pantalla: minutos, series, volumen y récords, cómo te sentiste, molestias y
+ * guardar. El reloj vive aquí, así no se repinta la sesión entera cada segundo mientras está abierta.
+ */
+export function FinishSheet({ open, onClose, draft, workouts, unit, onSave }: {
   open: boolean;
   onClose: () => void;
-  duration: string;
-  done: number;
-  total: number;
-  volume: string;
+  draft: TrainingDraft;
+  workouts: WorkoutEntry[];
+  unit: WeightUnit;
   onSave: (effort: Effort, feltPain: boolean) => void;
 }) {
   const [effort, setEffort] = useState<Effort>(3);
   const [pain, setPain] = useState(false);
+  const now = useNow(open ? 1000 : 60_000);
+  const minute = useNow();
+  const done = completedSets(draft.records);
+  const total = totalSets(draft.records);
   const pending = total - done;
+  const complete = done > 0 && pending === 0;
+  // Récords que quedarán con este entrenamiento: la misma regla que el historial.
+  const hits = useMemo(() => (open && minute ? buildWorkoutEntry(draft, workouts, { effort: 3, feltPain: false }, minute).prs ?? [] : []), [draft, minute, open, workouts]);
+  const names = [...new Set(hits.map((hit) => exerciseById(hit.exerciseId)?.name).filter((name): name is string => Boolean(name)))];
 
   return (
-    <Sheet open={open} onClose={onClose} title="Terminar entrenamiento" eyebrow="Antes de guardar" className="ses-finish">
-      <dl className="ses-finish-stats">
-        <div><dt className="meta">Duración</dt><dd className="num">{duration}</dd></div>
-        <div><dt className="meta">Series</dt><dd className="num">{done}<small>/{total}</small></dd></div>
-        <div><dt className="meta">Volumen</dt><dd className="num">{volume}</dd></div>
+    <Sheet open={open} onClose={onClose} title={complete ? "Entrenamiento completado" : "Terminar entrenamiento"} eyebrow={complete ? "Bien hecho" : "Antes de guardar"} className="ses-finish">
+      <dl className={cn("ses-finish-stats", hits.length > 0 && "has-records")}>
+        <div><dt className="meta">Duración</dt><dd className="num">{now ? clockLabel(durationSeconds(draft, now)) : "--:--"}</dd></div>
+        <div><dt className="meta">Series</dt><dd className="num">{done}{pending > 0 && <small>/{total}</small>}</dd></div>
+        <div><dt className="meta">Volumen</dt><dd className="num">{volumeLabel(recordsVolume(draft.records), unit)}</dd></div>
+        {hits.length > 0 && <div className="is-gold"><dt className="meta">Récords</dt><dd className="num"><Trophy size={16} aria-hidden="true" />{hits.length}</dd></div>}
       </dl>
+      {names.length > 0 && <p className="ses-finish-records">Récord personal en {names.join(", ")}.</p>}
 
       {pending > 0 && done > 0 && (
         <p className="notice warn">
           <CircleAlert size={18} />
-          <span>Te quedan {pending} {pending === 1 ? "serie pendiente" : "series pendientes"}. Sólo se guardarán las series realizadas.</span>
+          <span>Te quedan {pending} {pending === 1 ? "serie pendiente" : "series pendientes"}. Sólo se guardan las series hechas.</span>
         </p>
       )}
       {done === 0 && (
@@ -69,7 +78,7 @@ export function FinishSheet({ open, onClose, duration, done, total, volume, onSa
       <div className="toggle-row ses-pain">
         <span>
           <strong>Sentí molestias</strong>
-          <small>Lo tendremos en cuenta al sugerir tus próximas sesiones.</small>
+          <small>Queda en tu historial. Si sigue mañana, márcalo en «Cómo estás hoy» y tu sesión evitará esa zona.</small>
         </span>
         <Switch checked={pain} onChange={setPain} label="Sentí molestias" />
       </div>

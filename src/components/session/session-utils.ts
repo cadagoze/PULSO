@@ -1,21 +1,21 @@
-import { useSyncExternalStore } from "react";
-import { muscleLabels } from "@/data/catalog";
 import { formatVolume } from "@/lib/analytics";
 import { bestRepsAt, detectRecords, estimateOneRepMax, recordEligible } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
 import { completedSets, durationSeconds, isWorkingSet, newId, recordsVolume } from "@/lib/training";
 import { formatNumber, localDateKey, toDisplayWeight } from "@/lib/utils";
-import type { Exercise, ExerciseRecord, PersonalRecordKind, SetKind, SetRecord, TrainingDraft, WorkoutEntry, WorkoutSource } from "@/types";
+import type { Exercise, ExerciseRecord, SetKind, SetRecord, TrainingDraft, WorkoutEntry, WorkoutSource } from "@/types";
 
 export type Effort = 1 | 2 | 3 | 4 | 5;
 export type WeightUnit = "kg" | "lb";
 
-export const effortOptions: Array<{ value: Effort; label: string }> = [
-  { value: 1, label: "Muy fácil" },
+/** Nombre de cada esfuerzo guardado (1–5; los entrenamientos anteriores pueden tener 1 o 5). */
+export const effortLabels: Record<Effort, string> = { 1: "Muy fácil", 2: "Fácil", 3: "Bien", 4: "Difícil", 5: "Máximo" };
+
+/** Al terminar se elige entre tres, que se guardan en la misma escala de siempre. */
+export const effortChoices: Array<{ value: Effort; label: string }> = [
   { value: 2, label: "Fácil" },
-  { value: 3, label: "Moderado" },
+  { value: 3, label: "Bien" },
   { value: 4, label: "Difícil" },
-  { value: 5, label: "Máximo" },
 ];
 
 export const rirOptions: Array<{ value: number; label: string }> = [
@@ -28,12 +28,6 @@ export const rirOptions: Array<{ value: number; label: string }> = [
 
 export const limits = { reps: 200, seconds: 3600, load: 500 } as const;
 
-const subscribeNothing = () => () => {};
-
-/** Verdadero sólo en el cliente tras hidratar: evita mostrar el estado vacío antes de leer localStorage. */
-export function useHydrated() {
-  return useSyncExternalStore(subscribeNothing, () => true, () => false);
-}
 
 export function weightLabel(kg: number, unit: WeightUnit) {
   return `${formatNumber(toDisplayWeight(kg, unit))} ${unit}`;
@@ -96,11 +90,6 @@ export function performanceLabel(set: Pick<SetRecord, "value" | "load">, unit: "
   return load ? `${set.value} × ${load}` : `${set.value} rep`;
 }
 
-/** Músculos principales para la línea bajo el nombre: «Isquiotibiales · Glúteos». */
-export function primaryMuscles(exercise: Exercise) {
-  return exercise.primary.map((muscle) => muscleLabels[muscle]);
-}
-
 /** Salto de los botones +/− de carga, en la unidad visible. */
 export function loadStep(exercise: Exercise, unit: WeightUnit) {
   const base = exercise.increment > 0 ? exercise.increment : 2.5;
@@ -121,8 +110,8 @@ export function firstPendingRecord(records: ExerciseRecord[]) {
   return index === -1 ? Math.max(0, records.length - 1) : index;
 }
 
-/** Posiciones contiguas de la superserie de un ejercicio (sólo él si no está agrupado). */
-export function groupMembers(records: ExerciseRecord[], index: number) {
+/** Posiciones de los ejercicios de la misma superserie (o sólo el propio). */
+function groupMembers(records: ExerciseRecord[], index: number) {
   const group = records[index]?.group;
   if (!group) return [index];
   let start = index;
@@ -159,11 +148,6 @@ export function previousSet(record: ExerciseRecord, index: number, last?: Exerci
   const working = isWorkingSet(record.sets[index]);
   const position = record.sets.slice(0, index).filter((set) => isWorkingSet(set) === working).length;
   return last.sets.filter((set) => isWorkingSet(set) === working)[position];
-}
-
-export function previousLabel(set: SetRecord, unit: "reps" | "seconds", weightUnit: WeightUnit) {
-  if (unit === "seconds") return set.load > 0 ? `${formatNumber(toDisplayWeight(set.load, weightUnit))} × ${set.value} s` : `${set.value} s`;
-  return set.load > 0 ? `${formatNumber(toDisplayWeight(set.load, weightUnit))} × ${set.value}` : `${set.value} rep`;
 }
 
 export function validateSet(set: SetRecord, unit: "reps" | "seconds"): string | null {
@@ -229,20 +213,6 @@ export function sourceLabel(source?: WorkoutSource) {
     case "generated": return "Sesión sugerida";
     default: return "Entrenamiento libre";
   }
-}
-
-export function recordValueLabel(kind: PersonalRecordKind, value: number, unit: WeightUnit) {
-  if (kind === "reps") return `${formatNumber(value, 0)} rep.`;
-  if (kind === "seconds") return `${formatNumber(value, 0)} s`;
-  if (kind === "volume") return volumeLabel(value, unit);
-  return weightLabel(value, unit);
-}
-
-export function minutesLabel(minutes: number) {
-  if (minutes < 1) return `${Math.max(0, Math.round(minutes * 60))} s`;
-  if (minutes < 60) return `${Math.round(minutes)} min`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours} h ${Math.round(minutes % 60)} min`;
 }
 
 /** Entrenamiento listo para el historial: sólo series realizadas y ejercicios con al menos una. */

@@ -71,7 +71,7 @@ export function TodayHero({ now }: { now: number }) {
     const last = doneToday.reduce((latest, workout) => ((workout.completedAt ?? "") > (latest.completedAt ?? "") ? workout : latest));
     return (
       <HeroFrame photo={heroPhoto("mobility", seed, audience)} tag={<><Check size={13} strokeWidth={3} aria-hidden="true" />Hecho hoy</>} meta="Entrenamiento completado" title={(last.name ?? "Entrenamiento").replace(/ · \d+ min$/, "")}>
-        <MetaLine className="home-hero-details" items={[<><b className="num">{last.durationMinutes}</b> min</>, <><b className="num">{last.sets}</b> series</>, ...(doneToday.length > 1 ? [`${doneToday.length} sesiones hoy`] : [])]} />
+        <MetaLine className="home-hero-details" items={[<><b className="num">{Math.round(last.durationMinutes)}</b> min</>, <><b className="num">{last.sets}</b> series</>, last.prs?.length ? <><b className="num">{last.prs.length}</b> {last.prs.length === 1 ? "récord" : "récords"}</> : null, doneToday.length > 1 ? `${doneToday.length} sesiones hoy` : null]} />
         <div className="home-hero-actions home-hero-rest">
           <ButtonLink href="/progreso" size="l" block><ChartNoAxesColumn size={18} />Ver mi progreso</ButtonLink>
           <Link href="/entrenar" className="home-hero-anyway">o entrena otra vez</Link>

@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { MetricGrid, NumberMetric } from "@/components/ui";
 import { CountUp } from "@/components/ui/count-up";
 import { volumeParts } from "@/components/progress/format";
-import { recordValueLabel } from "@/components/session/session-utils";
+import { recordValueLabel } from "@/components/progress/format";
 import { weeklySeries } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById } from "@/lib/training";

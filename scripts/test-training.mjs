@@ -1331,3 +1331,39 @@ test('evaluación: cinco decisiones arman el perfil de siempre y repetirla conse
   assert.equal(prefilled.minutes, 30, 'los minutos se acercan a las opciones nuevas');
   assert.deepEqual(plain(prefilled.considerations), ['beginner', 'knees']);
 });
+
+const actions = load('src/components/session/session-actions.ts');
+
+test('sesión: acciones puras (carga que se copia, descanso, series, pausa y orden)', () => {
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  const pending = (value, load) => ({ value, load, done: false, kind: 'normal' });
+  const record = { exerciseId: 10, unit: 'reps', sets: [pending(10, 20), pending(10, 20), pending(8, 22)] };
+  // Subir la carga de la primera serie la copia a las pendientes que tenían la misma (no a la de 22).
+  const carried = actions.patchSet(record, 0, { load: 25 }, 20);
+  assert.deepEqual(plain(carried.sets.map((set) => set.load)), [25, 25, 22]);
+  assert.deepEqual(plain(actions.patchSet(record, 0, { value: 12 }).sets.map((set) => set.value)), [12, 10, 8]);
+
+  const draft = { id: 'd', name: 'Hoy', records: [record, { exerciseId: 11, unit: 'reps', sets: [pending(10, 0)] }], elapsedSeconds: 0, runningSince: 1000, restUntil: null, notes: '', restSeconds: 90, startedAt: '' };
+  const marked = actions.markSet(draft.records, 0, 0, true);
+  assert.equal(marked[0].sets[0].done, true);
+  assert.equal(actions.restAfterSet(draft, 0, marked, true), 90, 'descanso general');
+  assert.equal(actions.restAfterSet(draft, 0, marked, false), 0, 'sin descanso automático');
+  assert.equal(actions.restAfterSet({ ...draft, runningSince: null }, 0, marked, true), 0, 'en pausa no corre');
+  const allDone = draft.records.map((item) => ({ ...item, sets: item.sets.map((set) => ({ ...set, done: true })) }));
+  assert.equal(actions.restAfterSet(draft, 0, allDone, true), 0, 'tras la última serie toca terminar');
+  const superset = { ...draft, records: [{ ...record, group: 'a' }, { ...draft.records[1], group: 'a' }] };
+  assert.equal(actions.restAfterSet(superset, 0, actions.markSet(superset.records, 0, 0, true), true), 0, 'en superserie se alterna sin descanso');
+
+  assert.equal(actions.withExtraSet(record).sets.length, 4);
+  assert.equal(actions.withoutLastSet({ ...record, sets: [pending(5, 0)] }).sets.length, 1, 'siempre queda una serie');
+  const paused = actions.togglePaused({ ...draft, restUntil: 5000 }, 61_000);
+  assert.equal(paused.runningSince, null);
+  assert.equal(paused.elapsedSeconds, 60);
+  assert.equal(paused.restUntil, null, 'pausar corta el descanso');
+  assert.equal(actions.togglePaused(paused, 70_000).runningSince, 70_000);
+  const longer = actions.adjustedRest({ ...draft, restUntil: 100_000, restTotal: 90 }, 15, 50_000);
+  assert.equal(longer.restUntil, 115_000);
+  assert.equal(longer.restTotal, 105);
+  assert.deepEqual(plain(actions.movedRecords(draft.records, 0, 1).map((item) => item.exerciseId)), [11, 10]);
+  assert.equal(actions.movedRecords(draft.records, 0, -1), draft.records, 'fuera de rango no cambia');
+});

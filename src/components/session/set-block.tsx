@@ -101,7 +101,8 @@ function CountdownFigure({ until, target }: { until: number; target: number }) {
 }
 
 function CountdownChip({ until, label, onPress }: { until: number | null; label: string; onPress: () => void }) {
-  const now = useNow(250);
+  // Sin cuenta regresiva en marcha no hace falta consultar el reloj cuatro veces por segundo.
+  const now = useNow(until === null ? 60_000 : 250);
   const remaining = until === null || now === 0 ? null : Math.ceil((until - now) / 1000);
   const running = remaining !== null && remaining > 0;
   return (
@@ -222,7 +223,7 @@ export function SetBlock(props: SetBlockProps) {
           {badge && kind !== "warmup" && <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>}
           {isRecord && <StatusBadge tone="gold"><Trophy size={12} aria-hidden="true" />Récord</StatusBadge>}
         </div>
-        {record.unit === "reps" ? (
+        {record.unit === "reps" ? set.done && (
           <button
             type="button"
             className={cn("ses-chip", rir !== null && "has-value")}

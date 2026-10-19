@@ -2,7 +2,7 @@
 
 import Link from "@/components/ui/app-link";
 import type { CSSProperties } from "react";
-import { ChevronDown, Ellipsis, ListOrdered, Play } from "lucide-react";
+import { ChevronDown, Ellipsis, Play } from "lucide-react";
 import { clockLabel, durationSeconds } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -15,14 +15,13 @@ export function SessionClock({ draft }: { draft: TrainingDraft }) {
 }
 
 /**
- * Barra superior sobre la imagen: minimizar (la sesión sigue en curso), reloj (toca para pausar
- * o reanudar), progreso por ejercicio, acceso a «Ver sesión» y menú.
+ * Barra superior sobre la imagen: minimizar (la sesión sigue en curso), reloj (toca para pausar o
+ * reanudar), el avance por ejercicio en segmentos y el menú (ahí está «Ver sesión»).
  */
-export function SessionTopBar({ draft, current, onTogglePause, onOpenSession, onOpenMenu }: {
+export function SessionTopBar({ draft, current, onTogglePause, onOpenMenu }: {
   draft: TrainingDraft;
   current: number;
   onTogglePause: () => void;
-  onOpenSession: () => void;
   onOpenMenu: () => void;
 }) {
   const paused = draft.runningSince === null;
@@ -52,13 +51,7 @@ export function SessionTopBar({ draft, current, onTogglePause, onOpenSession, on
           {paused && <span className="ses-clock-state" aria-hidden="true">En pausa</span>}
         </button>
         <span className="ses-top-gap" />
-        {count > 0 && (
-          <button type="button" className="ses-glass ses-pill" onClick={onOpenSession} aria-label={`Ver sesión: ejercicio ${current + 1} de ${count}`}>
-            <ListOrdered size={17} aria-hidden="true" />
-            <span className="num" aria-hidden="true">{current + 1}/{count}</span>
-          </button>
-        )}
-        <button type="button" className="ses-glass ses-round" onClick={onOpenMenu} aria-label="Más opciones">
+        <button type="button" className="ses-glass ses-round" onClick={onOpenMenu} aria-label={count > 0 ? `Más opciones · ejercicio ${current + 1} de ${count}` : "Más opciones"}>
           <Ellipsis size={21} />
         </button>
       </div>

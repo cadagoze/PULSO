@@ -82,6 +82,6 @@ export function signed(value: number, format: (abs: number) => string) {
 export function recordValueLabel(kind: PersonalRecordKind, value: number, unit: Unit) {
   if (kind === "e1rm" || kind === "load") return weightLabel(value, unit);
   if (kind === "volume") return volumeLabel(value, unit);
-  if (kind === "reps") return `${value.toLocaleString("es-CL")} reps`;
+  if (kind === "reps") return `${value.toLocaleString("es-CL")} rep.`;
   return `${value.toLocaleString("es-CL")} s`;
 }

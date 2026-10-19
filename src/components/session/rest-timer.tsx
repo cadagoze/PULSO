@@ -25,7 +25,8 @@ export function RestOverlay({ restUntil, restTotal, sound, voice = false, vibrat
   /** Lo que viene después: «Serie 3 de 4» o el siguiente ejercicio. */
   upcoming?: string;
 }) {
-  const now = useNow(250);
+  // Sólo con un descanso en curso se consulta el reloj cuatro veces por segundo.
+  const now = useNow(restUntil === null ? 60_000 : 250);
   const remainingMs = restUntil === null ? 0 : restUntil - now;
 
   useCountdownCues({
@@ -49,7 +50,7 @@ export function RestOverlay({ restUntil, restTotal, sound, voice = false, vibrat
   const seconds = Math.ceil(Math.max(0, remainingMs) / 1000);
   const total = Math.max(restTotal, seconds, 1);
   // Cambia sólo en momentos clave, para que el lector de pantalla no lea cada segundo.
-  const announcement = !visible ? "" : finished ? `Descanso terminado.${upcoming ? ` Sigue: ${upcoming}.` : ""}` : seconds <= 10 ? "Quedan 10 segundos de descanso." : `Descanso de ${clockLabel(total)}.`;
+  const announcement = !visible ? "" : finished ? `Descanso terminado.${upcoming ? ` Siguiente: ${upcoming}.` : ""}` : seconds <= 10 ? "Quedan 10 segundos de descanso." : `Descanso de ${clockLabel(total)}.`;
 
   return (
     <>
@@ -64,9 +65,7 @@ export function RestOverlay({ restUntil, restTotal, sound, voice = false, vibrat
               <p className="ses-rest-done-title">{upcoming ?? "A la siguiente serie"}</p>
             </div>
           ) : (
-            <WorkoutTimer seconds={seconds} total={total} label="Descanso" size={size} className="ses-rest-timer">
-              {upcoming && size >= 170 && <span className="ses-rest-upcoming">Sigue · {upcoming}</span>}
-            </WorkoutTimer>
+            <WorkoutTimer seconds={seconds} total={total} label="Descanso" size={size} className="ses-rest-timer" />
           )}
         </div>
       )}
