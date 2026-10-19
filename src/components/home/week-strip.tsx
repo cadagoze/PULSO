@@ -1,25 +1,18 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
-import { ArrowRight, Check, Flame } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Flame } from "lucide-react";
 import { NumberMetric } from "@/components/ui";
 import { CountUp } from "@/components/ui/count-up";
+import { challengeIcons } from "@/components/progress/challenges-tab";
 import { weekStreak } from "@/lib/analytics";
+import { useChallengeBoard } from "@/lib/use-challenges";
 import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
 import { cleanDays, nextTrainingDay } from "@/lib/training-days";
 import { cn, localDateKey, startOfCurrentWeek } from "@/lib/utils";
 
 const labels = ["L", "M", "M", "J", "V", "S", "D"];
 const fullLabels = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
-
-/** Número de semana ISO (lunes a domingo), para la etiqueta editorial. */
-function isoWeek(date: Date) {
-  const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const weekday = day.getUTCDay() || 7;
-  day.setUTCDate(day.getUTCDate() + 4 - weekday);
-  const yearStart = new Date(Date.UTC(day.getUTCFullYear(), 0, 1));
-  return Math.ceil(((day.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-}
 
 function streakLine(streak: number, met: boolean, remaining: number, paused: boolean, next: string | null) {
   if (paused) return "Semana en pausa: tu racha te espera.";
@@ -29,7 +22,7 @@ function streakLine(streak: number, met: boolean, remaining: number, paused: boo
   return next ? `${line} Próximo entreno: ${next}.` : line;
 }
 
-/** La semana como bloque editorial: sesiones hechas en grande, los siete días y la racha. */
+/** La semana como bloque editorial: sesiones hechas en grande, los siete días, la racha y el reto en curso (si hay). */
 export function WeekStrip({ now }: { now: number }) {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
@@ -59,7 +52,7 @@ export function WeekStrip({ now }: { now: number }) {
   return (
     <section className="home-week" aria-labelledby="home-week-title">
       <div className="home-week-head">
-        <p className="meta">Semana {String(isoWeek(date)).padStart(2, "0")} · Objetivo {goal} {goal === 1 ? "sesión" : "sesiones"}</p>
+        <p className="meta">Esta semana · meta {goal}</p>
         <Link href="/progreso" className="home-week-link">Progreso<ArrowRight size={14} /></Link>
       </div>
       <h2 id="home-week-title" className="sr-only">Tu semana: {currentCount} de {goal} sesiones</h2>
@@ -82,6 +75,22 @@ export function WeekStrip({ now }: { now: number }) {
         <Flame size={16} aria-hidden="true" />
         <span><b>{streak > 0 ? `Racha de ${streak} ${streak === 1 ? "semana" : "semanas"}` : "Sin racha aún"}</b> · {streakLine(streak, currentMet, remaining, currentPaused, nextLabel)}</span>
       </p>
+      <ChallengeLine />
     </section>
+  );
+}
+
+/** El reto de 30 días en curso (si elegiste uno), en una línea: es parte de lo que llevas esta semana. */
+function ChallengeLine() {
+  const board = useChallengeBoard();
+  const current = board.ready ? board.active[0] : undefined;
+  if (!current) return null;
+  const Icon = challengeIcons[current.def.kind];
+  return (
+    <Link href="/progreso?tab=retos" className="home-week-challenge">
+      <Icon size={16} aria-hidden="true" />
+      <span className="grow"><b>{current.def.title}</b> · <span className="num">{current.count}/{current.target}</span>{current.daysLeft === 1 ? " · último día" : ` · quedan ${current.daysLeft} días`}</span>
+      <ChevronRight size={16} className="subtle" aria-hidden="true" />
+    </Link>
   );
 }

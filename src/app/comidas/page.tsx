@@ -261,16 +261,20 @@ export default function NutritionPage() {
     if (!params.has("registrar") && !params.has("calcular")) return;
     window.history.replaceState(null, "", window.location.pathname);
     if (params.has("calcular")) openSetup();
-    else startAdding();
+    else {
+      // «?registrar=almuerzo» (desde Inicio) abre esa comida; sin valor, la de esta hora.
+      const slot = params.get("registrar");
+      startAdding(mealSlots.find((item) => item.value === slot)?.value);
+    }
   });
 
-  /** «Añadir comida»: el buscador para la comida de esta hora (si cuentas calorías) o la próxima comida sin registrar. */
-  function startAdding() {
+  /** «Añadir comida»: el buscador para esa comida o la de esta hora (si cuentas calorías), o la próxima comida sin registrar. */
+  function startAdding(slot?: MealSlot) {
     if (counting && targets) {
-      openPicker(mealSlotAt(new Date()));
+      openPicker(slot ?? mealSlotAt(new Date()));
       return;
     }
-    const next = meals.find((meal) => !isLogged(meal)) ?? meals[0];
+    const next = (slot ? meals.find((meal) => meal.id === slot) : undefined) ?? meals.find((meal) => !isLogged(meal)) ?? meals[0];
     if (next) openMeal(next.id);
   }
   const ready = now !== 0;
@@ -294,7 +298,7 @@ export default function NutritionPage() {
         <PageHeader meta={formatLongDate(new Date(now))} title="Comidas" subtitle={subtitle} />
         {!targets && profile?.special !== "eating-disorder" && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
         {counting && targets ? <CalorieSummary targets={targets} totals={totals} /> : <DayProgress meals={meals} habitsDone={habitsDone} habitsTotal={habits.length} />}
-        <Button size="l" block onClick={startAdding}><Plus size={18} />Añadir comida</Button>
+        <Button size="l" block onClick={() => startAdding()}><Plus size={18} />Añadir comida</Button>
         <WaterTracker className="nut-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />
       </div>
 

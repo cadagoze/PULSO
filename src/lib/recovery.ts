@@ -1,8 +1,6 @@
-"use client";
-
 import type { MuscleGroup } from "@/types";
 
-// Recuperación muscular (antes en Inicio): ahora vive en Progreso, junto al volumen por músculo.
+// Recuperación muscular en frases cortas (Bienestar): qué grupos están listos y cuáles se recuperan.
 
 const groups: Array<{ label: string; muscles: MuscleGroup[]; ready: string; recovering: string }> = [
   { label: "Piernas", muscles: ["quads", "hamstrings", "glutes", "calves"], ready: "listas", recovering: "recuperándose" },

@@ -169,8 +169,9 @@ legend.nut-label { margin-bottom: 10px; }
 .water-btn { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast), opacity var(--motion-fast); }
 .water-btn:active { transform: scale(.9); }
 .water-btn:disabled { opacity: .4; pointer-events: none; }
-.water-add { width: 48px; height: 48px; background: var(--accent); color: var(--accent-ink); }
-@media (hover: hover) { .water-add:hover { background: var(--accent-bright); } }
+/* Acción secundaria: en tono suave, para que el botón principal de cada pantalla siga siendo el único rojo pleno. */
+.water-add { width: 48px; height: 48px; background: var(--accent-soft); color: var(--accent-text); }
+@media (hover: hover) { .water-add:hover { background: rgb(var(--accent-rgb) / 20%); } }
 .water-glasses { display: flex; align-items: center; gap: 4px; }
 .water-glasses span { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--surface-3); transform-origin: center bottom; transition: background-color var(--motion-base) var(--ease-standard), transform var(--motion-base) var(--ease-spring); }
 .water-glasses span.is-full { background: var(--accent); }

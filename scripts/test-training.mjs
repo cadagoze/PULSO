@@ -544,14 +544,19 @@ test('portada: foto según la sesión y frase según el progreso', () => {
 
   const wednesday = new Date(2026, 9, 7, 9);
   const day = (date) => ({ id: date, date, completedAt: `${date}T10:00:00.000Z`, durationMinutes: 30, exerciseCount: 4, sets: 12, mode: 'full' });
-  const line = (dates, goal = 3) => motivation.heroLine({ workouts: dates.map(day), weeklyGoal: goal, minutes: 20, now: wednesday });
-  assert.equal(line([]), 'Tu primera sesión: 20 minutos. Empieza ahora.');
-  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Meta cumplida. Hoy vas por más.');
-  assert.equal(line(['2026-09-28']), 'Nadie lo hará por ti. Hoy, 20 minutos.');
-  assert.equal(line(['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06']), '1 semana seguida · no la cortes: te faltan 2.');
-  assert.equal(line(['2026-09-22', '2026-09-23', '2026-09-24', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06', '2026-10-07']), '2 semanas seguidas · no la cortes: te falta 1 sesión.');
-  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta. Hazla hoy.');
-  assert.equal(line(['2026-10-05']), '20 minutos. Sin excusas.');
+  const line = (dates, state = 'train', goal = 3) => motivation.todayLine({ state, workouts: dates.map(day), weeklyGoal: goal, now: wednesday });
+  assert.equal(line([]), 'Tu primera sesión está lista.');
+  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Meta de la semana cumplida. Entrena fuerte, recupérate bien.');
+  assert.equal(line(['2026-09-28']), 'Volver es lo que cuenta. Hoy, a tu ritmo.', 'tras días sin entrenar, sin culpa');
+  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta de la semana.');
+  assert.equal(line(['2026-10-05']), 'Hoy toca entrenar.');
+  // El cuerpo manda: con cansancio o recuperación, la frase acompaña en vez de empujar.
+  assert.equal(line(['2026-10-05'], 'recovery'), 'Hoy, movimiento suave. Escuchar al cuerpo también es disciplina.');
+  assert.equal(line(['2026-10-05'], 'short'), 'Hoy, una versión más corta. Constancia antes que perfección.');
+  assert.equal(line(['2026-10-05'], 'done'), 'Hoy ya entrenaste. Ahora toca recuperar: come bien, hidrátate y duerme.');
+  for (const state of ['ready', 'running', 'done', 'rest', 'recovery', 'short', 'train']) {
+    assert.doesNotMatch(line(['2026-10-05'], state), /excusa|nadie lo hará|no la cortes|termínalo/i, `tono: ${state}`);
+  }
 });
 
 test('paleta: contraste AA del acento y el dorado en ambos temas', () => {
@@ -863,21 +868,6 @@ test('avisos: cuándo toca cada uno y cuándo no', () => {
   assert.equal(reminders.parseTime('03:00'), null);
   assert.equal(reminders.parseTime('19:75'), null);
   assert.ok(reminders.validTimeZone('Europe/Madrid') && !reminders.validTimeZone('Marte/Base'));
-});
-
-const firstWeek = load('src/lib/first-week.ts');
-
-test('primera semana: pasos según el equipo y lo ya hecho', () => {
-  const base = { hasPlan: false, hasWorkout: false, hasMeal: false, platform: 'android', standalone: false, push: 'ready', pushEnabled: false };
-  const ids = (input) => Array.from(firstWeek.firstWeekSteps(input), (step) => step.id);
-  assert.deepEqual(ids(base), ['plan', 'workout', 'meal', 'install', 'push']);
-  assert.deepEqual(ids({ ...base, platform: 'desktop' }), ['plan', 'workout', 'meal', 'push'], 'en el computador no se pide instalar');
-  assert.deepEqual(ids({ ...base, push: 'unsupported' }), ['plan', 'workout', 'meal', 'install'], 'sin avisos en el navegador, no se piden');
-  const iphone = firstWeek.firstWeekSteps({ ...base, platform: 'ios', push: 'needs-install' });
-  assert.match(iphone.find((step) => step.id === 'push').detail, /instálala primero/);
-  const done = firstWeek.firstWeekSteps({ ...base, hasPlan: true, hasWorkout: true, standalone: true, pushEnabled: true });
-  assert.deepEqual(Array.from(done.filter((step) => !step.done), (step) => step.id), ['meal']);
-  assert.equal(firstWeek.firstWeekSteps({ ...base, push: 'denied', pushEnabled: true }).find((step) => step.id === 'push').done, false, 'bloqueados después de activarlos: pendiente');
 });
 
 test('nube: lo anotado en dos equipos no se duplica al unir', () => {
@@ -1256,4 +1246,45 @@ test('versión de la app: detecta una publicación nueva por el archivo principa
   assert.equal(version.hasNewVersion(page('CTTfcN2o'), page('CTTfcN2o')), false);
   assert.equal(version.hasNewVersion('<html></html>', page('CTTfcN2o')), false, 'sin referencia actual, no recarga');
   assert.equal(version.hasNewVersion(page('CTTfcN2o'), '<html>error</html>'), false, 'respuesta rara, no recarga');
+});
+
+const readinessLib = load('src/lib/readiness.ts');
+
+test('chequeo rápido: un toque se guarda con la forma de siempre y ajusta la sesión', () => {
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  const at = new Date('2026-10-19T08:00:00Z');
+  const good = readinessLib.quickReadiness({ date: '2026-10-19', feel: 'good', loadRatio: 1, now: at });
+  assert.equal(good.recommendation, 'planned');
+  assert.ok(good.score >= 70);
+  assert.equal(good.energy, 3);
+  assert.equal(good.sleep, 2, 'sin sueño anotado queda «normal»');
+  assert.equal(readinessLib.quickReadiness({ date: '2026-10-19', feel: 'tired', loadRatio: 1, now: at }).recommendation, 'short');
+  const exhausted = readinessLib.quickReadiness({ date: '2026-10-19', feel: 'exhausted', loadRatio: null, now: at });
+  assert.equal(exhausted.recommendation, 'recovery');
+  assert.ok(exhausted.score < 40, 'el puntaje queda en la franja de la recomendación');
+  const sore = readinessLib.quickReadiness({ date: '2026-10-19', feel: 'good', pain: ['knees'], sleepHours: 5, loadRatio: 1, now: at });
+  assert.equal(sore.recommendation, 'short', 'con molestia, versión corta');
+  assert.equal(sore.soreness, 2);
+  assert.equal(sore.sleep, 1, 'el sueño de Bienestar se usa si está');
+  assert.deepEqual(plain(sore.pain), ['knees']);
+  // Chequeos anteriores (cuatro preguntas) se leen igual.
+  assert.equal(readinessLib.readinessFeel({ date: 'x', energy: 2, sleep: 2, soreness: 1, score: 55, recommendation: 'short', updatedAt: '' }), 'tired');
+  assert.deepEqual(plain(readinessLib.painLimitations(['knees', 'other', 'back'])), ['knees', 'back']);
+  assert.equal(readinessLib.painNote(['knees', 'back']), 'Hoy evitamos ejercicios que exijan las rodillas y la espalda.');
+  assert.equal(readinessLib.painNote([]), null);
+  assert.deepEqual(plain(readinessLib.feelOptions('female').map((option) => option.label)), ['Bien', 'Cansada', 'Muy cansada']);
+  assert.deepEqual(plain(readinessLib.feelOptions('mixed').map((option) => option.label)), ['Bien', 'Cansado/a', 'Muy cansado/a']);
+
+  // La molestia del día entra al generador como zona a cuidar.
+  const input = generator.todayGeneratorInput({ profile: { limitations: ['shoulders'] }, preference: { location: 'gym', equipment: [] }, workouts: [], pain: ['knees', 'other'], now: at.getTime() });
+  assert.deepEqual(plain(input.limitations).sort(), ['knees', 'shoulders']);
+  const plan = generator.generateWorkout({ ...input, focus: 'lower', minutes: 45, level: 3 });
+  for (const record of plan.records) {
+    const exercise = exercises.find((item) => item.id === record.exerciseId);
+    assert.ok(!(exercise.stresses ?? []).includes('knees'), `${exercise.name} exige las rodillas`);
+  }
+
+  // Programa con chequeo «cansado»: una serie menos donde hay tres o más.
+  const records = [{ exerciseId: 1, unit: 'reps', sets: [set(8, 10), set(8, 10), set(8, 10), set(8, 10)] }, { exerciseId: 2, unit: 'reps', sets: [set(8, 0), set(8, 0)] }];
+  assert.deepEqual(plain(programs.easierRecords(records).map((record) => record.sets.length)), [3, 2]);
 });

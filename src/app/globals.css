@@ -50,6 +50,7 @@
   --danger-soft: #fbe9e6;
   --warning: #a86a00;
   --warning-soft: #f8eed6;
+  --success: #1f7a45;
   --map-base: #e3dfd4;
   --map-line: #f4f3ee;
   --ill-ink: #1f1d1b;
@@ -110,7 +111,7 @@
     --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
     --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
     --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%);
+    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
     --map-base: #2b2b2b; --map-line: #151515;
     --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
     --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);
@@ -124,7 +125,7 @@
   --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
   --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
   --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%);
+  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
   --map-base: #2b2b2b; --map-line: #151515;
   --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
   --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);

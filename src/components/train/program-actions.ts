@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { programById, programSessionName, programSessionRecords } from "@/lib/programs";
+import { easierRecords, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
 import { useProgram, useWorkouts } from "@/lib/store";
 import type { Program } from "@/types";
@@ -36,12 +36,16 @@ export function useProgramActions() {
     return true;
   }, [setProgress]);
 
-  /** Entrena una sesión. Si el programa no está activo, primero lo activa (con confirmación) para que cuente el avance. */
-  const startSession = useCallback(async (program: Program, week: number, day: number) => {
+  /**
+   * Entrena una sesión. Si el programa no está activo, primero lo activa (con confirmación) para que cuente el avance.
+   * Con `easier` (chequeo «cansado») cada ejercicio lleva una serie menos.
+   */
+  const startSession = useCallback(async (program: Program, week: number, day: number, { easier = false }: { easier?: boolean } = {}) => {
     if (progress?.programId !== program.id && !(await begin(program))) return;
+    const records = programSessionRecords(program, week, day, workouts);
     start({
       name: programSessionName(program, week, day),
-      records: programSessionRecords(program, week, day, workouts),
+      records: easier ? easierRecords(records) : records,
       source: { type: "program", programId: program.id, week, day },
     });
   }, [begin, progress?.programId, start, workouts]);

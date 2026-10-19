@@ -59,14 +59,16 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const focus = focusChoice ?? suggested;
   const minutes = minutesChoice ?? profile?.recommendation.sessionMinutes ?? 30;
 
-  // Mismas entradas que la portada de Inicio (ver todayGeneratorInput); aquí se pueden ajustar.
+  // Una sola sesión de hoy para Inicio y Entrenar (aquí se puede ajustar). Se arma con la hora en punto:
+  // la semilla es del día y la recuperación cambia de hora en hora, así no se rehace cada minuto.
+  const pain = readiness?.pain;
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, recovery, now, minutes, focus, zone: zone ?? undefined, variant, bodyKg }));
-  }, [bodyKg, hydrated, focus, minutes, now, nutrition?.goal, preference, profile, readiness?.recommendation, recovery, variant, workouts, zone]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg }));
+  }, [bodyKg, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, readiness?.recommendation, recovery, variant, workouts, zone]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", nutrition?.goal ?? "", workouts.length, todayKey].join("|");
+  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const records = edited ? edits.records : plan?.records ?? [];
 

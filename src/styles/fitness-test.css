@@ -126,11 +126,6 @@
 .ft-history-row .icon-button { box-shadow: none; background: transparent; color: var(--ink-3); }
 
 /* ─── Inicio ─────────────────────────────────────────────────────────── */
-.home-test { position: relative; }
-.home-test .home-challenge { padding-right: 52px; }
-.home-test .home-challenge .grow { gap: 2px; }
-.home-test-close { position: absolute; top: 50%; right: 8px; display: grid; place-items: center; width: 36px; height: 36px; margin-top: -18px; border-radius: 50%; color: var(--ink-3); }
-.home-test-close:active { transform: scale(.9); }
 
 @media (prefers-reduced-motion: reduce) {
   .ft-pulse svg { animation: none; }

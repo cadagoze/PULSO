@@ -7,7 +7,7 @@ import { MuscleMap, RecoveryLegend } from "@/components/ui/muscle-map";
 import { muscleLabels } from "@/data/catalog";
 import { MuscleEvidence, MuscleList, muscleHeat, muscleVolume } from "@/components/progress/muscle-volume";
 import type { PeriodSummary } from "@/components/progress/period";
-import { recoveryLines, recoverySummary } from "@/components/progress/recovery-card";
+import { recoveryLines, recoverySummary } from "@/lib/recovery";
 import { muscleRecovery } from "@/lib/analytics";
 import { levelFromActivities } from "@/lib/generator";
 import { useProfile } from "@/lib/store";

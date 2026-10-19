@@ -120,7 +120,7 @@ export function dueReminders({ prefs, state, sent, timeZone, now }: {
     due.push({
       kind: "training",
       title: "Hora de entrenar",
-      body: weekSessions === 0 ? "Arranca la semana: tu sesión de hoy te espera." : `Llevas ${weekSessions} de ${weekGoal} sesiones esta semana. Hoy se entrena.`,
+      body: weekSessions === 0 ? "Arranca la semana: tu sesión de hoy te espera." : `Llevas ${weekSessions} de ${weekGoal} sesiones esta semana. Hoy toca entrenar.`,
       url: "/entrenar",
     });
   }

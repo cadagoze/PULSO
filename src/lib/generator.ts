@@ -6,6 +6,7 @@ import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, Move
 import { capabilitiesOf, fullGym } from "@/data/equipment";
 import { availableLoads, fitLoad, loadCapability, nearestLoad, startingLoad, unfit } from "@/lib/loads";
 import { zoneById, type BodyZone } from "@/data/body-zones";
+import { painLimitations } from "@/lib/readiness";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
@@ -334,12 +335,14 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, recovery, now, minutes, focus, zone, variant = 0, bodyKg }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, pain, recovery, now, minutes, focus, zone, variant = 0, bodyKg }: {
   profile: ProfileForToday;
   nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
   workouts: WorkoutEntry[];
   readiness?: ReadinessEntry["recommendation"];
+  /** Molestias anotadas hoy en el chequeo: se suman a las zonas a cuidar de la evaluación. */
+  pain?: ReadinessEntry["pain"];
   recovery?: Record<MuscleGroup, number>;
   now: number;
   minutes?: number;
@@ -356,7 +359,7 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
     ...(zoneInfo ? { zone: zoneInfo.id } : {}),
     goal: trainingGoal(profile?.goals, nutritionGoal),
     level: levelFromActivities(profile?.activities),
-    limitations: profileLimitations(profile?.limitations),
+    limitations: [...new Set([...profileLimitations(profile?.limitations), ...painLimitations(pain)])],
     readiness,
     recovery,
     workouts,

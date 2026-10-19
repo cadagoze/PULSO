@@ -138,7 +138,7 @@ export async function handlePushRequest(request: Request, env: PushEnv): Promise
   if (url.pathname === "/api/push/test") {
     const row = await db.prepare("SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE id = ?").bind(id).first<Pick<Row, "endpoint" | "p256dh" | "auth">>();
     if (!row) return json({ error: "missing" }, 404);
-    const status = await send(env, row, { title: "Así se ven tus avisos", body: "Te avisaremos a tu hora. Sin excusas.", url: "/", tag: "test" });
+    const status = await send(env, row, { title: "Así se ven tus avisos", body: "Te avisaremos a tu hora, sólo cuando sirva.", url: "/", tag: "test" });
     if (status === 404 || status === 410) await db.prepare("DELETE FROM push_subscriptions WHERE id = ?").bind(id).run();
     return json({ ok: status >= 200 && status < 300, status }, status >= 200 && status < 300 ? 200 : 502);
   }

@@ -1,6 +1,6 @@
 import { programs } from "@/data/programs";
 import { progressedSets } from "@/lib/progression";
-import { exerciseById, lastRecordFor } from "@/lib/training";
+import { exerciseById, isWorkingSet, lastRecordFor } from "@/lib/training";
 import type { ExerciseRecord, Program, ProgramProgress, WorkoutEntry } from "@/types";
 
 export function programById(id: string): Program | undefined {
@@ -35,7 +35,18 @@ export function programSessionRecords(program: Program, week: number, day: numbe
     if (!exercise) return [];
     const sets = Math.max(1, item.sets + delta);
     const prefilled = progressedSets({ ...exercise, range: item.range }, sets, lastRecordFor(workouts, exercise.id));
-    return [{ exerciseId: exercise.id, unit: exercise.unit, sets: prefilled, restSeconds: item.restSeconds }];
+    // El rango del programa viaja con la sesión: se ve al entrenar y queda en el historial.
+    return [{ exerciseId: exercise.id, unit: exercise.unit, sets: prefilled, restSeconds: item.restSeconds, range: item.range }];
+  });
+}
+
+/** Versión corta (chequeo «cansado»): una serie menos en los ejercicios que tienen tres o más de trabajo. */
+export function easierRecords(records: ExerciseRecord[]): ExerciseRecord[] {
+  return records.map((record) => {
+    const working = record.sets.filter(isWorkingSet);
+    if (working.length < 3) return record;
+    const last = record.sets.lastIndexOf(working[working.length - 1]);
+    return { ...record, sets: record.sets.filter((_, index) => index !== last) };
   });
 }
 

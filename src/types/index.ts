@@ -207,6 +207,10 @@ export interface ReadinessEntry {
   stress?: 1 | 2 | 3;
   score: number;
   recommendation: "recovery" | "short" | "planned";
+  /** Chequeo rápido (un toque): cómo llegas hoy. Los chequeos anteriores sólo tienen energía, sueño, molestias y estrés. */
+  feel?: "good" | "tired" | "exhausted";
+  /** Zonas con molestia hoy: la sesión evita ejercicios que las exijan. */
+  pain?: Array<BodyArea | "other">;
   updatedAt: string;
 }
 
