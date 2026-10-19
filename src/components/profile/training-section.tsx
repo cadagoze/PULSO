@@ -2,6 +2,9 @@
 
 import type { CSSProperties } from "react";
 import { SegmentedControl, Switch } from "@/components/ui";
+import { PlaceBar } from "@/components/train/place-picker";
+import { availableEquipment } from "@/lib/generator";
+import { usePreference } from "@/lib/store";
 import type { Settings } from "@/types";
 import { SettingRow, SettingsGroup } from "./settings-group";
 
@@ -26,8 +29,12 @@ const unitOptions: Array<{ value: Settings["unit"]; label: string }> = [
 const restChoices = restOptions.map((seconds) => ({ value: String(seconds), label: restLabel(seconds) }));
 const barChoices = barOptions.map((kg) => ({ value: String(kg), label: `${kg} kg` }));
 
-/** Cómo se comporta la sesión: unidades, descansos, avisos, pantalla, barra y discos. */
+/** Dónde y con qué entrenas, y cómo se comporta la sesión: unidades, descansos, avisos, pantalla y, si usas barra, barra y discos. */
 export function TrainingSection({ settings, update, order }: { settings: Settings; update: (patch: Partial<Settings>) => void; order?: number }) {
+  const [preference] = usePreference();
+  // Barra y discos sólo tienen sentido si entrenas con barra (en casa o en tu gimnasio).
+  const usesBarbell = availableEquipment(preference).has("barbell");
+
   function togglePlate(kg: number) {
     const has = settings.plates.includes(kg);
     const next = has ? settings.plates.filter((item) => item !== kg) : [...settings.plates, kg];
@@ -35,7 +42,8 @@ export function TrainingSection({ settings, update, order }: { settings: Setting
   }
 
   return (
-    <SettingsGroup id="entrenamiento" index="02" title="Entrenamiento" description="Cómo se comporta la sesión mientras entrenas." order={order}>
+    <SettingsGroup id="entrenamiento" index="02" title="Entrenamiento" description="Dónde entrenas, con qué y cómo se comporta la sesión." order={order}>
+      <SettingRow title="Dónde entrenas" helper="Tu rutina usa sólo el equipamiento de ese lugar." below={<PlaceBar />} />
       <SettingRow
         title="Unidades"
         helper="Tus registros se guardan en kg y se convierten al mostrar."
@@ -71,6 +79,7 @@ export function TrainingSection({ settings, update, order }: { settings: Setting
         helper="Evita que se apague mientras entrenas."
         control={<Switch checked={settings.keepAwake} onChange={(keepAwake) => update({ keepAwake })} label="Mantener pantalla encendida" />}
       />
+      {usesBarbell && <>
       <SettingRow
         title="Barra olímpica"
         helper="Para calcular los discos por lado."
@@ -98,6 +107,7 @@ export function TrainingSection({ settings, update, order }: { settings: Setting
           </div>
         }
       />
+      </>}
     </SettingsGroup>
   );
 }

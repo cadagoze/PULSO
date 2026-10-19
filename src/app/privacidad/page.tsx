@@ -36,7 +36,7 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2>Tus derechos</h2>
-          <p>Puedes ver y exportar todos tus datos (Ajustes → Tus datos → Exportar respaldo), corregirlos desde la app y eliminar tu cuenta con todo lo guardado en la nube (Perfil → Cuenta → Eliminar cuenta). Estos derechos se basan en la ley chilena de protección de datos personales (Ley 19.628 y su reforma, Ley 21.719).</p>
+          <p>Puedes ver y exportar todos tus datos (Ajustes → Datos y privacidad → Exportar respaldo), corregirlos desde la app y eliminar tu cuenta con todo lo guardado en la nube (Perfil → Cuenta → Eliminar cuenta). Estos derechos se basan en la ley chilena de protección de datos personales (Ley 19.628 y su reforma, Ley 21.719).</p>
         </section>
         <p className="privacy-back"><Link href="/perfil">Volver a Perfil</Link></p>
       </article>

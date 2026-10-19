@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Download, FileSpreadsheet, HardDriveDownload, ShieldCheck, Trash2, Upload } from "lucide-react";
+import Link from "@/components/ui/app-link";
+import { Download, FileSpreadsheet, FileText, HardDriveDownload, ShieldCheck, Trash2, Upload } from "lucide-react";
 import { Button, Sheet, StatusBadge } from "@/components/ui";
 import { STORAGE_KEYS, clearAllData, readAllData, writeAllData } from "@/lib/store";
 import type { WorkoutEntry } from "@/types";
@@ -129,7 +130,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
 
   return (
     <>
-      <SettingsGroup id="datos" index="05" title="Tus datos" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
+      <SettingsGroup id="datos" index="05" title="Datos y privacidad" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
         <button type="button" className="list-row" onClick={exportBackup}>
           <RowText icon={<Download size={19} />} title="Exportar respaldo" detail="Un archivo .json con todo lo que has registrado." />
         </button>
@@ -149,6 +150,9 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
             (persist === "idle" || persist === "denied") && <Button variant="secondary" size="s" onClick={requestPersist}>Proteger</Button>
           )}
         </div>
+        <Link href="/privacidad" className="list-row">
+          <RowText icon={<FileText size={19} />} title="Privacidad" detail="Qué guardamos, dónde y cómo borrarlo." />
+        </Link>
         <button type="button" className="list-row prof-danger" onClick={startDelete}>
           <RowText icon={<Trash2 size={19} />} title="Borrar todos mis datos" detail="Elimina entrenamientos, ajustes y evaluación de este dispositivo." />
         </button>

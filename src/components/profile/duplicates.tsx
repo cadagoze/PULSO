@@ -34,7 +34,7 @@ export function duplicatesSummary(food: number, workouts: number) {
   return [food ? plural(food, "alimento", "alimentos") : "", workouts ? plural(workouts, "entrenamiento", "entrenamientos") : ""].filter(Boolean).join(" y ");
 }
 
-/** Fila en Ajustes → Tus datos (sólo si hay repetidos) y la hoja para revisarlos y quitarlos. */
+/** Fila en Ajustes → Datos y privacidad (sólo si hay repetidos) y la hoja para revisarlos y quitarlos. */
 export function DuplicatesRow({ onToast }: { onToast: (message: string) => void }) {
   const duplicates = useDuplicates();
   const [open, setOpen] = useState(false);
