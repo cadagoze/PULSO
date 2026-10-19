@@ -1,4 +1,3 @@
-import type { Settings } from "@/types";
 
 /**
  * Personalización visual: qué fotos mostrar y qué color de acento usar. Las fotos se eligen según cómo
@@ -47,4 +46,3 @@ export function pickPhoto<T>(sets: { female: T[]; male: T[] }, audience: Audienc
   return list[Math.abs(seed) % list.length];
 }
 
-export type PersonalSettings = Pick<Settings, "accent" | "photos">;

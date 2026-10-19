@@ -90,4 +90,3 @@ export function useFoodDiary(now: number) {
   };
 }
 
-export type FoodDiary = ReturnType<typeof useFoodDiary>;

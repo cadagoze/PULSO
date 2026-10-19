@@ -264,6 +264,3 @@ export const mealIdeas: Record<MealSlot, string[]> = {
   colacion: ["yogur-griego", "yogur-proteina", "queso-cottage", "barra-proteina", "batido-proteina", "mani", "almendras", "huevo", "platano", "manzana", "frutillas"],
 };
 
-export function foodById(id: string) {
-  return foods.find((food) => food.id === id);
-}

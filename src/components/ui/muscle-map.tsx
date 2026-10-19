@@ -106,12 +106,3 @@ export function MuscleMap(props: MuscleMapProps) {
   );
 }
 
-export function RecoveryLegend() {
-  return (
-    <div className="muscle-legend" aria-hidden="true">
-      <span><i style={{ background: "var(--accent)" }} />Recuperado</span>
-      <span><i style={{ background: "var(--warning)" }} />Parcial</span>
-      <span><i style={{ background: "var(--danger)" }} />Fatigado</span>
-    </div>
-  );
-}

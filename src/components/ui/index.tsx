@@ -3,7 +3,7 @@
 import Link from "@/components/ui/app-link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { AnchorHTMLAttributes, AnimationEvent, ButtonHTMLAttributes, CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Check, Minus, Plus, X } from "lucide-react";
+import { ArrowLeft, Check, Minus, Plus, X } from "lucide-react";
 import { CountUp } from "@/components/ui/count-up";
 import { cn } from "@/lib/utils";
 
@@ -19,16 +19,6 @@ export function PageHeader({ eyebrow, meta, title, subtitle, backHref, actions }
       </div>
       {actions && <div className="row">{actions}</div>}
     </header>
-  );
-}
-
-export function SectionHeader({ title, action, href, children }: { title: string; action?: string; href?: string; children?: ReactNode }) {
-  return (
-    <div className="section-head">
-      <h2>{title}</h2>
-      {action && href && <Link href={href}>{action}<ArrowRight size={15} /></Link>}
-      {children}
-    </div>
   );
 }
 
@@ -52,14 +42,6 @@ export function ButtonLink({ href, variant, size, block, className, ...props }: 
   return <Link href={href} className={buttonClass({ variant, size, block }, className)} {...props} />;
 }
 
-export function PrimaryButton({ className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button className={cn("button button-primary", className)} {...props}>{children}</button>;
-}
-
-export function SecondaryButton({ className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button className={cn("button button-secondary", className)} {...props}>{children}</button>;
-}
-
 // ─── Progreso y métricas ──────────────────────────────────────────────────
 
 export function ProgressBar({ value, purple = false, tone, label }: { value: number; purple?: boolean; tone?: "accent" | "gold"; label?: string }) {
@@ -67,22 +49,6 @@ export function ProgressBar({ value, purple = false, tone, label }: { value: num
   return (
     <div className="progress-track" role="progressbar" aria-label={label} aria-valuenow={Math.round(safe)} aria-valuemin={0} aria-valuemax={100}>
       <span className={purple ? "purple" : tone === "gold" ? "gold" : undefined} style={{ "--value": safe / 100 } as CSSProperties} />
-    </div>
-  );
-}
-
-/** Anillo de progreso: se dibuja al aparecer y luego sigue el valor con una transición suave. */
-export function ProgressRing({ value, size = 112, stroke, color, children, label }: { value: number; size?: number; stroke?: number; color?: string; children?: ReactNode; label?: string }) {
-  const radius = 44;
-  const circumference = 2 * Math.PI * radius;
-  const safe = Math.max(0, Math.min(100, value));
-  return (
-    <div className="progress-ring" style={{ width: size, height: size }} role={label ? "img" : undefined} aria-label={label}>
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle className="ring-track" cx="50" cy="50" r={radius} style={stroke ? { strokeWidth: stroke } : undefined} />
-        <circle className="ring-value" cx="50" cy="50" r={radius} strokeDasharray={circumference} strokeDashoffset={circumference * (1 - safe / 100)} style={{ ...(stroke ? { strokeWidth: stroke } : {}), ...(color ? { stroke: color } : {}) }} />
-      </svg>
-      <div className="ring-content">{children}</div>
     </div>
   );
 }
@@ -121,10 +87,6 @@ export function MetaLine({ items, className }: { items: ReactNode[]; className?:
 export function StatusBadge({ children, tone = "green" }: { children: ReactNode; tone?: "green" | "purple" | "muted" | "warn" | "danger" | "solid" | "gold" | "ink" }) {
   const toneClass = { green: "", purple: "badge-violet", muted: "badge-muted", warn: "badge-warn", danger: "badge-danger", solid: "badge-solid", gold: "badge-gold", ink: "badge-ink" }[tone];
   return <span className={cn("badge", toneClass)}>{children}</span>;
-}
-
-export function Stat({ value, label, className }: { value: ReactNode; label: ReactNode; className?: string }) {
-  return <div className={cn("stat", className)}><b>{value}</b><span>{label}</span></div>;
 }
 
 // ─── Hojas ────────────────────────────────────────────────────────────────
@@ -270,7 +232,6 @@ export function Sheet({ open, onClose, title, eyebrow, children, labelledBy, cla
 }
 
 /** Alias con el nombre del sistema de componentes. */
-export const BottomSheet = Sheet;
 
 // ─── Controles ────────────────────────────────────────────────────────────
 
@@ -305,7 +266,6 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
 }
 
 /** Nombre anterior del control segmentado. */
-export const Segmented = SegmentedControl;
 
 /** Chip seleccionable (equipamiento, filtros): al activarse muestra un check con un pequeño rebote. */
 export function ToggleChip({ pressed, onChange, icon, children, className }: { pressed: boolean; onChange: (pressed: boolean) => void; icon?: ReactNode; children: ReactNode; className?: string }) {

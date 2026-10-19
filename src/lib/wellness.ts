@@ -13,12 +13,8 @@ export interface WellnessEntry {
   updatedAt: string;
 }
 
-export const moodLabels: Record<Mood, string> = { 1: "Muy bajo", 2: "Bajo", 3: "Normal", 4: "Bien", 5: "Muy bien" };
-
 /** Referencias generales para adultos (no son metas médicas). */
 export const SLEEP_RANGE = { min: 7, max: 9 } as const;
-export const STEPS_REFERENCE = 7000;
-
 const DAY = 86_400_000;
 
 function dayIndex(date: string) {

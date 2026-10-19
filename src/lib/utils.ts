@@ -1,16 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { WeekDay, WorkoutEntry } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function formatWeight(value: number) {
-  return value.toLocaleString("es-CL", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
 }
 
 export function localDateKey(date = new Date()) {
@@ -34,32 +26,6 @@ export function startOfCurrentWeek(date = new Date()) {
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - dayFromMonday);
   return start;
-}
-
-export function workoutsThisWeek(workouts: WorkoutEntry[], now = new Date()) {
-  const start = localDateKey(startOfCurrentWeek(now));
-  const endDate = new Date(startOfCurrentWeek(now));
-  endDate.setDate(endDate.getDate() + 6);
-  const end = localDateKey(endDate);
-  return workouts.filter((workout) => workout.date >= start && workout.date <= end);
-}
-
-export function currentWeekDays(workouts: WorkoutEntry[], now = new Date()): WeekDay[] {
-  const start = startOfCurrentWeek(now);
-  const today = localDateKey(now);
-  const completedDates = new Set(workouts.map((workout) => workout.date));
-  const labels = ["L", "M", "M", "J", "V", "S", "D"];
-  return labels.map((short, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    const dateKey = localDateKey(date);
-    return {
-      date: dateKey,
-      short,
-      number: date.getDate(),
-      status: completedDates.has(dateKey) ? "done" : dateKey === today ? "today" : dateKey < today ? "rest" : "planned",
-    };
-  });
 }
 
 export function weekNumber(date = new Date()) {

@@ -111,46 +111,11 @@ export function weekStreak(workouts: WorkoutEntry[], goal: number, pausedWeeks: 
   return { streak, currentCount: current.count, currentMet, currentPaused: paused.has(current.start), currentStart: current.start };
 }
 
-/** Racha de días consecutivos con actividad (hoy no rompe la racha si aún no entrenas). */
-export function dayStreak(workouts: WorkoutEntry[], now = new Date()) {
-  const dates = new Set(workouts.map((workout) => workout.date));
-  const cursor = new Date(now);
-  if (!dates.has(localDateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
-  let streak = 0;
-  while (dates.has(localDateKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
-
 export interface HeatDay {
   date: string;
   sets: number;
   sessions: number;
   future: boolean;
-}
-
-/** Cuadrícula de actividad: columnas por semana (lunes a domingo). */
-export function activityGrid(workouts: WorkoutEntry[], weeks = 16, now = new Date()): HeatDay[][] {
-  const byDate = new Map<string, { sets: number; sessions: number }>();
-  for (const workout of workouts) {
-    const day = byDate.get(workout.date) ?? { sets: 0, sessions: 0 };
-    day.sets += workout.sets;
-    day.sessions += 1;
-    byDate.set(workout.date, day);
-  }
-  const today = localDateKey(now);
-  return Array.from({ length: weeks }, (_, column) => {
-    const { startDate } = weekRange(now, column - weeks + 1);
-    return Array.from({ length: 7 }, (_, row) => {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + row);
-      const key = localDateKey(date);
-      const day = byDate.get(key);
-      return { date: key, sets: day?.sets ?? 0, sessions: day?.sessions ?? 0, future: key > today };
-    });
-  });
 }
 
 /** Carga de sesión: esfuerzo (escala 1–10) × minutos. Sin esfuerzo registrado se asume moderado. */

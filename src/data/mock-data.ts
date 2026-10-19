@@ -1,4 +1,4 @@
-import type { Article, Habit, Meal, User, WeekDay, WeightEntry } from "@/types";
+import type { Article, Habit, Meal, User } from "@/types";
 
 export const user: User = {
   name: "Carlos",
@@ -6,17 +6,6 @@ export const user: User = {
   currentWeight: 82.4,
   goalWeight: 78,
 };
-
-export const weightHistory: WeightEntry[] = [
-  { date: "2026-07-05", label: "5 jul", weight: 84 },
-  { date: "2026-07-09", label: "9 jul", weight: 83.7 },
-  { date: "2026-07-13", label: "13 jul", weight: 83.8 },
-  { date: "2026-07-17", label: "17 jul", weight: 83.1 },
-  { date: "2026-07-21", label: "21 jul", weight: 82.9 },
-  { date: "2026-07-25", label: "25 jul", weight: 82.5 },
-  { date: "2026-07-29", label: "29 jul", weight: 82.7 },
-  { date: "2026-08-02", label: "Hoy", weight: 82.4 },
-];
 
 export { exercises } from "./exercises";
 
@@ -41,12 +30,3 @@ export const articles: Article[] = [
   { id: 6, title: "Cuándo subir repeticiones y cuándo mantener", category: "Entrenamiento", readTime: "4 min" },
 ];
 
-export const weekDays: WeekDay[] = [
-  { date: "2026-07-27", short: "L", number: 27, status: "done" },
-  { date: "2026-07-28", short: "M", number: 28, status: "rest" },
-  { date: "2026-07-29", short: "M", number: 29, status: "done" },
-  { date: "2026-07-30", short: "J", number: 30, status: "rest" },
-  { date: "2026-07-31", short: "V", number: 31, status: "today" },
-  { date: "2026-08-01", short: "S", number: 1, status: "planned" },
-  { date: "2026-08-02", short: "D", number: 2, status: "rest" },
-];

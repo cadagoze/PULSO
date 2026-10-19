@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
 import type { Exercise, ExerciseRecord, Program, TrainingLocation } from "@/types";
 
 export const dayLetters = ["L", "M", "X", "J", "V", "S", "D"] as const;
@@ -47,16 +46,6 @@ export function topLoad(record: ExerciseRecord) {
 /** Paso de carga en la unidad visible: el incremento del ejercicio en kg, 5 en libras. */
 export function loadStep(exercise: Exercise, unit: "kg" | "lb") {
   return unit === "lb" ? 5 : exercise.increment || 2.5;
-}
-
-/** Coincidencia con una media query (falso en el servidor y durante la hidratación). */
-export function useMediaQuery(query: string) {
-  const subscribe = useCallback((notify: () => void) => {
-    const list = window.matchMedia(query);
-    list.addEventListener("change", notify);
-    return () => list.removeEventListener("change", notify);
-  }, [query]);
-  return useSyncExternalStore(subscribe, () => window.matchMedia(query).matches, () => false);
 }
 
 /**

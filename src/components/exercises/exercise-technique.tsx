@@ -10,11 +10,6 @@ export function equipmentText(exercise: Exercise) {
   return exercise.equipment.map((option) => option.map((item) => equipmentLabels[item]).join(" + ")).join(" o ");
 }
 
-export function targetText(exercise: Exercise, sets = exercise.sets) {
-  const [low, high] = exercise.range;
-  return `${sets} × ${low === high ? low : `${low}–${high}`} ${exercise.unit === "reps" ? "rep." : "s"}${exercise.unilateral ? " por lado" : ""}`;
-}
-
 /** Inicio y final del movimiento: los dos recortes de la foto, o la ilustración en dos pasos. */
 function TechniqueVisual({ exercise }: { exercise: Exercise }) {
   const start = exercisePhoto(exercise, "start");

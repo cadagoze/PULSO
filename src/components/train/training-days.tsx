@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { SegmentedControl, Sheet, Stepper } from "@/components/ui";
+import { SegmentedControl, Stepper } from "@/components/ui";
 import { useSettings } from "@/lib/store";
-import { DAY_LETTERS, DAY_NAMES, cleanDays, daysLabel, suggestedDays } from "@/lib/training-days";
+import { DAY_LETTERS, DAY_NAMES, cleanDays, suggestedDays } from "@/lib/training-days";
 
 type Mode = "fixed" | "any";
 const modeOptions: Array<{ value: Mode; label: string }> = [
@@ -63,26 +62,3 @@ export function TrainingDaysField({ onChange }: { onChange?: () => void }) {
   );
 }
 
-/** Fila «Tus días: L · X · V» con hoja para cambiarlos (en Entrenar → Tu semana). */
-export function TrainingDaysRow() {
-  const [settings] = useSettings();
-  const [open, setOpen] = useState(false);
-  const days = cleanDays(settings.trainingDays);
-  return (
-    <>
-      <button type="button" className="days-row pressable" onClick={() => setOpen(true)}>
-        <span className="grow">
-          <span className="meta">Tus días de entreno</span>
-          <strong>{days.length ? daysLabel(days) : `Cualquier día · ${settings.weeklyGoal} por semana`}</strong>
-        </span>
-        <span className="days-row-action">Cambiar</span>
-      </button>
-      <Sheet open={open} onClose={() => setOpen(false)} eyebrow="Tu semana" title="Días de entreno">
-        <div className="days-sheet">
-          <TrainingDaysField />
-          <p className="muted days-note">El aviso de «hora de entrenar» llega sólo tus días, y en Inicio los otros días se proponen como descanso activo.</p>
-        </div>
-      </Sheet>
-    </>
-  );
-}

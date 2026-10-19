@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "@/components/ui/app-link";
 import type { CSSProperties, ReactNode } from "react";
-import { NumberMetric } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 type Photo = { src: string; alt: string; position?: string };
@@ -9,18 +8,6 @@ type Photo = { src: string; alt: string; position?: string };
 /** Superficie base. `carbon` aplica además la paleta oscura a su contenido. */
 export function Card({ tone = "default", padding = "m", className, children }: { tone?: "default" | "flat" | "carbon" | "forest" | "accent"; padding?: "m" | "l"; className?: string; children: ReactNode }) {
   return <div className={cn("card", tone !== "default" && `card-${tone}`, tone === "carbon" && "on-dark", padding === "l" && "card-l", className)}>{children}</div>;
-}
-
-/** Métrica principal dentro de una tarjeta: etiqueta arriba, número protagonista abajo. */
-export function StatCard({ label, value, unit, detail, icon, href, className }: { label: string; value: ReactNode; unit?: ReactNode; detail?: ReactNode; icon?: ReactNode; href?: string; className?: string }) {
-  const content = (
-    <>
-      <span className="stat-card-head"><span className="eyebrow">{label}</span>{icon}</span>
-      <NumberMetric value={value} unit={unit} label={detail} size="m" />
-    </>
-  );
-  if (href) return <Link href={href} className={cn("stat-card card-link", className)}>{content}</Link>;
-  return <div className={cn("stat-card", className)}>{content}</div>;
 }
 
 /**

@@ -274,4 +274,3 @@ export function savedMealsFor(saved: SavedMeal[], meal: MealSlot) {
 }
 
 export const formatKcal = (value: number) => Math.round(value).toLocaleString("es-CL");
-export const formatGrams = (value: number) => `${Math.round(value)} g`;
