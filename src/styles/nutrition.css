@@ -60,7 +60,7 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-item-name { font-size: 14.5px; font-weight: 500; line-height: 1.3; }
 .nut-item small, .nut-food small { font-size: 12.5px; color: var(--ink-2); }
 .nut-item-kcal { flex: none; font-size: 14px; font-weight: 600; }
-.nut-repeat { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 4px; padding: 0 14px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
+.nut-repeat { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; padding: 0 14px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard); }
 .nut-repeat:active { transform: scale(.96); }
 
 /* ─── Hojas: buscador, porciones y formularios ─────────────────────────── */
@@ -225,3 +225,20 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-save-items li { display: flex; justify-content: space-between; gap: 12px; }
 .nut-save-items li span:first-child { min-width: 0; }
 .nut-save-total { padding-top: 8px; box-shadow: inset 0 1px 0 var(--line); font-weight: 600; }
+
+/* ─── Tu día (Inicio y Comidas): comidas con ✓, proteína y agua ────────── */
+.day-summary { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
+.meal-check { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.meal-check-item { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; min-height: 64px; padding: 8px 2px; border-radius: var(--radius); font-size: 12.5px; font-weight: 600; color: var(--ink-2); text-align: center; transition: background-color var(--motion-fast); }
+@media (hover: hover) { .meal-check-item:hover { background: var(--surface-2); } }
+.meal-check-item:active { background: var(--surface-2); }
+.meal-check-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); font-size: 16px; font-weight: 500; color: var(--ink-3); }
+.meal-check-item.is-done { color: var(--ink); }
+.meal-check-item.is-done .meal-check-mark { background: var(--accent); box-shadow: none; color: var(--accent-ink); }
+.protein-row { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
+.protein-row > p { align-self: stretch; font-size: 14px; color: var(--ink-2); }
+.protein-row b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+.protein-row .progress-track { align-self: stretch; }
+.day-summary-water { padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
+.nut-repeat-yesterday { align-self: flex-start; }
+.nut-plan-rows { margin-top: 4px; }

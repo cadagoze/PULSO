@@ -1,4 +1,4 @@
-import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, NutritionSpecialCase, SavedMeal, SavedMealItem, Sex } from "@/types";
+import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, SavedMeal, SavedMealItem, Sex } from "@/types";
 import { fromDisplayWeight } from "@/lib/utils";
 
 /** Nivel de actividad diaria (incluye el entrenamiento) y su factor sobre el metabolismo basal. */
@@ -136,25 +136,6 @@ export function parseBody(input: { age: string; height: string; weight: string }
     weight: !input.weight.trim() || !Number.isFinite(weightKg) || weightKg < 30 || weightKg > 300 ? "Ingresa un peso válido." : "",
   };
   return { age, heightCm, weightKg, errors, valid: !errors.age && !errors.height && !errors.weight };
-}
-
-/**
- * Plan de alimentación desde la evaluación inicial, con edad, estatura y el sexo que usa la fórmula.
- * Con antecedente de TCA no se cuentan calorías (modo simple); el resto de las reglas de seguridad
- * (sin déficit en embarazo, lactancia o menores de 18, mínimo seguro) las aplica nutritionTargets.
- */
-export function nutritionFromAssessment(
-  assessment: { activities?: string[]; goals?: string[] },
-  body: { age: number; heightCm: number; sex: Sex; special: NutritionSpecialCase },
-  now = new Date(),
-): NutritionProfile {
-  return {
-    ...suggestedNutritionProfile({ ...assessment, sex: body.sex }, now),
-    birthYear: now.getFullYear() - Math.round(body.age),
-    heightCm: Math.round(body.heightCm),
-    special: body.special,
-    mode: body.special === "eating-disorder" ? "simple" : "count",
-  };
 }
 
 // ─── Registro de alimentos ─────────────────────────────────────────────────

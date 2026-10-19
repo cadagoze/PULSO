@@ -81,20 +81,8 @@
 .body-pain-areas { display: flex; flex-direction: column; gap: 10px; animation: rise-in var(--motion-base) var(--ease-standard) backwards; }
 .body-safety { font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
 
-/* ─── Tu día: comidas, proteína y agua ─────────────────────────────────── */
+/* ─── Tu día (el bloque es TodaySummary, en nutrition.css) ─────────────── */
 .home-food { display: flex; flex-direction: column; gap: 12px; }
-.home-food-card { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
-.home-meals { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.home-meal { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 64px; padding: 8px 2px; border-radius: var(--radius); font-size: 12.5px; font-weight: 600; color: var(--ink-2); text-align: center; transition: background-color var(--motion-fast); }
-@media (hover: hover) { .home-meal:hover { background: var(--surface-2); } }
-.home-meal:active { background: var(--surface-2); }
-.home-meal-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); font-size: 16px; font-weight: 500; color: var(--ink-3); }
-.home-meal.is-done { color: var(--ink); }
-.home-meal.is-done .home-meal-mark { background: var(--accent); box-shadow: none; color: var(--accent-ink); }
-.home-protein { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
-.home-protein p { font-size: 14px; color: var(--ink-2); }
-.home-protein b { color: var(--ink); font-weight: 600; margin-right: 4px; }
-.home-food-water { padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
 
 /* ─── Esqueleto ────────────────────────────────────────────────────────── */
 .home-skeleton { border-radius: var(--radius-l); background: var(--surface-2); animation: home-shimmer 1.4s ease-in-out infinite; }

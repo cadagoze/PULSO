@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, Bookmark, ChevronRight, PenLine, Plus, ScanBarcode, Search, Trash2, X, Zap } from "lucide-react";
+import { ArrowLeft, Bookmark, ChevronRight, PenLine, Plus, RotateCcw, ScanBarcode, Search, Trash2, X, Zap } from "lucide-react";
 import { Button, MetaLine, NumberMetric } from "@/components/ui";
 import { AmountInput, initialAmount, resolveAmount, type Amount } from "@/components/nutrition/amount-input";
 import { BarcodeScanner } from "@/components/nutrition/barcode-scanner";
 import { barcodeFoodId } from "@/lib/barcode";
 import { foodCategoryLabels, foods } from "@/data/foods";
-import { amountLabel, entryTotals, formatKcal } from "@/lib/nutrition";
+import { amountLabel, formatKcal } from "@/lib/nutrition";
+import { measureLabel, type Measure } from "@/components/nutrition/meal-diary";
 import { cn, normalizeText } from "@/lib/utils";
 import type { FoodCategory, FoodEntry, FoodItem, SavedMeal } from "@/types";
 
@@ -16,12 +17,16 @@ const categories = Object.keys(foodCategoryLabels) as FoodCategory[];
 const parse = (value: string) => Number(value.trim().replace(",", ".") || 0);
 
 /**
- * Buscador para registrar un alimento en una comida: recientes, categorías, búsqueda sin tildes y
- * código de barras; luego porciones o gramos con calorías y macros en vivo. También permite crear
- * alimentos propios y anotar calorías rápidas.
+ * Registrar en una comida, de lo más rápido a lo más largo: repetir lo de ayer, tus comidas guardadas,
+ * recientes y, al buscar o elegir una categoría, todo el catálogo (sin tildes) o el código de barras.
+ * Luego porciones o gramos con proteína (o calorías, si las cuentas) en vivo. También permite crear
+ * alimentos propios y, si cuentas calorías, anotar calorías rápidas.
  */
-export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPortions, usualGrams, onPick, onCreate, onPickSaved, onDeleteSaved }: {
+export function FoodPicker({ measure, mealLabel, repeat, customFoods, recent, savedMeals, usualPortions, usualGrams, onPick, onCreate, onPickSaved, onDeleteSaved }: {
+  measure: Measure;
   mealLabel: string;
+  /** Lo de ayer en esta comida, para repetirlo con un toque (null si no hay). */
+  repeat: { detail: string; onRepeat: () => void } | null;
   customFoods: FoodItem[];
   recent: FoodEntry[];
   savedMeals: SavedMeal[];
@@ -50,7 +55,8 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
     return catalog.filter((food) => (!category || food.category === category) && words.every((word) => normalizeText(food.name).includes(word))).slice(0, 80);
   }, [catalog, category, query]);
   const recentFoods = recent.map((entry) => catalog.find((food) => food.id === entry.foodId)).filter((food): food is FoodItem => Boolean(food));
-  const showRecent = !query.trim() && !category && recentFoods.length > 0;
+  const browsing = Boolean(query.trim() || category);
+  const showRecent = !browsing && recentFoods.length > 0;
 
   function choose(food: FoodItem) {
     setSelected(food);
@@ -74,8 +80,14 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
         </div>
         <AmountInput portion={selected.portion} value={amount} onChange={setAmount} hint={usual} />
         <div className="nut-detail-values">
-          <NumberMetric size="l" value={formatKcal(selected.kcal * factor)} unit="kcal" animate={false} />
-          <MetaLine items={[`${Math.round(selected.protein * factor)} g proteína`, `${Math.round(selected.carbs * factor)} g carbohidratos`, `${Math.round(selected.fat * factor)} g grasa`]} />
+          {measure === "kcal" ? (
+            <>
+              <NumberMetric size="l" value={formatKcal(selected.kcal * factor)} unit="kcal" animate={false} />
+              <MetaLine items={[`${Math.round(selected.protein * factor)} g proteína`, `${Math.round(selected.carbs * factor)} g carbohidratos`, `${Math.round(selected.fat * factor)} g grasa`]} />
+            </>
+          ) : (
+            <NumberMetric size="l" value={Math.round(selected.protein * factor)} unit="g" label="de proteína" animate={false} />
+          )}
         </div>
         {scanned && isNew && <p className="scan-source">Datos de Open Food Facts: revisa que coincidan con la etiqueta. Queda guardado en «Mis alimentos».</p>}
         <Button size="l" block disabled={!resolved} onClick={() => resolved && (isNew ? onCreate : onPick)(selected, resolved.portions, resolved.grams)}><Plus size={18} />Agregar a {mealLabel}{resolved?.grams ? ` · ${amountLabel({ grams: resolved.grams, portions: resolved.portions, portion: selected.portion })}` : ""}</Button>
@@ -108,7 +120,13 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
         ))}
       </div>
 
-      {!query.trim() && !category && savedMeals.length > 0 && (
+      {!browsing && repeat && (
+        <button type="button" className="nut-repeat nut-repeat-yesterday" onClick={repeat.onRepeat}>
+          <RotateCcw size={15} aria-hidden="true" />
+          Repetir {mealLabel.toLowerCase()} de ayer · <span className="num">{repeat.detail}</span>
+        </button>
+      )}
+      {!browsing && savedMeals.length > 0 && (
         <section className="nut-results">
           <div className="nut-results-head">
             <h4 className="meta">Tus comidas</h4>
@@ -123,7 +141,7 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
                     <span className="nut-item-name">{saved.name}</span>
                     <small>{saved.items.length} {saved.items.length === 1 ? "alimento" : "alimentos"} · {saved.items.map((item) => item.name).join(", ")}</small>
                   </span>
-                  <span className="num nut-item-kcal">{formatKcal(entryTotals(saved.items).kcal)}</span>
+                  <span className="num nut-item-kcal">{measureLabel(measure, saved.items)}</span>
                   {!editingSaved && <Plus size={16} className="subtle" aria-hidden="true" />}
                 </button>
                 {editingSaved && (
@@ -137,23 +155,26 @@ export function FoodPicker({ mealLabel, customFoods, recent, savedMeals, usualPo
       {showRecent && (
         <section className="nut-results">
           <h4 className="meta">Recientes</h4>
-          <FoodList items={recentFoods} onChoose={choose} />
+          <FoodList items={recentFoods} measure={measure} onChoose={choose} />
         </section>
       )}
-      <section className="nut-results">
-        {showRecent && <h4 className="meta">Todos los alimentos</h4>}
-        {results.length ? <FoodList items={results} onChoose={choose} /> : <p className="muted nut-empty">No encontramos «{query}». Puedes crearlo como alimento propio.</p>}
-      </section>
+      {browsing ? (
+        <section className="nut-results">
+          {results.length ? <FoodList items={results} measure={measure} onChoose={choose} /> : <p className="muted nut-empty">No encontramos «{query}». Puedes crearlo como alimento propio.</p>}
+        </section>
+      ) : (
+        <p className="muted nut-empty">Busca un alimento, elige una categoría o escanea su código de barras.</p>
+      )}
 
       <div className="nut-picker-actions">
         <Button variant="secondary" onClick={() => { setBarcode(null); setView("custom"); }}><PenLine size={16} />Crear alimento</Button>
-        <Button variant="secondary" onClick={() => { setBarcode(null); setView("quick"); }}><Zap size={16} />Calorías rápidas</Button>
+        {measure === "kcal" && <Button variant="secondary" onClick={() => { setBarcode(null); setView("quick"); }}><Zap size={16} />Calorías rápidas</Button>}
       </div>
     </div>
   );
 }
 
-function FoodList({ items, onChoose }: { items: FoodItem[]; onChoose: (food: FoodItem) => void }) {
+function FoodList({ items, measure, onChoose }: { items: FoodItem[]; measure: Measure; onChoose: (food: FoodItem) => void }) {
   return (
     <ul className="nut-food-list">
       {items.map((food) => (
@@ -163,7 +184,7 @@ function FoodList({ items, onChoose }: { items: FoodItem[]; onChoose: (food: Foo
               <span className="nut-item-name">{food.name}</span>
               <small>{food.portion}</small>
             </span>
-            <span className="num nut-item-kcal">{formatKcal(food.kcal)}</span>
+            <span className="num nut-item-kcal">{measure === "kcal" ? formatKcal(food.kcal) : `${Math.round(food.protein)} g`}</span>
             <ChevronRight size={16} className="subtle" aria-hidden="true" />
           </button>
         </li>
