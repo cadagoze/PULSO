@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
+import "@/styles/reset.css";
 import "./globals.css";
+import "@/styles/navigation.css";
+import "@/styles/exercises.css";
 import "@/styles/home.css";
 import "@/styles/onboarding.css";
 import "@/styles/train.css";

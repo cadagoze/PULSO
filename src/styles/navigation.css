@@ -1,0 +1,49 @@
+/* PULSO — navegación: barra inferior (riel lateral en escritorio) y acceso al entrenamiento en curso. */
+
+/* ─── Navegación ───────────────────────────────────────────────────────── */
+.bottom-nav { position: fixed; z-index: 50; left: 50%; bottom: calc(var(--nav-gap) + var(--safe-b)); width: min(calc(100% - 24px), 432px); height: var(--nav-h); padding: 6px; border-radius: var(--radius-pill); background: rgb(20 20 20 / 92%); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); box-shadow: 0 16px 36px -12px rgb(0 0 0 / 42%), inset 0 0 0 1px rgb(255 255 255 / 7%); transform: translateX(-50%); }
+.bottom-nav-inner { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); height: 100%; }
+/* El fondo va en el propio indicador (no en un pseudoelemento) para que los lectores de contraste lo vean. */
+.nav-indicator { position: absolute; top: 0; bottom: 0; left: 0; width: 20%; padding: 0 2px; border-radius: var(--radius-pill); background: var(--accent); background-clip: content-box; transform: translateX(calc(var(--index, 0) * 100%)); transition: transform var(--motion-slow) var(--ease-standard), opacity var(--motion-base); pointer-events: none; }
+.nav-indicator.is-hidden { opacity: 0; }
+.nav-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; border-radius: var(--radius-pill); color: rgb(242 241 236 / 64%); font-size: 10.5px; font-weight: 600; letter-spacing: .01em; transition: color var(--motion-base) var(--ease-standard); }
+.nav-item:active .nav-icon { transform: scale(.9); }
+.nav-icon { display: grid; place-items: center; transition: transform var(--motion-fast) var(--ease-standard); }
+.nav-item-active { color: var(--accent-ink); }
+@media (hover: hover) { .nav-item:not(.nav-item-active):hover { color: #f2f1ec; } }
+.nav-brand { display: none; }
+:root[data-theme="dark"] .bottom-nav { background: rgb(30 30 30 / 90%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bottom-nav { background: rgb(30 30 30 / 90%); } }
+.nav-resume { position: fixed; z-index: 49; left: 50%; bottom: calc(var(--nav-gap) + var(--nav-h) + 10px + var(--safe-b)); width: min(calc(100% - 24px), 432px); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 18px; border-radius: var(--radius-pill); background: var(--carbon); color: var(--on-carbon); box-shadow: var(--shadow-float), inset 0 0 0 1px rgb(255 255 255 / 7%); animation: toast-in var(--motion-slow) var(--ease-standard); }
+.nav-resume strong { font-size: 14px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-resume small { font-size: 12px; color: var(--on-carbon-2); display: block; }
+.nav-resume .grow { flex: 1; min-width: 0; }
+.nav-resume .pulse-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.8s infinite; flex: none; }
+.nav-resume-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 44px; color: inherit; }
+.nav-resume .resume-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex: none; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
+.nav-resume .resume-btn:active { transform: scale(.9); }
+.nav-resume .resume-go { background: var(--accent); color: var(--accent-ink); }
+.nav-resume .resume-end { background: rgb(255 255 255 / 10%); color: var(--on-carbon); }
+@media (hover: hover) { .nav-resume .resume-end:hover { background: rgb(255 255 255 / 16%); } }
+.nav-resume.is-paused .pulse-dot { animation: none; background: var(--on-carbon-2); box-shadow: none; }
+.draft-end { display: flex; flex-direction: column; gap: 12px; }
+.draft-end-note { padding: 12px 14px; border-radius: var(--radius-s); background: var(--surface-2); font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.draft-end-confirm { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--radius); background: var(--danger-soft); }
+.draft-end-confirm p { font-size: 13.5px; line-height: 1.45; color: var(--danger); font-weight: 600; }
+@media (min-width: 1024px) {
+  .page-container { padding-left: 40px; padding-right: 40px; }
+  :root { --gutter: 40px; --nav-gap: 20px; --rail-w: 88px; }
+  .toast { bottom: calc(var(--nav-h) + var(--nav-gap) + 20px); }
+  /* Riel lateral: la misma navegación, vertical, con el isotipo arriba y el indicador que se desliza hacia abajo. */
+  .app-shell:has(> .bottom-nav) { padding-left: calc(var(--rail-w) + 20px); }
+  .app-shell:has(> .bottom-nav) .page-container { padding-bottom: 56px; }
+  .bottom-nav { left: 20px; top: 20px; bottom: 20px; width: var(--rail-w); height: auto; display: flex; flex-direction: column; align-items: stretch; padding: 18px 8px; border-radius: 30px; transform: none; }
+  .nav-brand { display: grid; place-items: center; height: 48px; margin-bottom: 22px; font-size: 30px; border-radius: var(--radius-pill); transition: transform var(--motion-fast) var(--ease-standard); }
+  .nav-brand:active { transform: scale(.94); }
+  .bottom-nav-inner { display: flex; flex-direction: column; height: auto; }
+  .nav-item { height: 70px; gap: 5px; font-size: 11px; }
+  .nav-indicator { right: 0; bottom: auto; width: auto; height: 70px; padding: 0; background-clip: border-box; border-radius: 22px; transform: translateY(calc(var(--index, 0) * 100%)); }
+  .app-shell:has(> .bottom-nav) .toast, .app-shell:has(> .bottom-nav) .nav-resume { left: calc(50% + (var(--rail-w) + 20px) / 2); }
+  .app-shell:has(> .bottom-nav) .toast { bottom: 28px; }
+  .nav-resume { bottom: 24px; }
+}

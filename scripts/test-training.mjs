@@ -21,7 +21,7 @@ function load(relativePath) {
   const exported = {};
   cache.set(relativePath, exported);
   const require = (name) => {
-    if (name === 'clsx' || name === 'tailwind-merge') return nodeRequire(name);
+    if (name === 'clsx') return nodeRequire(name);
     if (!name.startsWith('@/') && !name.startsWith('.')) throw new Error(`Unexpected import: ${name}`);
     const base = name.startsWith('@/') ? path.join('src', name.slice(2)) : path.join(path.dirname(relativePath), name);
     const candidates = [`${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts')];
