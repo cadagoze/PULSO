@@ -306,8 +306,6 @@ test('alimentación: totales del día y alimentos recientes', () => {
   assert.equal(totals.protein, 25);
   const recent = nutrition.recentFoods([entry('a', 'arroz', 1, 200), entry('b', 'pollo', 1, 198), entry('c', 'arroz', 1, 200)]);
   assert.deepEqual(Array.from(recent, (item) => item.foodId), ['arroz', 'pollo']);
-  const pruned = nutrition.pruneHistory([{ ...entry('x', 'a', 1, 1), date: '2026-01-01' }, entry('y', 'b', 1, 1)], '2026-10-05');
-  assert.deepEqual(Array.from(pruned, (item) => item.id), ['y']);
 });
 
 test('alimentos: ids únicos y calorías coherentes con los macros', () => {
@@ -378,8 +376,6 @@ test('agua: meta para beber según el peso, comida según la hora e historial ac
   assert.equal(nutrition.formatLiters(9), '2,25');
   const at = (hour, minute = 0) => nutrition.mealSlotAt(new Date(2026, 9, 5, hour, minute));
   assert.deepEqual([at(7), at(13), at(18), at(19, 45), at(23, 30), at(3)], ['desayuno', 'almuerzo', 'once', 'cena', 'colacion', 'colacion']);
-  const kept = nutrition.pruneHistory([{ date: '2026-01-01', glasses: 3 }, { date: '2026-10-04', glasses: 8 }], '2026-10-05');
-  assert.deepEqual(Array.from(kept, (entry) => entry.date), ['2026-10-04']);
   const targets = nutrition.nutritionTargets({ sex: 'male', birthYear: 1986, heightCm: 178, activity: 'moderate', goal: 'lose', adjustment: -15, special: 'none', mode: 'count', updatedAt: '' }, 81.5, new Date(2026, 9, 5));
   assert.equal(targets.waterLiters, 2.25);
 });
@@ -420,6 +416,20 @@ test('nube: diferencias por registro y unión al conectar un equipo', () => {
   assert.deepEqual(Array.from(merged.items, (item) => item.id), ['a', 'c', 'd']);
   assert.equal(merged.items[0].notes, 'nube');
   assert.deepEqual(Object.keys(merged.shadow).sort(), ['a', 'c']);
+});
+
+test('nube: al conectar un equipo, las listas se unen en vez de reemplazarse', () => {
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  // Rutinas: gana la nube en el mismo id; la rutina creada sólo en este equipo se conserva al final.
+  const routines = sync.mergeListDoc([{ id: 'r1', name: 'Local' }, { id: 'r3', name: 'Sólo aquí' }], [{ id: 'r1', name: 'Nube' }, { id: 'r2', name: 'Otra' }]);
+  assert.deepEqual(plain(routines).map((item) => `${item.id}:${item.name}`), ['r1:Nube', 'r2:Otra', 'r3:Sólo aquí']);
+  // Favoritos (números) y bienestar (por fecha, en orden cronológico).
+  assert.deepEqual(plain(sync.mergeListDoc([3, 7], [7, 9])), [7, 9, 3]);
+  const wellness = sync.mergeListDoc([{ date: '2026-10-03', sleepHours: 6 }, { date: '2026-10-05', sleepHours: 8 }], [{ date: '2026-10-04', sleepHours: 7 }, { date: '2026-10-05', sleepHours: 7.5 }]);
+  assert.deepEqual(plain(wellness), [{ date: '2026-10-03', sleepHours: 6 }, { date: '2026-10-04', sleepHours: 7 }, { date: '2026-10-05', sleepHours: 7.5 }]);
+  // Documentos que no son listas (ajustes, evaluación): manda la nube, como antes.
+  assert.deepEqual(plain(sync.mergeListDoc({ name: 'Local' }, { name: 'Nube' })), { name: 'Nube' });
+  assert.deepEqual(plain(sync.mergeListDoc([{ id: 'x' }], { name: 'Nube' })), { name: 'Nube' });
 });
 
 test('nube: un cambio remoto no pisa un cambio local sin subir', () => {
@@ -1114,10 +1124,10 @@ test('pausas activas: tramos, duración, rotación y registro', () => {
   assert.equal(breaksLib.suggestedRoutine([entry('cuello', '2026-10-07')], '2026-10-08').id, 'cuello', 'lo de ayer no cuenta');
   assert.equal(breaksLib.suggestedRoutine(['cuello', 'piernas', 'espalda', 'ojos'].map((id) => entry(id)), '2026-10-08').id, 'completa');
   assert.equal(breaksLib.breaksOn([entry('cuello'), entry('ojos'), entry('cuello', '2026-10-07')], '2026-10-08'), 2);
-  // Se guardan 120 días y sin duplicados.
+  // El historial se conserva completo (nada se borra por antigüedad) y sin duplicados.
   const saved = breaksLib.addBreak([entry('cuello', '2026-05-01'), entry('ojos', '2026-09-01')], entry('piernas'));
-  assert.deepEqual(JSON.parse(JSON.stringify(saved.map((item) => item.routine))), ['ojos', 'piernas']);
-  assert.equal(breaksLib.addBreak(saved, entry('piernas')).length, 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(saved.map((item) => item.routine))), ['cuello', 'ojos', 'piernas']);
+  assert.equal(breaksLib.addBreak(saved, entry('piernas')).length, 3);
   assert.ok(sync.docSpecs.some((spec) => spec.key === 'pulso:breaks'), 'se sincroniza como documento');
 });
 
@@ -1196,7 +1206,7 @@ test('bienestar: un registro por día, combinable, y promedios de 7 días', () =
   assert.equal(week.mood, 3);
   assert.equal(week.steps, null);
   const old = wellness.upsertWellness([{ date: '2026-01-01', sleepHours: 8, updatedAt: 'x' }], '2026-10-19', { mood: 3 }, 't6');
-  assert.equal(old.length, 1, 'se conservan sólo 120 días');
+  assert.equal(old.length, 2, 'los días antiguos no se borran');
 });
 
 test('gráficos propios: curva monótona, marcas y etiquetas sin montarse', () => {

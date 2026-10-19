@@ -169,12 +169,17 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
 /** Nutrición dentro del plan: calorías y proteína del día, o la invitación a calcularlas. */
 function NutritionLine() {
   const now = useNow();
-  const { targets } = useNutritionDay(now);
+  const { profile, targets } = useNutritionDay(now);
   return (
     <Link href="/comidas" className="prof-plan-program prof-plan-food pressable">
       <span className="prof-plan-program-text">
         <span className="meta">Comidas</span>
-        {targets ? (
+        {profile?.special === "eating-disorder" ? (
+          <>
+            <strong>Por saciedad</strong>
+            <small>Registras tus comidas sin contar calorías.</small>
+          </>
+        ) : targets ? (
           <>
             <strong><span className="num">{formatKcal(targets.kcal)}</span> kcal al día</strong>
             <small className="num">{targets.protein} g proteína · {targets.carbs} g carbohidratos · {targets.fat} g grasa</small>

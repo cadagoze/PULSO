@@ -15,6 +15,7 @@ import { SettingsGroup } from "./settings-group";
 import { hasCloudSession } from "@/lib/cloud/status";
 import { cloudActions } from "@/lib/cloud/use-cloud";
 import { confirmAction } from "@/lib/confirm";
+import { disablePush, usePushSettings } from "@/lib/push";
 
 type PersistStatus = "checking" | "unsupported" | "persisted" | "idle" | "denied";
 
@@ -45,6 +46,7 @@ function RowText({ icon, title, detail, live = false }: { icon: ReactNode; title
 /** Respaldo, importación, CSV, almacenamiento persistente y borrado total (con doble confirmación). */
 export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEntry[]; onToast: (message: string) => void; order?: number }) {
   const router = useRouter();
+  const [push] = usePushSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [persist, setPersist] = useState<PersistStatus>("checking");
@@ -123,6 +125,8 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
   async function eraseEverything() {
     // Con sesión abierta, primero se cierra: así borrar este equipo no borra también la nube.
     if (hasCloudSession()) await cloudActions.signOut().catch(() => undefined);
+    // Los avisos dejan de llegar: se anula la suscripción en el teléfono y en el servidor.
+    if (push.enabled) await disablePush(push.endpoint);
     clearAllData();
     setDeleting(false);
     router.push("/");
@@ -154,7 +158,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
           <RowText icon={<FileText size={19} />} title="Privacidad" detail="Qué guardamos, dónde y cómo borrarlo." />
         </Link>
         <button type="button" className="list-row prof-danger" onClick={startDelete}>
-          <RowText icon={<Trash2 size={19} />} title="Borrar todos mis datos" detail="Elimina entrenamientos, ajustes y evaluación de este dispositivo." />
+          <RowText icon={<Trash2 size={19} />} title="Borrar todos mis datos" detail="Elimina todo lo de PULSO en este teléfono: entrenamientos, comidas, peso, ajustes y avisos." />
         </button>
         {error && <p className="form-error prof-data-error" role="alert">{error}</p>}
       </SettingsGroup>

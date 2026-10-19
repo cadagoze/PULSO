@@ -11,7 +11,6 @@ export interface BreakEntry {
 
 export const BREAK_PREP_SECONDS = 5;
 export const BREAK_SWITCH_SECONDS = 5;
-const KEEP_DAYS = 120;
 
 export interface BreakSegment {
   kind: "prep" | "move" | "switch";
@@ -64,10 +63,7 @@ export function suggestedRoutine(entries: BreakEntry[], today: string): BreakRou
   return breakRoutines.find((routine) => routine.id === id) ?? breakRoutines[0];
 }
 
-/** Guarda una pausa y descarta las de hace más de 120 días. */
+/** Guarda una pausa (el historial se conserva completo). */
 export function addBreak(entries: BreakEntry[], entry: BreakEntry) {
-  const limit = new Date(`${entry.date}T12:00:00Z`);
-  limit.setUTCDate(limit.getUTCDate() - KEEP_DAYS);
-  const cutoff = limit.toISOString().slice(0, 10);
-  return [...entries.filter((item) => item.date >= cutoff && item.id !== entry.id), entry];
+  return [...entries.filter((item) => item.id !== entry.id), entry];
 }

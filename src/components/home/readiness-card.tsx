@@ -36,8 +36,6 @@ const stressOptions: Array<{ value: Stress; label: string }> = [
   { value: 3, label: "Alto" },
 ];
 
-const MAX_ENTRIES = 90;
-
 export function readinessState(score: number) {
   if (score >= 70) return { label: "Disponible", tone: "ready" as const, color: "var(--accent)" };
   if (score >= 40) return { label: "Moderada", tone: "moderate" as const, color: "var(--warning)" };
@@ -75,7 +73,7 @@ export function ReadinessCard({ today, now }: { today: string; now: number }) {
   function save(values: Answers) {
     const { score, recommendation } = readinessScore(values, trainingLoad(workouts, Date.now()).ratio);
     const entry: ReadinessEntry = { date: today, ...values, score, recommendation, updatedAt: new Date().toISOString() };
-    setEntries((items) => [entry, ...items.filter((item) => item.date !== today)].slice(0, MAX_ENTRIES));
+    setEntries((items) => [entry, ...items.filter((item) => item.date !== today)]);
     setOpen(false);
   }
 

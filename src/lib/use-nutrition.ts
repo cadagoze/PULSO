@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { entryTotals, nutritionTargets, pruneHistory, waterGoal } from "@/lib/nutrition";
+import { entryTotals, nutritionTargets, waterGoal } from "@/lib/nutrition";
 import { useFoodLog, useNutritionProfile, useWater, useWeights } from "@/lib/store";
 import { localDateKey } from "@/lib/utils";
 import { weeklyReview, type WeeklyReview } from "@/lib/weekly-review";
@@ -34,7 +34,7 @@ export function useWaterToday(now: number) {
     const date = localDateKey();
     setEntries((current) => {
       const value = Math.max(0, Math.min(30, (current.find((entry) => entry.date === date)?.glasses ?? 0) + delta));
-      return pruneHistory([...current.filter((entry) => entry.date !== date), { date, glasses: value }], date);
+      return [...current.filter((entry) => entry.date !== date), { date, glasses: value }];
     });
   }
 

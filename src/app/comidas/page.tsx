@@ -27,7 +27,7 @@ import { Toast, useToast } from "@/components/ui/toast";
 import { foods } from "@/data/foods";
 import { habits } from "@/data/mock-data";
 import { dayGap, type FoodIdea } from "@/lib/day-gap";
-import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, pruneHistory, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
+import { activityLevels, entriesFromSavedMeal, entryFromFood, entryTotals, formatKcal, mealSlotAt, mealSlots, nutritionTargets, recentFoods, savedMealFromEntries, savedMealsFor, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
 import { useCustomFoods, useFoodLog, useHabits, useMeals, useNutritionProfile, useProfile, useSavedMeals, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
@@ -167,7 +167,7 @@ export default function NutritionPage() {
     if (!targets) return;
     const id = newId("comida");
     const entry = entryFromFood(food, { id, date: today, meal, portions, grams });
-    setLog((current) => pruneHistory([...current, entry], today));
+    setLog((current) => [...current, entry]);
     setFresh(id);
     const protein = totals.protein + food.protein * entry.portions;
     const proteinMet = totals.protein < targets.protein && protein >= targets.protein;
@@ -191,7 +191,7 @@ export default function NutritionPage() {
     if (!targets) return;
     const entries = entriesFromSavedMeal(saved, { date: today, meal, newId: () => newId("comida") });
     if (!entries.length) return;
-    setLog((current) => pruneHistory([...current, ...entries], today));
+    setLog((current) => [...current, ...entries]);
     setPickerOpen(false);
     setFresh(entries[0].id);
     const added = entryTotals(entries);
@@ -211,13 +211,13 @@ export default function NutritionPage() {
     if (!entries.length) return;
     const existing = savedMeals.find((item) => item.name.toLowerCase() === name.toLowerCase());
     const meal = savedMealFromEntries(entries, { id: existing?.id ?? newId("guardada"), name, meal: saving.meal });
-    setSavedMeals((current) => [meal, ...current.filter((item) => item.id !== meal.id)].slice(0, 30));
+    setSavedMeals((current) => [meal, ...current.filter((item) => item.id !== meal.id)]);
     setSavingOpen(false);
     showToast(`Guardada · ${meal.name}`, { delay: 260 });
   }
 
   function createFood(food: FoodItem, portions: number, grams?: number) {
-    if (food.id !== "rapido") setCustomFoods((current) => [food, ...current.filter((item) => item.id !== food.id)].slice(0, 200));
+    if (food.id !== "rapido") setCustomFoods((current) => [food, ...current.filter((item) => item.id !== food.id)]);
     addFood(food, portions, grams);
   }
 
@@ -248,7 +248,7 @@ export default function NutritionPage() {
   function repeatMeal(meal: MealSlot) {
     const copies = yesterdayEntries.filter((entry) => entry.meal === meal).map((entry) => ({ ...entry, id: newId("comida"), date: today }));
     if (!copies.length) return;
-    setLog((current) => pruneHistory([...current, ...copies], today));
+    setLog((current) => [...current, ...copies]);
     setFresh(copies[0].id);
     showToast(`${slotLabel(meal)} repetido · ${formatKcal(entryTotals(copies).kcal)} kcal`);
   }
@@ -292,7 +292,7 @@ export default function NutritionPage() {
     <div className="page cnt-page cnt-split nut-page">
       <div className="cnt-lead">
         <PageHeader meta={formatLongDate(new Date(now))} title="Comidas" subtitle={subtitle} />
-        {!targets && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
+        {!targets && profile?.special !== "eating-disorder" && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
         {counting && targets ? <CalorieSummary targets={targets} totals={totals} /> : <DayProgress meals={meals} habitsDone={habitsDone} habitsTotal={habits.length} />}
         <Button size="l" block onClick={startAdding}><Plus size={18} />Añadir comida</Button>
         <WaterTracker className="nut-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />

@@ -50,6 +50,7 @@ import {
   emptyShadow,
   hashValue,
   mergeCollection,
+  mergeListDoc,
   parseJson,
   specByKey,
   type CollectionSpec,
@@ -233,7 +234,11 @@ class Session {
       const parsed = parseJson(record.json);
       if (!parsed.ok) continue;
       shadow.docs[spec.name] = hashValue(parsed.value);
-      if (readPersistentRaw(spec.key) !== JSON.stringify(parsed.value)) writePersistentValue(spec.key, parsed.value);
+      // Las listas se unen con lo de este equipo; si queda algo local, la sombra (de la nube) difiere y se sube al arrancar.
+      const localRaw = readPersistentRaw(spec.key);
+      const local = localRaw === null ? null : parseJson(localRaw);
+      const value = local?.ok ? mergeListDoc(local.value, parsed.value) : parsed.value;
+      if (localRaw !== JSON.stringify(value)) writePersistentValue(spec.key, value);
     }
 
     await setDoc(root, { schema: 1, updatedAt: serverTimestamp() });

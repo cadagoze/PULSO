@@ -22,6 +22,22 @@ export function NutritionPlan({ profile, targets, today, onEdit, onAdjust, onMod
   const reviewed = activeCheckIn(profile);
   const lastCheckIn = profile.checkIns?.at(-1);
 
+  // Con antecedente de TCA no se muestran calorías, macros ni gasto: sólo el registro por saciedad.
+  if (!countAllowed) {
+    return (
+      <section className="nut-plan" aria-labelledby="nut-plan-title">
+        <div className="nut-plan-head">
+          <p className="meta">Tu plan de alimentación</p>
+          <h2 id="nut-plan-title" className="title-m">Sin contar calorías</h2>
+        </div>
+        <p className="nut-plan-why">Registras tus comidas por saciedad y por grupos de alimentos, sin números. Si quieres un plan con cantidades, defínelo con un profesional de salud que te acompañe.</p>
+        <div className="nut-plan-actions">
+          <Button variant="secondary" onClick={onEdit}><UserRoundPen size={16} />Editar mis datos</Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="nut-plan" aria-labelledby="nut-plan-title">
       <div className="nut-plan-head">

@@ -131,7 +131,7 @@ export function useNutritionProfile() {
   return usePersistentState<NutritionProfile | null>(STORAGE_KEYS.nutrition, null);
 }
 
-/** Alimentos registrados de los últimos días (cada uno con su fecha y comida). */
+/** Alimentos registrados (cada uno con su fecha y comida). */
 export function useFoodLog() {
   return usePersistentState<FoodEntry[]>(STORAGE_KEYS.foodLog, emptyFoodLog);
 }
@@ -156,7 +156,7 @@ export function useFitnessTests() {
   return usePersistentState<FitnessTestEntry[]>(STORAGE_KEYS.fitnessTests, emptyFitnessTests);
 }
 
-/** Pausas activas hechas (últimos 120 días). */
+/** Pausas activas hechas. */
 export function useBreaks() {
   return usePersistentState<BreakEntry[]>(STORAGE_KEYS.breaks, emptyBreaks);
 }
@@ -165,7 +165,7 @@ export function useWellness() {
   return usePersistentState<WellnessEntry[]>(STORAGE_KEYS.wellness, emptyWellness);
 }
 
-/** Vasos de agua por día (historial de 120 días). */
+/** Vasos de agua por día. */
 export function useWater() {
   return usePersistentState<WaterEntry[]>(STORAGE_KEYS.water, emptyWater);
 }
@@ -292,6 +292,19 @@ export function writeAllData(data: Record<string, unknown>) {
   return entries.length;
 }
 
+/**
+ * Borra todo lo de PULSO en este equipo: las claves sincronizadas y también las propias del equipo
+ * (avisos, borradores del test, avisos ocultos, cuenta), todas con el prefijo «pulso:».
+ */
 export function clearAllData() {
-  for (const key of Object.values(STORAGE_KEYS)) removePersistentKey(key);
+  const keys = new Set<string>(Object.values(STORAGE_KEYS));
+  try {
+    for (let index = 0; index < window.localStorage.length; index++) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith("pulso:")) keys.add(key);
+    }
+  } catch {
+    // Sin acceso al almacenamiento se limpian al menos las claves conocidas.
+  }
+  for (const key of keys) removePersistentKey(key);
 }

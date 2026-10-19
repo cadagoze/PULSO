@@ -226,17 +226,6 @@ export function amountLabel(entry: Pick<FoodEntry, "grams" | "portions" | "porti
   return `${entry.portions === 1 ? "" : `${entry.portions.toLocaleString("es-CL")} × `}${entry.portion}`;
 }
 
-/** Días de registro que se conservan (suficiente para tendencias sin llenar el almacenamiento). */
-export const FOOD_LOG_DAYS = 120;
-
-/** Conserva los últimos FOOD_LOG_DAYS días de un historial (alimentos, agua). */
-export function pruneHistory<T extends { date: string }>(entries: T[], today: string) {
-  const limit = new Date(`${today}T12:00:00`);
-  limit.setDate(limit.getDate() - FOOD_LOG_DAYS);
-  const cutoff = limit.toISOString().slice(0, 10);
-  return entries.filter((entry) => entry.date >= cutoff);
-}
-
 // ─── Agua ──────────────────────────────────────────────────────────────────
 
 export const GLASS_ML = 250;

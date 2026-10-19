@@ -19,14 +19,13 @@ export const moodLabels: Record<Mood, string> = { 1: "Muy bajo", 2: "Bajo", 3: "
 export const SLEEP_RANGE = { min: 7, max: 9 } as const;
 export const STEPS_REFERENCE = 7000;
 
-const KEEP_DAYS = 120;
 const DAY = 86_400_000;
 
 function dayIndex(date: string) {
   return Math.round(new Date(`${date}T12:00:00`).getTime() / DAY);
 }
 
-/** Guarda lo de un día (combinando con lo ya anotado); `null` borra un dato. Conserva los últimos 120 días. */
+/** Guarda lo de un día (combinando con lo ya anotado); `null` borra un dato. */
 export function upsertWellness(
   entries: WellnessEntry[],
   date: string,
@@ -41,8 +40,7 @@ export function upsertWellness(
     if (value === null || value === undefined) delete next[key];
     else (next as unknown as Record<string, number>)[key] = value;
   }
-  const today = dayIndex(date);
-  return [...entries.filter((entry) => entry.date !== date && today - dayIndex(entry.date) < KEEP_DAYS), next].sort((a, b) => a.date.localeCompare(b.date));
+  return [...entries.filter((entry) => entry.date !== date), next].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function average(values: number[]) {

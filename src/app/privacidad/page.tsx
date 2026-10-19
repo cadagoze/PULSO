@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2>Cuánto tiempo</h2>
-          <p>Mientras mantengas tu cuenta. El registro de alimentos y de agua conserva los últimos 120 días.</p>
+          <p>Mientras mantengas tu cuenta. PULSO no borra tu historial por su cuenta: sólo se elimina si tú lo borras.</p>
         </section>
         <section>
           <h2>Tus derechos</h2>

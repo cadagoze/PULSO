@@ -163,6 +163,26 @@ function parseRecord(json: string): Item | null {
   }
 }
 
+/**
+ * Primera conexión con un documento que es una lista (rutinas, retos, comidas guardadas, favoritos…):
+ * se unen ambos lados en vez de reemplazar lo de este equipo. En un mismo elemento (mismo id, o misma
+ * fecha si no tiene id) gana la nube; lo que sólo está aquí se agrega al final y se subirá después.
+ * Si alguno de los dos no es una lista (ajustes, evaluación, plan), manda la nube como siempre.
+ */
+export function mergeListDoc(local: unknown, remote: unknown): unknown {
+  if (!Array.isArray(local) || !Array.isArray(remote)) return remote;
+  const key = (item: unknown) => {
+    if (typeof item !== "object" || item === null) return JSON.stringify(item);
+    const record = item as Item;
+    return typeof record.id === "string" || typeof record.id === "number" ? `id:${record.id}` : typeof record.date === "string" ? `date:${record.date}` : JSON.stringify(item);
+  };
+  const seen = new Set(remote.map(key));
+  const merged = [...remote, ...local.filter((item) => !seen.has(key(item)))];
+  // Las listas por fecha (bienestar, pausas, tests) quedan en orden cronológico, como las escribe la app.
+  const dated = merged.every((item) => typeof item === "object" && item !== null && typeof (item as Item).date === "string");
+  return dated ? [...merged].sort((a, b) => String((a as Item).date).localeCompare(String((b as Item).date))) : merged;
+}
+
 export function parseJson(json: string): { ok: true; value: unknown } | { ok: false } {
   try {
     return { ok: true, value: JSON.parse(json) };

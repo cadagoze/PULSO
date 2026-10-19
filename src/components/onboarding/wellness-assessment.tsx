@@ -333,7 +333,8 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
 
   function finish() {
     const location = profile.location ?? "home";
-    setPreference({ location, equipment: location === "gym" ? [] : profile.equipment ?? [] });
+    // Se conserva lo ya configurado (equipamiento del gimnasio, pesos de casa): cambia el lugar y, si se eligió, el equipo de casa.
+    setPreference((current) => ({ ...current, location, ...(location === "home" && profile.equipment?.length ? { equipment: profile.equipment } : {}) }));
     const name = profile.name?.trim();
     updateSettings({ ...(name ? { name } : {}), weeklyGoal: profile.recommendation.sessionsPerWeek });
     if (body.valid && plannedNutrition) {
