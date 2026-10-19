@@ -108,9 +108,9 @@
 
 /* ─── Tu plan ──────────────────────────────────────────────────────────── */
 .onb-result { position: absolute; inset: 0; z-index: 5; animation: fade-in var(--motion-slow) var(--ease-standard); }
-.onb-result-backdrop { position: absolute; inset: -12%; z-index: 0; filter: blur(34px) saturate(1.1); opacity: .75; }
-.onb-result-backdrop img { object-fit: cover; object-position: 62% 35%; }
-.onb-result::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgb(13 15 14 / 50%) 0%, rgb(13 15 14 / 64%) 32%, rgb(13 15 14 / 86%) 58%, rgb(13 15 14 / 94%) 100%); }
+.onb-result-backdrop { position: absolute; inset: -4%; z-index: 0; filter: blur(3px) brightness(1.25); opacity: .85; }
+.onb-result-backdrop img { object-fit: cover; object-position: center 18%; }
+.onb-result::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgb(13 15 14 / 28%) 0%, rgb(13 15 14 / 52%) 34%, rgb(13 15 14 / 84%) 58%, rgb(13 15 14 / 94%) 100%); }
 .onb-result.grain::before { opacity: .3; }
 .onb-result.is-leaving { animation: fade-out var(--motion-base) var(--ease-exit) forwards; pointer-events: none; }
 .onb-result-scroll { position: relative; z-index: 3; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--gutter); }
@@ -217,3 +217,12 @@
 .onb-body-special { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; border: 0; }
 .onb-body-special legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .onb-body-preview { padding: 14px 16px; border-radius: var(--radius); background: var(--accent-soft); color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.4; }
+
+/* Fotos de esfuerzo en la evaluación: entran con un fundido al cambiar de paso; en el teléfono, una franja
+   detrás del número del paso que se funde con el fondo. */
+.onb-media-photo { animation: fade-in var(--motion-slow) var(--ease-standard) backwards; }
+.onb-band { position: relative; height: clamp(150px, 24vh, 220px); margin: -26px calc(-1 * var(--gutter)) -92px; overflow: hidden; border-radius: 0; -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 100%); mask-image: linear-gradient(180deg, #000 30%, transparent 100%); animation: fade-in var(--motion-slow) var(--ease-standard) backwards; pointer-events: none; }
+.onb-band .photo-img { object-position: center 18%; opacity: .62; }
+.onb-band + .onb-step-index { position: relative; z-index: 1; }
+.onb-band + .onb-step-index .num-display, .onb-band + .onb-step-index .meta { text-shadow: 0 2px 18px rgb(0 0 0 / 55%); }
+@media (min-width: 1024px) { .onb-band { display: none; } }

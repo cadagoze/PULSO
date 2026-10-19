@@ -36,6 +36,7 @@ import { useNutritionProfile, usePreference, useSettings, useWeights } from "@/l
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { formatShortDate, localDateKey, toDisplayWeight } from "@/lib/utils";
 import type { Sex as FormulaSex, TrainingEquipment, TrainingLocation } from "@/types";
+import { onboardingPhoto, resultPhoto } from "@/data/onboarding-photos";
 import { AssessmentResult } from "./assessment-result";
 import { AssessmentSplash } from "./assessment-splash";
 import { BodyStep, ChoiceStepView, LocationStep, NameStep, SexStep, type BodyInputs } from "./assessment-steps";
@@ -233,8 +234,6 @@ const sexOptions: Array<{ value: Sex; label: string; detail: string; icon: React
   { value: "unspecified", label: "Prefiero no decir", detail: "Fotos de mujeres y hombres", icon: <CircleDashed size={iconSize} /> },
 ];
 
-/** Foto del panel editorial de escritorio (las preguntas en móvil van sin foto, limpias). */
-const sidePhoto = "/images/editorial/brisk-march-start.webp";
 const disclaimer = "Orientación general de bienestar. No reemplaza una evaluación médica o nutricional.";
 const focusable = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
@@ -270,6 +269,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
   const showingResult = stepIndex === flow.length;
   const step = flow[Math.min(stepIndex, flow.length - 1)];
   const profile = useMemo(() => buildProfile(answers, extras), [answers, extras]);
+  const photo = onboardingPhoto(stepIndex, extras.sex);
   // «Tu cuerpo»: vacío se omite; completo, calcula la energía del día con las mismas reglas que Comidas.
   const body = parseBody(extras.body, settings.unit);
   const bodyEmpty = !extras.body.age && !extras.body.height && !extras.body.weight;
@@ -381,7 +381,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
   const questions = (
     <>
       <aside className="onb-media photo grain on-dark" aria-hidden="true">
-        <Image src={sidePhoto} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="photo-img" />
+        <Image key={photo} src={photo} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="photo-img onb-media-photo" />
         <div className="onb-media-top photo-content">
           <span className="meta">PULSO · Evaluación inicial</span>
           <span className="meta">Entrenamiento que se adapta a tu vida.</span>
@@ -416,6 +416,9 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
 
         <div className="onb-stage">
           <section key={stepIndex} className="onb-step" aria-labelledby="onb-step-title">
+            <div className="onb-band photo" aria-hidden="true">
+              <Image src={photo} alt="" fill sizes="100vw" className="photo-img" />
+            </div>
             <div className="onb-step-index">
               <p className="onb-num" aria-hidden="true">
                 <span className="num-display">{pad(stepIndex + 1)}</span>
@@ -496,6 +499,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
         <AssessmentResult
           profile={profile}
           energy={energy}
+          backdrop={resultPhoto(profile.location, extras.sex)}
           retake={Boolean(onCancel)}
           disclaimer={disclaimer}
           onActivate={finish}

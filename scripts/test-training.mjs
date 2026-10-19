@@ -581,6 +581,11 @@ test('personalización: fotos y color según cómo te identificas, con elección
   for (const kind of ['home', 'gym', 'cardio', 'mobility']) {
     assert.match(hero.heroPhoto(kind, 0, 'female').alt, /Mujer/);
   }
+  const onboarding = load('src/data/onboarding-photos.ts');
+  for (const photo of onboarding.allOnboardingPhotos) assert.ok(fs.existsSync(path.join(root, 'public', photo)), `falta ${photo}`);
+  assert.notEqual(onboarding.onboardingPhoto(0, null), onboarding.onboardingPhoto(1, null), 'sin identidad, se alternan');
+  assert.equal(onboarding.onboardingPhoto(2, 'female'), '/images/editorial/hero-f-gym-deadlift.webp');
+  assert.equal(onboarding.resultPhoto('gym', 'male'), '/images/editorial/hero-m-gym-squat.webp');
 });
 
 test('colores de acento: contraste AA en claro y oscuro', () => {

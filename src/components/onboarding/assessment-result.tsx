@@ -10,15 +10,15 @@ import { cn } from "@/lib/utils";
 import type { AssessmentProfile } from "./wellness-assessment";
 
 const rise = (index: number) => ({ "--i": index }) as CSSProperties;
-/** La misma foto de la portada, desenfocada y con grano: atmósfera cálida, sin paneles verdes. */
-const backdrop = "/images/editorial/home-squat.webp";
 
 /**
- * Tu plan inicial como estado especial: foto desenfocada con grano, sesiones y minutos en grande,
+ * Tu plan inicial como estado especial: foto de esfuerzo apenas desenfocada, con grano, sesiones y minutos en grande,
  * el foco y el primer hábito. Al activarlo se desvanece y da paso al Inicio.
  */
-export function AssessmentResult({ profile, energy, retake, disclaimer, onActivate, onBack, onRestart, onCancel }: {
+export function AssessmentResult({ profile, energy, backdrop, retake, disclaimer, onActivate, onBack, onRestart, onCancel }: {
   profile: AssessmentProfile;
+  /** Foto de fondo: el lugar donde vas a entrenar (data/onboarding-photos). */
+  backdrop: string;
   /** Energía del día calculada en «Tu cuerpo» (null si se omitió). */
   energy: string | null;
   /** Se repite desde Perfil: el botón guarda en vez de «empezar». */
