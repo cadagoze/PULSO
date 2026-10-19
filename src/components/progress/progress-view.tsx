@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AchievementsTab } from "@/components/progress/achievements-tab";
 import { BodyTab } from "@/components/progress/body-tab";
 import { HistoryTab } from "@/components/progress/history-tab";
-import { isPeriod, type Period } from "@/components/progress/period";
-import type { ChartMetric } from "@/components/progress/period-chart";
+import { MusclesView } from "@/components/progress/muscles-section";
 import { isSubview, progressViews, useBackToSummary, type ProgressSubview } from "@/components/progress/progress-nav";
 import { RecordsTab } from "@/components/progress/records-tab";
 import { SummaryTab } from "@/components/progress/summary-tab";
@@ -16,6 +15,7 @@ const subtitles: Record<ProgressSubview, string> = {
   historial: "Cada sesión con sus series, cargas y récords.",
   records: "Tus mejores marcas, ejercicio por ejercicio.",
   cuerpo: "Peso y medidas: cambios que se ven con el tiempo.",
+  musculos: "Series por grupo muscular esta semana, frente a lo recomendado.",
   logros: "Hitos de constancia, fuerza y volumen.",
 };
 
@@ -23,30 +23,20 @@ const subtitles: Record<ProgressSubview, string> = {
 const movedToTools = new Set(["retos", "test"]);
 
 /**
- * Progreso: por defecto, el resumen del periodo (Semana | Mes | Año, en `?periodo=`).
- * Las vistas completas se abren con `?tab=historial|records|cuerpo|logros`, como antes.
+ * Progreso: por defecto, el resumen (la semana y la tendencia de 12 semanas). Las vistas completas se
+ * abren con `?tab=historial|records|cuerpo|musculos|logros`, como antes (`?periodo=` ya no aplica).
  */
 export function ProgressView() {
   const params = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
   const tab = params.get("tab");
-  const initial = params.get("periodo");
-  // El periodo responde al instante; la URL se actualiza después para conservarlo al volver.
-  const [period, setPeriod] = useState<Period>(isPeriod(initial) ? initial : "semana");
-  const [metric, setMetric] = useState<ChartMetric | null>(null);
 
   useEffect(() => {
     if (tab && movedToTools.has(tab)) router.replace(`/herramientas?tab=${tab}`);
   }, [router, tab]);
 
-  function changePeriod(next: Period) {
-    setPeriod(next);
-    router.replace(next === "semana" ? pathname : `${pathname}?periodo=${next}`, { scroll: false });
-  }
-
   if (isSubview(tab)) return <Subview key={tab} view={tab} />;
-  return <SummaryTab period={period} onPeriod={changePeriod} metric={metric} onMetric={setMetric} />;
+  return <SummaryTab />;
 }
 
 function Subview({ view }: { view: ProgressSubview }) {
@@ -68,6 +58,7 @@ function Subview({ view }: { view: ProgressSubview }) {
         {view === "historial" && <HistoryTab />}
         {view === "records" && <RecordsTab />}
         {view === "cuerpo" && <BodyTab />}
+        {view === "musculos" && <MusclesView />}
         {view === "logros" && <AchievementsTab />}
       </div>
     </div>

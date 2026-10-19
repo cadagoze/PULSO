@@ -40,8 +40,7 @@ function bucketContext(bucket: Bucket, metric: ChartMetric, grain: PeriodSummary
 
 const emptyCopy: Record<PeriodSummary["period"], string> = {
   semana: "Aún no entrenas esta semana.",
-  mes: "Nada registrado en los últimos 30 días.",
-  ano: "Nada registrado en los últimos 12 meses.",
+  doce: "Nada registrado en las últimas 12 semanas.",
 };
 
 const emptyMetric: Record<ChartMetric, string> = {
@@ -51,11 +50,11 @@ const emptyMetric: Record<ChartMetric, string> = {
 };
 
 /**
- * Un gráfico simple por periodo: barras por día o por mes sobre fondo carbón.
- * Las barras crecen desde la base la primera vez que el gráfico de cada periodo entra en pantalla; al cambiar de métrica se transforman.
- * Tocar, pasar el puntero o usar las flechas muestra el detalle de una barra.
+ * Una tendencia simple: barras por día o por semana sobre fondo carbón. Crecen desde la base la primera
+ * vez que entran en pantalla; tocar, pasar el puntero o usar las flechas muestra el detalle de una barra.
+ * Con `onMetric` se puede cambiar de métrica; sin él, muestra sólo la indicada.
  */
-export function PeriodChart({ summary, metric, onMetric, unit }: { summary: PeriodSummary; metric: ChartMetric; onMetric: (metric: ChartMetric) => void; unit: Unit }) {
+export function PeriodChart({ summary, metric, onMetric, unit, title: heading }: { summary: PeriodSummary; metric: ChartMetric; onMetric?: (metric: ChartMetric) => void; unit: Unit; title?: string }) {
   const plotRef = useRef<HTMLDivElement>(null);
   useRevealOnView(`chart-${summary.period}`, plotRef);
   const readoutId = useId();
@@ -67,12 +66,15 @@ export function PeriodChart({ summary, metric, onMetric, unit }: { summary: Peri
   const max = Math.max(0, ...buckets.map((item) => item[metric]));
   const lastPast = buckets.reduce((last, item, index) => (item.future ? last : index), 0);
   const metricLabel = metricOptions.find((option) => option.value === metric)?.label ?? "";
-  const title = `${metricLabel} por ${grain}`;
+  const title = heading ?? `${metricLabel} por ${grain}`;
+  const weeks = summary.buckets.filter((item) => item.sessions > 0).length;
 
   const readout = bucket
     ? { label: bucket.long, ...parts(metric, bucket[metric], unit), context: bucketContext(bucket, metric, grain, unit) }
     : totals.sessions
-      ? { label: "Media por sesión", ...parts(metric, totals[metric] / totals.sessions, unit), context: `${text(metric, totals[metric], unit)} en ${sessionsLabel(totals.sessions)}` }
+      ? grain === "semana"
+        ? { label: "Promedio por semana activa", ...parts(metric, totals[metric] / Math.max(1, weeks), unit), context: `${sessionsLabel(totals.sessions)} en ${weeks} ${weeks === 1 ? "semana" : "semanas"}` }
+        : { label: "Media por sesión", ...parts(metric, totals[metric] / totals.sessions, unit), context: `${text(metric, totals[metric], unit)} en ${sessionsLabel(totals.sessions)}` }
       : { label: "Sin entrenamientos", ...parts(metric, 0, unit), context: emptyCopy[summary.period] };
 
   function indexAt(event: MouseEvent<HTMLDivElement> | PointerEvent<HTMLDivElement>) {
@@ -108,13 +110,17 @@ export function PeriodChart({ summary, metric, onMetric, unit }: { summary: Peri
   return (
     <section className="card card-l card-carbon on-dark prog-chart-card" aria-labelledby={`${readoutId}-title`}>
       <h2 id={`${readoutId}-title`} className="sr-only">{title}</h2>
-      <div className="chips prog-chart-metrics" role="group" aria-label="Métrica del gráfico">
-        {metricOptions.map((option) => (
-          <button key={option.value} type="button" className="chip" aria-pressed={metric === option.value} onClick={() => onMetric(option.value)}>
-            {option.label}
-          </button>
-        ))}
-      </div>
+      {onMetric ? (
+        <div className="chips prog-chart-metrics" role="group" aria-label="Métrica del gráfico">
+          {metricOptions.map((option) => (
+            <button key={option.value} type="button" className="chip" aria-pressed={metric === option.value} onClick={() => onMetric(option.value)}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="meta prog-chart-title">{title}</p>
+      )}
 
       <div className="prog-readout" id={readoutId} aria-live="polite">
         <p className="meta">{readout.label}</p>
@@ -162,7 +168,7 @@ export function PeriodChart({ summary, metric, onMetric, unit }: { summary: Peri
       <table className="sr-only">
         <caption>{title}</caption>
         <thead>
-          <tr><th scope="col">{grain === "día" ? "Día" : "Mes"}</th><th scope="col">{metricLabel}</th><th scope="col">Sesiones</th></tr>
+          <tr><th scope="col">{grain === "día" ? "Día" : "Semana"}</th><th scope="col">{metricLabel}</th><th scope="col">Sesiones</th></tr>
         </thead>
         <tbody>
           {buckets.filter((item) => !item.future).map((item) => (

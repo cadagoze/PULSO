@@ -1,75 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Share2 } from "lucide-react";
 import type { CSSProperties } from "react";
-import { ButtonLink, PageHeader, SegmentedControl } from "@/components/ui";
+import { ButtonLink, PageHeader } from "@/components/ui";
 import { RoutineCard } from "@/components/ui/cards";
-import { BestMarks } from "@/components/progress/best-marks";
-import { ConsistencySection } from "@/components/progress/consistency-section";
 import { KeyMetrics } from "@/components/progress/key-metrics";
 import { MoreList } from "@/components/progress/more-list";
-import { MusclesSection } from "@/components/progress/muscles-section";
-import { periods, summarizePeriod, type Period, type PeriodSummary } from "@/components/progress/period";
-import { defaultMetric, PeriodChart, type ChartMetric } from "@/components/progress/period-chart";
+import { summarizePeriod, type PeriodSummary } from "@/components/progress/period";
+import { defaultMetric, PeriodChart } from "@/components/progress/period-chart";
 import { clearFromSummary } from "@/components/progress/progress-nav";
 import { WeekShareSheet } from "@/components/progress/week-share-sheet";
-import { WeightSummary } from "@/components/progress/weight-summary";
-import { WeekInsights } from "@/components/progress/week-insights";
-import { weekStreak } from "@/lib/analytics";
+import { bestWeekStreak, weekStreak } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 
-/** Una frase bajo el título: la meta de la semana o la constancia media del periodo. */
-function headline(summary: PeriodSummary, goal: number, state: { met: boolean; paused: boolean }) {
-  if (summary.period === "semana") {
-    if (state.paused) return "Semana en pausa: tu racha está protegida.";
-    if (state.met) return "Meta semanal cumplida. Todo lo extra suma.";
-    const remaining = goal - summary.totals.sessions;
-    return remaining === 1 ? "Te falta 1 sesión para tu meta semanal." : `Te faltan ${remaining} sesiones para tu meta semanal.`;
-  }
-  const scope = summary.period === "mes" ? "en los últimos 30 días" : "en los últimos 12 meses";
-  if (!summary.totals.sessions) return `Sin entrenamientos ${scope}.`;
-  const average = summary.totals.sessions / summary.activeWeeks;
-  const label = average.toLocaleString("es-CL", { maximumFractionDigits: 1 });
-  const noun = label === "1" ? "sesión" : "sesiones";
-  if (Math.abs(average - goal) < 0.05) return `Promedias ${label} ${noun} por semana: justo tu meta.`;
-  if (average > goal) return `Promedias ${label} ${noun} por semana, por encima de tu meta.`;
-  return `Promedias ${label} ${noun} por semana. Tu meta es ${goal}.`;
+/** Una frase bajo el título: lo que falta para la meta de la semana, sin presión. */
+function headline(week: PeriodSummary, goal: number, state: { met: boolean; paused: boolean }) {
+  if (state.paused) return "Semana en pausa: tu racha está protegida.";
+  if (state.met) return "Meta semanal cumplida. Lo que sumes, suma.";
+  const remaining = goal - week.totals.sessions;
+  return remaining === 1 ? "Te falta 1 sesión para tu meta semanal." : `Te faltan ${remaining} sesiones para tu meta semanal.`;
 }
 
 const rise = (index: number) => ({ "--i": index }) as CSSProperties;
 
-/** Resumen del periodo: lo más importante primero (entrenamientos, volumen, tiempo), un gráfico y el resto en bloques ligeros. */
-export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Period; onPeriod: (period: Period) => void; metric: ChartMetric | null; onMetric: (metric: ChartMetric) => void }) {
+/**
+ * Progreso, primero lo que sirve para decidir: entrenamientos, volumen, tiempo y constancia de la semana,
+ * y la tendencia de las últimas 12 semanas. El resto (historial, récords, cuerpo, músculos y logros) en
+ * «Ver detalles»; el test físico y los retos, en Herramientas.
+ */
+export function SummaryTab() {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
   const now = useNow();
   const [sharing, setSharing] = useState(false);
+  // La hoja de compartir se monta la primera vez que se abre (y queda para su animación de cierre).
+  const [shareMounted, setShareMounted] = useState(false);
+  const day = now ? Math.floor(now / 3_600_000) : 0;
 
   // Al volver al resumen, la próxima vista secundaria vuelve a contar como abierta desde aquí.
   useEffect(() => {
     clearFromSummary();
   }, []);
 
-  if (!now) return <ProgressSkeleton />;
-
   const goal = Math.max(1, settings.weeklyGoal);
+  // Se recalcula por hora (o al registrar algo), no cada minuto.
+  const data = useMemo(() => {
+    if (!day) return null;
+    const at = day * 3_600_000;
+    const date = new Date(at);
+    return {
+      week: summarizePeriod(workouts, "semana", at),
+      trend: summarizePeriod(workouts, "doce", at),
+      streak: weekStreak(workouts, goal, settings.pausedWeeks, date),
+      best: bestWeekStreak(workouts, goal, settings.pausedWeeks, date),
+    };
+  }, [day, goal, settings.pausedWeeks, workouts]);
+
+  if (!now || !data) return <ProgressSkeleton />;
+
+  const { week, trend, streak, best } = data;
   const empty = workouts.length === 0;
-  const summary = summarizePeriod(workouts, empty ? "semana" : period, now);
-  const date = new Date(now);
-  const streak = weekStreak(workouts, goal, settings.pausedWeeks, date);
 
   return (
     <div className="page prog-page">
       <div className="prog-top">
         <PageHeader
-          meta={summary.meta}
+          meta={week.meta}
           title="Progreso"
-          subtitle={empty ? "Aquí verás tu semana, tu constancia y tus mejores marcas." : headline(summary, goal, { met: streak.currentMet, paused: streak.currentPaused })}
-          actions={!empty && <button type="button" className="icon-button" onClick={() => setSharing(true)} aria-label="Compartir mi semana"><Share2 size={19} /></button>}
+          subtitle={empty ? "Aquí verás tus entrenamientos, tu constancia y tus mejores marcas." : headline(week, goal, { met: streak.currentMet, paused: streak.currentPaused })}
+          actions={!empty && <button type="button" className="icon-button" onClick={() => { setShareMounted(true); setSharing(true); }} aria-label="Compartir mi semana"><Share2 size={19} /></button>}
         />
-        {!empty && <SegmentedControl options={periods} value={period} onChange={onPeriod} label="Periodo del resumen" className="prog-periods" />}
       </div>
 
       {empty ? (
@@ -82,28 +84,22 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
               eyebrow="Tu primera semana"
               title="Tu progreso empieza con la primera sesión"
               meta={[`0 de ${goal} sesiones esta semana`]}
-              action={<ButtonLink href="/entrenar" size="l">Preparar entrenamiento</ButtonLink>}
+              action={<ButtonLink href="/entrenar" size="l">Ir a entrenar</ButtonLink>}
               className="prog-empty-cover"
             />
           </div>
-          <div className="prog-area-weight rise" style={rise(1)}><WeightSummary period="semana" nowMs={now} /></div>
-          <div className="prog-area-more rise" style={rise(2)}><MoreList workouts={workouts} nowMs={now} /></div>
+          <div className="prog-area-more rise" style={rise(1)}><MoreList workouts={workouts} nowMs={now} /></div>
         </div>
       ) : (
         <div className="prog-summary">
-          <div className="prog-area-metrics rise" style={rise(0)}><KeyMetrics summary={summary} goal={goal} unit={settings.unit} /></div>
+          <div className="prog-area-metrics rise" style={rise(0)}><KeyMetrics summary={week} goal={goal} unit={settings.unit} streak={streak.streak} best={Math.max(best, streak.streak)} /></div>
           <div className="prog-area-chart rise" style={rise(1)}>
-            <PeriodChart key={period} summary={summary} metric={metric ?? defaultMetric(summary)} onMetric={onMetric} unit={settings.unit} />
+            <PeriodChart summary={trend} metric={defaultMetric(trend)} unit={settings.unit} title={defaultMetric(trend) === "volume" ? "Volumen por semana · 12 semanas" : "Tiempo por semana · 12 semanas"} />
           </div>
-          <div className="prog-area-insights rise" style={rise(2)}><WeekInsights nowMs={now} /></div>
-          <div className="prog-area-consistency rise" style={rise(3)}><ConsistencySection workouts={workouts} now={date} goal={goal} pausedWeeks={settings.pausedWeeks} /></div>
-          <div className="prog-area-marks rise" style={rise(4)}><BestMarks summary={summary} workouts={workouts} unit={settings.unit} /></div>
-          <div className="prog-area-weight rise" style={rise(5)}><WeightSummary period={period} nowMs={now} /></div>
-          <div className="prog-area-muscles rise" style={rise(6)}><MusclesSection workouts={workouts} summary={summary} nowMs={now} /></div>
-          <div className="prog-area-more rise" style={rise(7)}><MoreList workouts={workouts} nowMs={now} /></div>
+          <div className="prog-area-more rise" style={rise(2)}><MoreList workouts={workouts} nowMs={now} /></div>
         </div>
       )}
-      {!empty && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}
+      {!empty && shareMounted && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}
     </div>
   );
 }

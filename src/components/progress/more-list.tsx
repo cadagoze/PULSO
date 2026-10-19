@@ -2,7 +2,7 @@
 
 import Link from "@/components/ui/app-link";
 import type { ReactNode } from "react";
-import { Award, ChevronRight, History, Ruler, Trophy, Wrench } from "lucide-react";
+import { Activity, Award, ChevronRight, History, Ruler, Trophy, Wrench } from "lucide-react";
 import { weightLabel } from "@/components/progress/format";
 import { markFromSummary, subviewHref, type ProgressSubview } from "@/components/progress/progress-nav";
 import { achievements } from "@/lib/analytics";
@@ -34,7 +34,7 @@ function ViewRow({ view, icon, title, detail }: { view: ProgressSubview; icon: R
   );
 }
 
-/** «Ver detalles»: historial, récords, cuerpo y logros; aparte, las herramientas para medirte (test y retos). */
+/** «Ver detalles»: historial, récords, cuerpo, músculos y logros; aparte, las herramientas para medirte (test y retos). */
 export function MoreList({ workouts, nowMs }: { workouts: WorkoutEntry[]; nowMs: number }) {
   const [settings] = useSettings();
   const [weights] = useWeights();
@@ -57,6 +57,7 @@ export function MoreList({ workouts, nowMs }: { workouts: WorkoutEntry[]; nowMs:
         />
         <ViewRow view="records" icon={<Trophy size={18} />} title="Récords" detail={exercises ? `${exercises} ${exercises === 1 ? "ejercicio" : "ejercicios"} · ${prs} ${prs === 1 ? "récord" : "récords"}` : "Tus mejores marcas por ejercicio"} />
         <ViewRow view="cuerpo" icon={<Ruler size={18} />} title="Cuerpo" detail={lastWeight ? `${weightLabel(lastWeight.weight, settings.unit)} · peso y medidas` : "Peso y medidas"} />
+        <ViewRow view="musculos" icon={<Activity size={18} />} title="Músculos" detail="Series por grupo muscular esta semana" />
         <ViewRow view="logros" icon={<Award size={18} />} title="Logros" detail={`${unlocked} de ${list.length} desbloqueados`} />
       </ul>
       <Link href="/herramientas" className="list-row prog-tools-row">

@@ -2,9 +2,8 @@
 
 import Link from "@/components/ui/app-link";
 import { useState } from "react";
-import { ChevronRight, Download, History, Trophy } from "lucide-react";
-import { Button, EmptyState, StatusBadge } from "@/components/ui";
-import { exportCsv, exportJson } from "@/components/progress/export";
+import { ChevronRight, History, Trophy } from "lucide-react";
+import { EmptyState, StatusBadge } from "@/components/ui";
 import { dayLabel, exerciseName, monthLabel, volumeLabel, type Unit } from "@/components/progress/format";
 import { dateFromKey, workoutVolume } from "@/components/progress/period";
 import { WorkoutDetailSheet } from "@/components/progress/workout-detail-sheet";
@@ -21,7 +20,7 @@ function groupByMonth(workouts: WorkoutEntry[]) {
   return [...groups.entries()];
 }
 
-/** Historial completo por mes: filtro por ejercicio, exportación y detalle de cada sesión (repetir, guardar o eliminar). */
+/** Historial completo por mes: filtro por ejercicio y detalle de cada sesión (repetir, guardar o eliminar). */
 export function HistoryTab() {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
@@ -57,16 +56,6 @@ export function HistoryTab() {
             ))}
           </select>
         </label>
-        <div className="prog-export" role="group" aria-label="Exportar historial">
-          <Button variant="secondary" size="s" onClick={() => exportCsv(workouts)}>
-            <Download size={15} aria-hidden="true" />
-            CSV
-          </Button>
-          <Button variant="secondary" size="s" onClick={() => exportJson()}>
-            <Download size={15} aria-hidden="true" />
-            JSON
-          </Button>
-        </div>
       </div>
 
       <p className="meta prog-history-count">
@@ -92,7 +81,7 @@ export function HistoryTab() {
         ))}
       </div>
 
-      <p className="subtle prog-history-help">Tu historial se guarda en este navegador. Expórtalo de vez en cuando como respaldo.</p>
+      <p className="subtle prog-history-help">Tu historial se guarda en este teléfono y, si tienes cuenta, en la nube. El respaldo y la exportación están en Ajustes.</p>
 
       <WorkoutDetailSheet workout={open} onClose={() => setOpenId(null)} />
     </div>

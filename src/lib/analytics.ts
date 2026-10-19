@@ -223,7 +223,7 @@ export function achievements(workouts: WorkoutEntry[], weeklyGoal: number, pause
   ];
 }
 
-export function bestWeekStreak(workouts: WorkoutEntry[], goal: number, pausedWeeks: string[] = []) {
+export function bestWeekStreak(workouts: WorkoutEntry[], goal: number, pausedWeeks: string[] = [], now = new Date()) {
   if (!workouts.length) return 0;
   const paused = new Set(pausedWeeks);
   const counts = new Map<string, number>();
@@ -233,7 +233,7 @@ export function bestWeekStreak(workouts: WorkoutEntry[], goal: number, pausedWee
   }
   const first = sortedWorkouts(workouts).at(-1)!;
   const cursor = startOfCurrentWeek(new Date(`${first.date}T12:00:00`));
-  const end = startOfCurrentWeek(new Date());
+  const end = startOfCurrentWeek(now);
   let best = 0;
   let run = 0;
   while (cursor <= end) {

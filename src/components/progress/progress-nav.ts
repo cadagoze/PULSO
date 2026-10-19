@@ -7,6 +7,7 @@ export const progressViews = [
   { value: "historial", label: "Historial" },
   { value: "records", label: "Récords" },
   { value: "cuerpo", label: "Cuerpo" },
+  { value: "musculos", label: "Músculos" },
   { value: "logros", label: "Logros" },
 ] as const;
 
