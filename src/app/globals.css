@@ -44,9 +44,9 @@
   --violet: #7657ff;
   --violet-soft: #ece8ff;
   /* Estados (no decorativos). En claro, error y advertencia más oscuros que la paleta para leerse como texto. */
-  --danger: #c43d32;
+  --danger: #b8382e;
   --danger-soft: #fbe9e6;
-  --warning: #a86a00;
+  --warning: #8f5c00;
   --warning-soft: #f8eed6;
   --success: #1f7a45;
   --map-base: #e3dfd4;
@@ -109,7 +109,7 @@
     --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
     --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
     --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
+    --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #f06060; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
     --map-base: #2b2b2b; --map-line: #151515;
     --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
     --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);
@@ -123,7 +123,7 @@
   --carbon: #151515; --carbon-2: #1f1f1f; --forest: #1f1a17; --forest-2: #151110; --on-forest-2: #b3aaa2;
   --accent: #ff351f; --accent-bright: #ff7a2f; --accent-soft: rgb(var(--accent-rgb) / 12%); --accent-text: #ff351f; --accent-rgb: 255 53 31;
   --gold: #f5b73d; --gold-soft: rgb(245 183 61 / 14%); --gold-text: #f7c565;
-  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #e54848; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
+  --violet: #9b87ff; --violet-soft: rgb(155 135 255 / 14%); --danger: #f06060; --danger-soft: rgb(229 72 72 / 13%); --warning: #f5a623; --warning-soft: rgb(245 166 35 / 13%); --success: #39b86b;
   --map-base: #2b2b2b; --map-line: #151515;
   --shadow-s: 0 1px 2px rgb(0 0 0 / 40%); --shadow: 0 0 0 1px rgb(255 255 255 / 6%), 0 14px 32px -16px rgb(0 0 0 / 70%); --shadow-float: 0 22px 48px -16px rgb(0 0 0 / 80%); --ring: 0 0 0 1px rgb(255 255 255 / 7%);
   --seg-track: rgb(255 255 255 / 7%); --seg-thumb: rgb(255 255 255 / 15%);
@@ -227,19 +227,19 @@ img, svg { display: block; }
 .btn-ghost { background: transparent; color: var(--ink-2); padding: 0 14px; }
 @media (hover: hover) { .btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); } }
 .btn-danger { background: var(--danger-soft); color: var(--danger); }
-.btn-small { min-height: 40px; padding: 0 16px; font-size: 13.5px; }
+.btn-small { min-height: 44px; padding: 0 16px; font-size: 13.5px; }
 .btn-large { min-height: 58px; padding: 0 28px; font-size: 16px; }
 .btn-block { width: 100%; }
 .icon-button, .btn-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--surface); box-shadow: var(--ring); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
 .icon-button:active, .btn-icon:active { transform: scale(.94); }
 @media (hover: hover) { .icon-button:hover, .btn-icon:hover { background: var(--surface-2); } }
-.btn-icon.small { width: 36px; height: 36px; }
+.btn-icon.small { width: 44px; height: 44px; }
 .btn-icon.glass, .icon-button.glass { background: rgb(255 255 255 / 14%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%); color: #fff; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 .link-button { color: var(--ink); font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 4px; }
 
 /* ─── Controles ────────────────────────────────────────────────────────── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); font-size: 14px; font-weight: 500; white-space: nowrap; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-base), color var(--motion-base), box-shadow var(--motion-base); }
+.chip { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); font-size: 14px; font-weight: 500; white-space: nowrap; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-base), color var(--motion-base), box-shadow var(--motion-base); }
 .chip:active { transform: scale(.96); }
 .chip[aria-pressed="true"], .chip.active { background: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--bg); }
 .chip .chip-check { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring); }
@@ -249,9 +249,9 @@ img, svg { display: block; }
 .segmented-indicator { position: absolute; z-index: -1; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--count, 2)); border-radius: var(--radius-pill); background: var(--seg-thumb, var(--surface)); box-shadow: 0 1px 2px rgb(22 24 22 / 8%), 0 6px 16px -6px rgb(22 24 22 / 18%); transform: translateX(calc(var(--index, 0) * 100%)); transition: transform var(--motion-base) var(--ease-standard); }
 .segmented.is-empty .segmented-indicator { opacity: 0; transition: opacity var(--motion-base); }
 .segmented button { min-height: 40px; padding: 0 12px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--motion-base); }
-.segmented button[aria-selected="true"], .segmented button.active { color: var(--ink); }
+.segmented button[aria-checked="true"] { color: var(--ink); }
 .segmented-l button { min-height: 48px; font-size: 15px; }
-.segmented-s button { min-height: 34px; font-size: 13px; }
+.segmented-s button { min-height: 40px; font-size: 13px; }
 
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: var(--radius-pill); font-size: 11.5px; font-weight: 600; letter-spacing: .01em; background: var(--accent-soft); color: var(--accent-text); white-space: nowrap; }
 .badge-gold { background: var(--gold-soft); color: var(--gold-text); }
@@ -437,3 +437,7 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .state-mark { height: 56px; margin-bottom: 10px; animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
 .state-text { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin-bottom: 10px; }
 .state-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ─── Zonas táctiles: al menos ~44 px sin cambiar cómo se ven los enlaces y botones chicos ── */
+.link-button, .ses-cues-more { position: relative; }
+.link-button::after, .ses-cues-more::after { content: ""; position: absolute; inset: -8px -4px; }

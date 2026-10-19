@@ -34,6 +34,8 @@
 .picker-sheet { gap: 12px; }
 .picker-search { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--ink-3); }
 .picker-search input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font-size: 16px; color: var(--ink); }
+/* El campo no muestra su propio foco: lo muestra el buscador completo. */
+.picker-search:focus-within { box-shadow: inset 0 0 0 2px var(--ink); }
 /* Sin la «x» propia del navegador: el buscador ya tiene su botón para borrar. */
 .picker-search input::-webkit-search-cancel-button, .picker-search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
 .picker-toggle { min-height: 40px; font-size: 14px; color: var(--ink-2); }

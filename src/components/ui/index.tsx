@@ -242,30 +242,30 @@ export function Sheet({ open, onClose, title, eyebrow, children, labelledBy, cla
 export function SegmentedControl<T extends string>({ options, value, onChange, label, size = "m", className }: { options: Array<{ value: T; label: string }>; value: T | null; onChange: (value: T) => void; label: string; size?: "s" | "m" | "l"; className?: string }) {
   const selected = options.findIndex((option) => option.value === value);
   const index = Math.max(0, selected);
+  // Grupo de opciones (radio): las flechas cambian la opción y el foco se queda en la elegida.
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+    if (!forward && event.key !== "ArrowLeft" && event.key !== "ArrowUp") return;
     event.preventDefault();
-    const next = selected < 0 ? 0 : (index + (event.key === "ArrowRight" ? 1 : -1) + options.length) % options.length;
+    const next = selected < 0 ? 0 : (index + (forward ? 1 : -1) + options.length) % options.length;
     onChange(options[next].value);
     event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
   };
   return (
     <div
       className={cn("segmented", size === "l" && "segmented-l", size === "s" && "segmented-s", selected < 0 && "is-empty", className)}
-      role="tablist"
+      role="radiogroup"
       aria-label={label}
       style={{ "--count": options.length, "--index": index } as CSSProperties}
       onKeyDown={onKeyDown}
     >
       <span className="segmented-indicator" aria-hidden="true" />
       {options.map((option, position) => (
-        <button key={option.value} type="button" role="tab" aria-selected={value === option.value} tabIndex={position === index ? 0 : -1} onClick={() => onChange(option.value)}>{option.label}</button>
+        <button key={option.value} type="button" role="radio" aria-checked={value === option.value} tabIndex={position === index ? 0 : -1} onClick={() => onChange(option.value)}>{option.label}</button>
       ))}
     </div>
   );
 }
-
-/** Nombre anterior del control segmentado. */
 
 /** Chip seleccionable (equipamiento, filtros): al activarse muestra un check con un pequeño rebote. */
 export function ToggleChip({ pressed, onChange, icon, children, className }: { pressed: boolean; onChange: (pressed: boolean) => void; icon?: ReactNode; children: ReactNode; className?: string }) {

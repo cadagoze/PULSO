@@ -68,7 +68,7 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-back { align-self: flex-start; text-decoration: none; }
 .nut-search { position: sticky; top: 22px; z-index: 1; display: flex; align-items: center; gap: 8px; }
 .nut-search .picker-search { flex: 1; min-width: 0; }
-.nut-search .picker-search button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); }
+.nut-search .picker-search button { display: grid; place-items: center; width: 40px; height: 40px; margin-right: -10px; border-radius: 50%; color: var(--ink-2); }
 .nut-scan-button { display: grid; place-items: center; flex: none; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
 .nut-scan-button:active { transform: scale(.92); }
 @media (hover: hover) { .nut-scan-button:hover { background: var(--accent-bright); } }

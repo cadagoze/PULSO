@@ -70,9 +70,10 @@ export function ExerciseVisual({ exercise, size = "card", className, eager = fal
 export function MovingIllustration({ spec, primary, label, className }: { spec: IllustrationSpec; primary: MuscleGroup[]; label: string; className?: string }) {
   return (
     <div className={cn("exercise-visual exercise-visual-immersive exercise-visual-ill atmosphere grain on-dark ex-move", className)} role="img" aria-label={label}>
-      <div className="ex-move-frame is-start"><ExerciseIllustration spec={spec} primary={primary} panels="start" /></div>
-      <div className="ex-move-frame is-end"><ExerciseIllustration spec={spec} primary={primary} panels="end" /></div>
-      <div className="ex-move-still"><ExerciseIllustration spec={spec} primary={primary} labels /></div>
+      {/* Las tres capas son una sola imagen para el lector de pantalla (la descripción va en el contenedor). */}
+      <div className="ex-move-frame is-start" aria-hidden="true"><ExerciseIllustration spec={spec} primary={primary} panels="start" /></div>
+      <div className="ex-move-frame is-end" aria-hidden="true"><ExerciseIllustration spec={spec} primary={primary} panels="end" /></div>
+      <div className="ex-move-still" aria-hidden="true"><ExerciseIllustration spec={spec} primary={primary} labels /></div>
       <MoveSteps />
     </div>
   );

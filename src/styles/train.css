@@ -72,7 +72,7 @@
 .train-load.is-bumped::before { animation: train-flash 760ms var(--ease-standard); }
 @keyframes train-bump { from { transform: scale(.86); } }
 @keyframes train-flash { from { opacity: .95; } to { opacity: 0; } }
-.btn-icon.train-row-action { width: 40px; height: 40px; background: transparent; box-shadow: none; color: var(--ink-3); }
+.btn-icon.train-row-action { width: 44px; height: 44px; background: transparent; box-shadow: none; color: var(--ink-3); }
 @media (hover: hover) { .btn-icon.train-row-action:hover { background: var(--surface-2); color: var(--ink); } }
 .train-ex-empty { padding: 20px; border-radius: var(--radius); background: var(--surface-2); color: var(--ink-2); font-size: 14px; text-align: center; }
 .train-ex-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -356,7 +356,7 @@
 .equip-loads p { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
 .equip-loads p strong { font-weight: 600; color: var(--ink); }
 .equip-load-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.equip-load-chips .chip { min-height: 36px; padding: 0 12px; font-size: 13px; }
+.equip-load-chips .chip { min-height: 44px; padding: 0 12px; font-size: 13px; }
 .equip-load-chips .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
 
 /* ─── Días de entreno ──────────────────────────────────────────────────── */
