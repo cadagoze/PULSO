@@ -17,8 +17,10 @@ const backdrop = "/images/editorial/home-squat.webp";
  * Tu plan inicial como estado especial: foto desenfocada con grano, sesiones y minutos en grande,
  * el foco y el primer hábito. Al activarlo se desvanece y da paso al Inicio.
  */
-export function AssessmentResult({ profile, retake, disclaimer, onActivate, onBack, onRestart, onCancel }: {
+export function AssessmentResult({ profile, energy, retake, disclaimer, onActivate, onBack, onRestart, onCancel }: {
   profile: AssessmentProfile;
+  /** Energía del día calculada en «Tu cuerpo» (null si se omitió). */
+  energy: string | null;
   /** Se repite desde Perfil: el botón guarda en vez de «empezar». */
   retake: boolean;
   disclaimer: string;
@@ -88,6 +90,12 @@ export function AssessmentResult({ profile, retake, disclaimer, onActivate, onBa
                 <dt className="meta">Dónde</dt>
                 <dd>{place}</dd>
               </div>
+              {energy && (
+                <div>
+                  <dt className="meta">Tu energía</dt>
+                  <dd>{energy}</dd>
+                </div>
+              )}
             </dl>
 
             {recommendation.caution && (

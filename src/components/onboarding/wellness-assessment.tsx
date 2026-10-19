@@ -31,11 +31,14 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui";
-import { usePreference, useSettings } from "@/lib/store";
-import type { TrainingEquipment, TrainingLocation } from "@/types";
+import { formatKcal, nutritionFromAssessment, nutritionTargets, parseBody } from "@/lib/nutrition";
+import { useNutritionProfile, usePreference, useSettings, useWeights } from "@/lib/store";
+import { useLatestWeight } from "@/lib/use-nutrition";
+import { formatShortDate, localDateKey, toDisplayWeight } from "@/lib/utils";
+import type { Sex as FormulaSex, TrainingEquipment, TrainingLocation } from "@/types";
 import { AssessmentResult } from "./assessment-result";
 import { AssessmentSplash } from "./assessment-splash";
-import { ChoiceStepView, LocationStep, NameStep, SexStep } from "./assessment-steps";
+import { BodyStep, ChoiceStepView, LocationStep, NameStep, SexStep, type BodyInputs } from "./assessment-steps";
 
 type Goal = "strength" | "weight" | "energy" | "habits";
 type Activity = "sedentary" | "walking" | "some" | "regular";
@@ -91,7 +94,7 @@ export interface ChoiceStep {
 }
 
 interface SpecialStep {
-  kind: "name" | "sex" | "location";
+  kind: "name" | "sex" | "location" | "body";
   eyebrow: string;
   title: string;
   description: string;
@@ -112,7 +115,7 @@ const flow: FlowStep[] = [
     kind: "sex",
     eyebrow: "Para ti",
     title: "¿Cómo te identificas?",
-    description: "Elegimos las fotos y el color de la app para ti. Puedes cambiarlo cuando quieras en Ajustes.",
+    description: "Elegimos las fotos de la app para ti. Puedes cambiarlo cuando quieras en Ajustes.",
   },
   {
     kind: "multi",
@@ -189,6 +192,12 @@ const flow: FlowStep[] = [
       { value: "discomfort", label: "Molestias o cansancio", detail: "No sé cuánto exigirme", icon: <BatteryLow size={iconSize} /> },
     ],
   },
+  {
+    kind: "body",
+    eyebrow: "Tu energía",
+    title: "¿Calculamos tus calorías?",
+    description: "Con tu edad, estatura y peso estimamos cuánto comer para tu objetivo. Es opcional: puedes omitirlo y hacerlo después en Comidas.",
+  },
 ];
 
 const locationOptions: Array<{ value: TrainingLocation; label: string; detail: string; icon: ReactNode }> = [
@@ -212,14 +221,16 @@ interface Extras {
   sex: Sex | null;
   location: TrainingLocation | null;
   equipment: TrainingEquipment[];
+  body: BodyInputs;
 }
 
-const emptyExtras: Extras = { name: "", sex: null, location: null, equipment: [] };
+const emptyBody: BodyInputs = { age: "", height: "", weight: "", formulaSex: "female", special: "none" };
+const emptyExtras: Extras = { name: "", sex: null, location: null, equipment: [], body: emptyBody };
 
 const sexOptions: Array<{ value: Sex; label: string; detail: string; icon: ReactNode }> = [
-  { value: "female", label: "Mujer", detail: "Fotos de mujeres y color magenta", icon: <Venus size={iconSize} /> },
-  { value: "male", label: "Hombre", detail: "Fotos de hombres y color fuego", icon: <Mars size={iconSize} /> },
-  { value: "unspecified", label: "Prefiero no decir", detail: "Fotos de ambos y color fuego", icon: <CircleDashed size={iconSize} /> },
+  { value: "female", label: "Mujer", detail: "Portadas y programas con mujeres", icon: <Venus size={iconSize} /> },
+  { value: "male", label: "Hombre", detail: "Portadas y programas con hombres", icon: <Mars size={iconSize} /> },
+  { value: "unspecified", label: "Prefiero no decir", detail: "Fotos de mujeres y hombres", icon: <CircleDashed size={iconSize} /> },
 ];
 
 /** Foto del panel editorial de escritorio (las preguntas en móvil van sin foto, limpias). */
@@ -242,17 +253,42 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
   const [answers, setAnswers] = useState<AssessmentAnswers>(emptyAnswers);
   const [, setPreference] = usePreference();
   const [settings, updateSettings] = useSettings();
-  // Al repetir la evaluación, el nombre guardado aparece ya escrito.
-  const [extras, setExtras] = useState<Extras>(() => ({ ...emptyExtras, name: settings.name }));
+  const [nutrition, setNutrition] = useNutritionProfile();
+  const [, setWeights] = useWeights();
+  const latestWeight = useLatestWeight();
+  // Al repetir la evaluación, el nombre y los datos del cálculo de calorías aparecen ya escritos.
+  const initialExtras = (): Extras => ({
+    ...emptyExtras,
+    name: settings.name,
+    body: nutrition
+      ? { age: String(new Date().getFullYear() - nutrition.birthYear), height: String(nutrition.heightCm), weight: latestWeight ? String(toDisplayWeight(latestWeight, settings.unit)).replace(".", ",") : "", formulaSex: nutrition.sex, special: nutrition.special }
+      : emptyBody,
+  });
+  const [extras, setExtras] = useState<Extras>(initialExtras);
   const scrollRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const showingResult = stepIndex === flow.length;
   const step = flow[Math.min(stepIndex, flow.length - 1)];
   const profile = useMemo(() => buildProfile(answers, extras), [answers, extras]);
+  // «Tu cuerpo»: vacío se omite; completo, calcula la energía del día con las mismas reglas que Comidas.
+  const body = parseBody(extras.body, settings.unit);
+  const bodyEmpty = !extras.body.age && !extras.body.height && !extras.body.weight;
+  const formulaSex: FormulaSex = extras.sex === "male" || extras.sex === "female" ? extras.sex : extras.body.formulaSex;
+  // Embarazo o lactancia sólo aplica al cálculo para mujer.
+  const special = formulaSex === "male" && extras.body.special === "pregnancy" ? "none" : extras.body.special;
+  const plannedNutrition = body.valid ? nutritionFromAssessment(answers, { age: body.age, heightCm: body.heightCm, sex: formulaSex, special }) : null;
+  const plannedTargets = plannedNutrition ? nutritionTargets(plannedNutrition, body.weightKg) : null;
+  const energy = plannedNutrition && plannedTargets
+    ? plannedNutrition.mode === "simple"
+      ? "Sin contar calorías: registrarás tus comidas por saciedad, con calma."
+      : `≈ ${formatKcal(plannedTargets.kcal)} kcal y ${plannedTargets.protein} g de proteína al día`
+    : null;
 
   const canContinue = step.kind === "multi"
     ? (answers[step.key] as SelectionValue[]).length > 0 || answers.customAnswers[step.key].trim().length > 0
-    : step.kind === "name" || (step.kind === "sex" ? extras.sex !== null : extras.location !== null);
+    : step.kind === "body"
+      ? bodyEmpty || body.valid
+      : step.kind === "name" || (step.kind === "sex" ? extras.sex !== null : extras.location !== null);
   const canGoBack = stepIndex > 0 || !onCancel;
 
   // La pantalla de evaluación tapa la página: sin desplazamiento detrás mientras está abierta.
@@ -300,12 +336,23 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
     setPreference({ location, equipment: location === "gym" ? [] : profile.equipment ?? [] });
     const name = profile.name?.trim();
     updateSettings({ ...(name ? { name } : {}), weeklyGoal: profile.recommendation.sessionsPerWeek });
+    if (body.valid && plannedNutrition) {
+      const now = new Date();
+      // Con un plan ya hecho, sólo se actualizan los datos del cuerpo (se conservan objetivo, ritmo y ajustes).
+      setNutrition((current) => current
+        ? { ...current, sex: formulaSex, birthYear: plannedNutrition.birthYear, heightCm: plannedNutrition.heightCm, special: plannedNutrition.special, mode: plannedNutrition.special === "eating-disorder" ? "simple" : current.mode, updatedAt: now.toISOString() }
+        : plannedNutrition);
+      if (latestWeight === null || Math.abs(latestWeight - body.weightKg) >= 0.05) {
+        const today = localDateKey(now);
+        setWeights((current) => [...current.filter((entry) => entry.date !== today), { date: today, label: formatShortDate(today), weight: Math.round(body.weightKg * 10) / 10 }].sort((a, b) => a.date.localeCompare(b.date)));
+      }
+    }
     onComplete(profile);
   }
 
   function restart() {
     setAnswers(emptyAnswers);
-    setExtras({ ...emptyExtras, name: settings.name });
+    setExtras(initialExtras());
     goTo(0);
   }
 
@@ -325,7 +372,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   }
 
-  const continueLabel = step.kind === "name" && !extras.name.trim()
+  const continueLabel = (step.kind === "name" && !extras.name.trim()) || (step.kind === "body" && bodyEmpty)
     ? "Omitir"
     : stepIndex === flow.length - 1
       ? "Ver mi plan"
@@ -403,6 +450,18 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
               />
             )}
 
+            {step.kind === "body" && (
+              <BodyStep
+                value={extras.body}
+                unit={settings.unit}
+                askSex={extras.sex !== "male" && extras.sex !== "female"}
+                sex={formulaSex}
+                errors={body.errors}
+                preview={energy}
+                onChange={(patch) => setExtras((current) => ({ ...current, body: { ...current.body, ...patch } }))}
+              />
+            )}
+
             {step.kind === "multi" && (
               <ChoiceStepView
                 step={step}
@@ -436,6 +495,7 @@ export function WellnessAssessment({ onComplete, onCancel }: { onComplete: (prof
       {intro !== "open" && (showingResult ? (
         <AssessmentResult
           profile={profile}
+          energy={energy}
           retake={Boolean(onCancel)}
           disclaimer={disclaimer}
           onActivate={finish}

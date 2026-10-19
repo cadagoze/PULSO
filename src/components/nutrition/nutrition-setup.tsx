@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button, NumberMetric, SegmentedControl } from "@/components/ui";
-import { activityLevels, defaultAdjustment, formatKcal, goalShortLabels, nutritionTargets, paceOptions } from "@/lib/nutrition";
-import { cn, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
+import { activityLevels, defaultAdjustment, formatKcal, goalShortLabels, nutritionTargets, paceOptions, parseBody } from "@/lib/nutrition";
+import { cn, toDisplayWeight } from "@/lib/utils";
 import type { ActivityLevel, NutritionGoal, NutritionProfile, NutritionSpecialCase, Sex } from "@/types";
 import { LimitNote } from "./limit-note";
 
@@ -13,8 +13,6 @@ const specialOptions: Array<{ value: NutritionSpecialCase; label: string }> = [
   { value: "pregnancy", label: "Embarazo o lactancia" },
   { value: "eating-disorder", label: "He tenido un trastorno de la conducta alimentaria" },
 ];
-
-const parse = (value: string) => Number(value.trim().replace(",", "."));
 
 /**
  * Datos para calcular calorías y macros, con el resultado en vivo. El peso se guarda en el registro
@@ -31,15 +29,7 @@ export function NutritionSetup({ initial, weightKg, unit, onSave }: { initial: N
   const [adjustment, setAdjustment] = useState(initial.adjustment);
   const [special, setSpecial] = useState<NutritionSpecialCase>(initial.special);
 
-  const ageValue = parse(age);
-  const heightValue = parse(height);
-  const weightValue = fromDisplayWeight(parse(weight), unit);
-  const errors = {
-    age: !Number.isFinite(ageValue) || ageValue < 14 || ageValue > 100 ? "Entre 14 y 100 años." : "",
-    height: !Number.isFinite(heightValue) || heightValue < 120 || heightValue > 230 ? "Entre 120 y 230 cm." : "",
-    weight: !weight.trim() || !Number.isFinite(weightValue) || weightValue < 30 || weightValue > 300 ? "Ingresa un peso válido." : "",
-  };
-  const valid = !errors.age && !errors.height && !errors.weight;
+  const { age: ageValue, heightCm: heightValue, weightKg: weightValue, errors, valid } = parseBody({ age, height, weight }, unit);
 
   const draft: NutritionProfile = {
     ...initial,

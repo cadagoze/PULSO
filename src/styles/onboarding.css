@@ -200,3 +200,20 @@
   .onb-splash-lead, .onb-splash-note { text-align: left; justify-content: flex-start; }
 }
 
+
+/* «Tu cuerpo»: edad, estatura y peso en grande, situaciones especiales y la energía estimada en vivo. */
+.onb-body { display: flex; flex-direction: column; gap: 18px; margin-top: 4px; animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; }
+.onb-body-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.onb-body-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.onb-body-input { display: flex; align-items: baseline; gap: 4px; padding: 0 2px 6px; border-bottom: 2px solid var(--line-strong); transition: border-color var(--motion-fast); }
+.onb-body-field:focus-within .onb-body-input { border-bottom-color: var(--ink); }
+.onb-body-field.is-invalid .onb-body-input { border-bottom-color: var(--danger); }
+.onb-body-input input { width: 100%; min-width: 0; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.onb-body-input input:focus { outline: none; }
+.onb-body-input input::placeholder { color: var(--ink-3); opacity: .6; }
+.onb-body-input small { flex: none; font-size: 13px; color: var(--ink-2); }
+.onb-body-error { font-size: 13px; color: var(--danger); }
+.onb-body-sex { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+.onb-body-special { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; border: 0; }
+.onb-body-special legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.onb-body-preview { padding: 14px 16px; border-radius: var(--radius); background: var(--accent-soft); color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.4; }

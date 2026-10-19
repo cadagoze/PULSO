@@ -1209,3 +1209,26 @@ test('gráficos propios: curva monótona, marcas y etiquetas sin montarse', () =
   assert.deepEqual([...chart.labelIndexes(10, 320)], [1, 3, 5, 7, 9]);
   assert.deepEqual([...chart.labelIndexes(3, 320)], [0, 1, 2]);
 });
+
+test('evaluación con «Tu cuerpo»: validación y plan de calorías seguro', () => {
+  const now = new Date('2026-10-20T12:00:00');
+  const ok = nutrition.parseBody({ age: '34', height: '176', weight: '82,5' }, 'kg');
+  assert.equal(ok.valid, true);
+  assert.equal(ok.weightKg, 82.5);
+  assert.equal(nutrition.parseBody({ age: '', height: '176', weight: '82' }, 'kg').errors.age, 'Entre 14 y 100 años.');
+  assert.equal(nutrition.parseBody({ age: '34', height: '90', weight: '82' }, 'kg').valid, false);
+  assert.ok(Math.abs(nutrition.parseBody({ age: '34', height: '176', weight: '180' }, 'lb').weightKg - 81.65) < 0.01, 'libras a kg');
+  const plan = nutrition.nutritionFromAssessment({ activities: ['regular'], goals: ['weight'] }, { age: 34, heightCm: 176, sex: 'male', special: 'none' }, now);
+  assert.equal(plan.birthYear, 1992);
+  assert.equal(plan.heightCm, 176);
+  assert.equal(plan.goal, 'lose');
+  assert.equal(plan.activity, 'moderate');
+  assert.equal(plan.mode, 'count');
+  const targets = nutrition.nutritionTargets(plan, 82.5, now);
+  assert.ok(targets.kcal > 1800 && targets.kcal < 2800, `kcal razonables: ${targets.kcal}`);
+  const minor = nutrition.nutritionTargets(nutrition.nutritionFromAssessment({ goals: ['weight'] }, { age: 16, heightCm: 165, sex: 'female', special: 'none' }, now), 60, now);
+  assert.equal(minor.limited, 'minor', 'sin déficit para menores de 18');
+  const tca = nutrition.nutritionFromAssessment({ goals: ['weight'] }, { age: 30, heightCm: 165, sex: 'female', special: 'eating-disorder' }, now);
+  assert.equal(tca.mode, 'simple', 'con antecedente de TCA no se cuentan calorías');
+  assert.equal(nutrition.nutritionTargets(tca, 60, now).limited, 'special');
+});

@@ -1,4 +1,5 @@
-import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, SavedMeal, SavedMealItem, Sex } from "@/types";
+import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, NutritionSpecialCase, SavedMeal, SavedMealItem, Sex } from "@/types";
+import { fromDisplayWeight } from "@/lib/utils";
 
 /** Nivel de actividad diaria (incluye el entrenamiento) y su factor sobre el metabolismo basal. */
 export const activityLevels: Array<{ value: ActivityLevel; label: string; detail: string; factor: number }> = [
@@ -111,16 +112,49 @@ export function nutritionTargets(profile: NutritionProfile, weightKg: number, no
   };
 }
 
-/** Valores iniciales razonables a partir de la evaluación (actividad y objetivo). */
 /** Objetivo a partir de la evaluación inicial, mientras no hay un plan de alimentación. */
 export function goalFromAssessment(goals: string[] = []): NutritionGoal {
   return goals[0] === "weight" ? "lose" : "maintain";
 }
 
+/** Valores iniciales razonables a partir de la evaluación (actividad y objetivo). */
 export function suggestedNutritionProfile({ activities = [], goals = [], sex }: { activities?: string[]; goals?: string[]; sex?: string }, now = new Date()): NutritionProfile {
   const activity: ActivityLevel = activities.includes("regular") ? "moderate" : activities.includes("some") || activities.includes("walking") ? "light" : "sedentary";
   const goal = goalFromAssessment(goals);
   return { sex: sex === "male" ? "male" : "female", birthYear: now.getFullYear() - 35, heightCm: sex === "male" ? 175 : 163, activity, goal, adjustment: defaultAdjustment(goal), special: "none", mode: "count", updatedAt: now.toISOString() };
+}
+
+/** Edad, estatura y peso escritos a mano (con coma o punto) → números y el error de cada campo. Mismo criterio en la evaluación y en Comidas. */
+export function parseBody(input: { age: string; height: string; weight: string }, unit: "kg" | "lb") {
+  const parse = (value: string) => Number(value.trim().replace(",", "."));
+  const age = parse(input.age);
+  const heightCm = parse(input.height);
+  const weightKg = fromDisplayWeight(parse(input.weight), unit);
+  const errors = {
+    age: !input.age.trim() || !Number.isFinite(age) || age < 14 || age > 100 ? "Entre 14 y 100 años." : "",
+    height: !input.height.trim() || !Number.isFinite(heightCm) || heightCm < 120 || heightCm > 230 ? "Entre 120 y 230 cm." : "",
+    weight: !input.weight.trim() || !Number.isFinite(weightKg) || weightKg < 30 || weightKg > 300 ? "Ingresa un peso válido." : "",
+  };
+  return { age, heightCm, weightKg, errors, valid: !errors.age && !errors.height && !errors.weight };
+}
+
+/**
+ * Plan de alimentación desde la evaluación inicial, con edad, estatura y el sexo que usa la fórmula.
+ * Con antecedente de TCA no se cuentan calorías (modo simple); el resto de las reglas de seguridad
+ * (sin déficit en embarazo, lactancia o menores de 18, mínimo seguro) las aplica nutritionTargets.
+ */
+export function nutritionFromAssessment(
+  assessment: { activities?: string[]; goals?: string[] },
+  body: { age: number; heightCm: number; sex: Sex; special: NutritionSpecialCase },
+  now = new Date(),
+): NutritionProfile {
+  return {
+    ...suggestedNutritionProfile({ ...assessment, sex: body.sex }, now),
+    birthYear: now.getFullYear() - Math.round(body.age),
+    heightCm: Math.round(body.heightCm),
+    special: body.special,
+    mode: body.special === "eating-disorder" ? "simple" : "count",
+  };
 }
 
 // ─── Registro de alimentos ─────────────────────────────────────────────────
