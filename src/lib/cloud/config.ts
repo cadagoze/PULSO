@@ -12,7 +12,7 @@ export const firebaseConfig = {
 };
 
 /** Dirección pública de PULSO: ahí el Worker hace de puente con el inicio de sesión de Firebase (/__/auth). */
-export const APP_HOST = "pulso.c-gonzalezzepeda.workers.dev";
+export const APP_HOST = "pulso.pulsochile.workers.dev";
 
 /**
  * Iniciar sesión desde el mismo dominio de la app. Safari (y la app instalada en iPhone) bloquea la

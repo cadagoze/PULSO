@@ -110,7 +110,7 @@ Con una cuenta (Google o correo y contraseña, desde Perfil o desde la bienvenid
 - **Modelo:** los historiales (entrenamientos, alimentos, peso, agua, chequeos, medidas) van como un documento por registro, para que dos equipos sumen en vez de pisarse. El resto (evaluación, ajustes, plan, rutinas…) va como un documento por clave. El entrenamiento en curso no se sincroniza.
 - **Cómo sincroniza** (`src/lib/cloud`): la primera vez une lo local con la nube (gana la nube en un mismo registro). Después sube sólo lo que cambió (huellas por registro) y escucha los cambios de otros equipos desde el último visto. Un cambio local sin subir no se pisa.
 - **Carga diferida:** Firebase (~170 KB comprimido) sólo se descarga al iniciar sesión o si ya hay una sesión abierta en ese equipo.
-- **Dominios autorizados** (Firebase → Authentication → Configuración): `localhost` y `pulso.c-gonzalezzepeda.workers.dev`.
+- **Dominios autorizados** (Firebase → Authentication → Configuración): `localhost` y `pulso.pulsochile.workers.dev`. En el cliente OAuth de Google Cloud, origen autorizado `https://pulso.pulsochile.workers.dev` y redirección `https://pulso.pulsochile.workers.dev/__/auth/handler`.
 - Borrar los datos del equipo (Ajustes) cierra antes la sesión, para no borrar la nube. Eliminar la cuenta (Perfil) borra todo lo de la nube. Política en `/privacidad`.
 
 El build para Cloudflare (`npm run build:vinext`) requiere Node 22 (`nvm use`, ver `.nvmrc`).

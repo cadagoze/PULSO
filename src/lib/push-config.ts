@@ -5,4 +5,4 @@
 export const VAPID_PUBLIC_KEY = "BN4BMnN-cawwfvVjadOcHLtit8JGH4FX1gdajTH8xd6ktPy9LZOi9Sj8MqS2evhKzQHDKzYH6eA-yJ9w0h9bac0";
 
 /** Contacto para los servicios de avisos (Google, Apple, Mozilla): la dirección de la app. */
-export const VAPID_SUBJECT = "https://pulso.c-gonzalezzepeda.workers.dev";
+export const VAPID_SUBJECT = "https://pulso.pulsochile.workers.dev";
