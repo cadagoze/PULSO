@@ -587,3 +587,9 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 /* ─── Confirmaciones ───────────────────────────────────────────────────── */
 .confirm-body { display: flex; flex-direction: column; gap: 12px; }
 .confirm-body .muted { margin-bottom: 6px; line-height: 1.5; }
+
+/* ─── Estados: página no encontrada y error ─────────────────────────────── */
+.state-page { min-height: calc(100dvh - var(--nav-h) - 120px); justify-content: center; align-items: flex-start; gap: 14px; max-width: 520px; }
+.state-mark { height: 56px; margin-bottom: 10px; animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
+.state-text { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin-bottom: 10px; }
+.state-actions { display: flex; flex-wrap: wrap; gap: 10px; }

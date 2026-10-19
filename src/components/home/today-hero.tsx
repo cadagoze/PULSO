@@ -7,7 +7,8 @@ import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/ses
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, focusLabels, generateWorkout, todayGeneratorInput } from "@/lib/generator";
+import { estimateMinutes, focusLabels, generateWorkout, goalLabels, todayGeneratorInput, trainingGoal } from "@/lib/generator";
+import { zoneById } from "@/data/body-zones";
 import { nextProgramSession, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartMobility, useStartWorkout } from "@/lib/session";
 import { useDraft, useNutritionProfile, usePreference, useProfile, useProgram, useSettings, useWorkouts } from "@/lib/store";
@@ -124,8 +125,8 @@ export function TodayHero({ now, readiness }: { now: number; readiness?: Readine
       photo={heroPhoto(restDay ? "mobility" : heroKind({ focus: generated.focus, location: preference.location }), seed, audience)}
       line={restDay ? restLine : motivation(minutes)}
       tag={restDay ? "Día de descanso" : "Tu sesión de hoy"}
-      meta={focusLabels[generated.focus]}
-      title={generated.name}
+      meta={goalLabels[trainingGoal(profile?.goals, nutrition?.goal)]}
+      title={zoneById(generated.zone)?.label ?? focusLabels[generated.focus]}
       note={easier ? generated.notes[0] : undefined}
     >
       <Details records={generated.records} minutes={minutes} place={place} />
