@@ -24,12 +24,11 @@
 .prog-kpi { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line-strong); }
 .prog-kpi .nmetric { gap: 10px; }
 .prog-kpi .nmetric-value { overflow: hidden; text-overflow: ellipsis; }
-.prog-delta.up { color: var(--accent-text); }
 
 /* ─── Gráfico del periodo ──────────────────────────────────────────────── */
 .prog-chart-card { display: flex; flex-direction: column; gap: 18px; padding: 20px 20px 22px; }
 .prog-chart-metrics { gap: 6px; }
-.prog-chart-metrics .chip, .prog-toggle .chip { min-height: 34px; padding: 0 14px; font-size: 13px; }
+.prog-chart-metrics .chip { min-height: 34px; padding: 0 14px; font-size: 13px; }
 .prog-readout { display: flex; flex-direction: column; gap: 6px; min-height: 86px; }
 .prog-chart-card .prog-readout-value { display: flex; align-items: baseline; gap: 6px; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 36px; font-weight: 600; letter-spacing: -.008em; line-height: 1; }
 .prog-readout-unit { font-size: 15px; letter-spacing: -.01em; color: var(--ink-2); }
@@ -58,11 +57,7 @@
 .prog-plot-empty { position: absolute; left: 0; right: 0; top: 50%; padding: 0 12px; text-align: center; font-size: 13.5px; color: var(--ink-2); transform: translateY(-60%); pointer-events: none; }
 
 /* ─── Consistencia ─────────────────────────────────────────────────────── */
-.prog-streak.is-active .prog-streak-number { color: var(--ink); }
-.prog-streak.is-active .prog-flame { color: var(--gold); fill: color-mix(in srgb, var(--gold) 22%, transparent); }
 
-.prog-heat-cell.future { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); opacity: .55; }
-.prog-heat-cell.today { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
 
 /* ─── Mejores marcas ───────────────────────────────────────────────────── */
 .prog-record { align-items: center; }
@@ -82,7 +77,6 @@
 .prog-muscles-note { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 .prog-heat-scale { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
 .prog-heat-scale i { flex: 1; max-width: 96px; height: 6px; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--map-base), color-mix(in srgb, var(--accent-text) 40%, var(--map-base)), var(--accent-text)); }
-.prog-recovery-lines li.is-tired::before { background: var(--warning); }
 .prog-muscles-info .muscle-legend { justify-content: flex-start; gap: 4px 10px; font-size: 11.5px; }
 
 .prog-muscle-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -101,7 +95,6 @@
 .prog-evidence svg { flex: none; margin-top: 2px; color: var(--accent-text); }
 
 /* ─── Peso (resumen) ───────────────────────────────────────────────────── */
-.prog-weight-top .nmetric { gap: 10px; }
 @keyframes prog-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
 /* ─── Vistas secundarias ───────────────────────────────────────────────── */
@@ -111,7 +104,6 @@
 /* Historial */
 .prog-history-tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .prog-filter { flex: 1 1 220px; min-width: 0; }
-.prog-export .btn { min-height: 50px; }
 .prog-history-count { margin-top: -6px; }
 .prog-months { display: flex; flex-direction: column; gap: 28px; }
 .prog-month { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -220,12 +212,6 @@
 .prog-badge-progress { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
 
 /* Carga de entrenamiento (hoja) */
-.prog-gauge-zone.low { stroke: var(--surface-3); }
-.prog-gauge-zone.ok { stroke: var(--accent); }
-.prog-gauge-zone.high { stroke: color-mix(in srgb, var(--warning) 70%, var(--surface)); }
-.prog-load-status.ok svg { color: var(--accent-text); }
-.prog-load-status.low svg, .prog-load-status.unknown svg { color: var(--ink-3); }
-.prog-load-status.high svg { color: var(--warning); }
 
 /* Estados de carga y vacío */
 .prog-skeleton { border-radius: var(--radius-l); background: var(--surface-2); animation: prog-shimmer 1.4s ease-in-out infinite; }
@@ -308,10 +294,6 @@
 .ch-medal-mark { flex: none; color: var(--gold); }
 
 /* ─── Tu semana en datos ─────────────────────────────────────────────── */
-.prog-insights-head .muted { font-size: 13.5px; }
-.insight .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.insight.is-positive .insight-icon { background: var(--accent-soft); color: var(--accent-text); }
-.insight.is-attention .insight-icon { background: var(--warning-soft); color: var(--warning); }
 
 /* ─── Portada: cuatro cifras, la tendencia de 12 semanas y «Ver detalles» ── */
 .prog-chart-title { margin-bottom: -4px; color: var(--on-carbon-2, var(--ink-2)); }

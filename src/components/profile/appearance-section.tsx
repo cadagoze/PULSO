@@ -23,7 +23,7 @@ const themeHelp: Record<Settings["theme"], string> = {
 const photoIcons: Record<PhotoPreference, LucideIcon> = { auto: Sparkles, female: Venus, male: Mars, mixed: UsersRound };
 
 const photoHelp: Record<PhotoPreference, string> = {
-  auto: "Según cómo te identificas en tu evaluación.",
+  auto: "Según cómo te identificas (si lo indicaste); si no, mujeres y hombres alternando.",
   female: "Portadas y programas con mujeres.",
   male: "Portadas y programas con hombres.",
   mixed: "Mujeres y hombres, alternando cada día.",

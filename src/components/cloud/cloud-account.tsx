@@ -25,8 +25,8 @@ function syncLine(status: CloudStatus, now: number) {
   return `Todo guardado · a las ${clock.format(status.lastSyncedAt)}`;
 }
 
-/** Cuenta en Perfil: invitación a guardar los datos en la nube o el estado de la sincronización. */
-export function CloudAccount({ onToast }: { onToast: (message: string) => void }) {
+/** Cuenta (en Ajustes): invitación a guardar los datos en la nube o el estado de la sincronización. */
+export function CloudAccount({ onToast, heading = true }: { onToast: (message: string) => void; heading?: boolean }) {
   const status = useCloudStatus();
   const now = useNow(30_000);
   const [signIn, setSignIn] = useState(false);
@@ -49,8 +49,8 @@ export function CloudAccount({ onToast }: { onToast: (message: string) => void }
   }
 
   return (
-    <section className="cloud-card rise" style={{ "--i": 1 } as CSSProperties} aria-labelledby="cloud-title">
-      <h2 id="cloud-title" className="meta">Cuenta</h2>
+    <section className="cloud-card rise" style={{ "--i": 1 } as CSSProperties} aria-labelledby={heading ? "cloud-title" : undefined} aria-label={heading ? undefined : "Cuenta"}>
+      {heading && <h2 id="cloud-title" className="meta">Cuenta</h2>}
       {user ? (
         <div className="cloud-panel">
           <div className="cloud-user">

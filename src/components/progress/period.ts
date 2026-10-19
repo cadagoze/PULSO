@@ -1,4 +1,4 @@
-import { recordsVolume } from "@/lib/training";
+import { workoutVolume } from "@/lib/training";
 import { formatShortDate, localDateKey, startOfCurrentWeek, weekNumber } from "@/lib/utils";
 import type { WorkoutEntry } from "@/types";
 
@@ -57,11 +57,6 @@ function daysBetween(from: string, to: string) {
 
 function weekday(date: Date) {
   return date.toLocaleDateString("es-CL", { weekday: "long" });
-}
-
-/** Tonelaje de una sesión; los registros antiguos sin `volume` se calculan a partir de sus series. */
-export function workoutVolume(workout: WorkoutEntry) {
-  return workout.volume ?? (workout.records ? recordsVolume(workout.records) : 0);
 }
 
 export function totalsBetween(workouts: WorkoutEntry[], start: string, end: string): Totals {

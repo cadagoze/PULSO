@@ -1,4 +1,4 @@
-import { exerciseById, isWorkingSet, sortedWorkouts } from "@/lib/training";
+import { exerciseById, isWorkingSet, sortedWorkouts, workoutVolume } from "@/lib/training";
 import { localDateKey, startOfCurrentWeek } from "@/lib/utils";
 import type { MuscleGroup, ReadinessEntry, WorkoutEntry } from "@/types";
 
@@ -84,7 +84,7 @@ export function weeklySeries(workouts: WorkoutEntry[], weeks = 8, now = new Date
       label: range.startDate.toLocaleDateString("es-CL", { day: "numeric", month: "short" }).replace(".", ""),
       sessions: items.length,
       sets: items.reduce((sum, item) => sum + item.sets, 0),
-      volume: Math.round(items.reduce((sum, item) => sum + (item.volume ?? 0), 0)),
+      volume: Math.round(items.reduce((sum, item) => sum + workoutVolume(item), 0)),
       minutes: Math.round(items.reduce((sum, item) => sum + item.durationMinutes, 0)),
     };
   });
@@ -201,7 +201,7 @@ export interface Achievement {
 export function achievements(workouts: WorkoutEntry[], weeklyGoal: number, pausedWeeks: string[] = []): Achievement[] {
   const total = workouts.length;
   const prs = workouts.reduce((sum, workout) => sum + (workout.prs?.length ?? 0), 0);
-  const volume = workouts.reduce((sum, workout) => sum + (workout.volume ?? 0), 0);
+  const volume = workouts.reduce((sum, workout) => sum + workoutVolume(workout), 0);
   const sets = workouts.reduce((sum, workout) => sum + workout.sets, 0);
   const minutes = workouts.reduce((sum, workout) => sum + workout.durationMinutes, 0);
   const streak = bestWeekStreak(workouts, weeklyGoal, pausedWeeks);

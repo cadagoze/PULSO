@@ -13,7 +13,6 @@
 @keyframes train-swap { from { opacity: 0; transform: translateY(6px); } }
 
 /* ─── Lugar y equipamiento ─────────────────────────────────────────────── */
-.train-equip { display: flex; flex-direction: column; gap: 12px; }
 .train-chips { gap: 8px; }
 .train-chips .chip { min-height: 44px; }
 

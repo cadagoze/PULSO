@@ -13,7 +13,7 @@ import { exerciseById } from "@/lib/training";
 
 const CONSISTENCY_WEEKS = 8;
 
-/** Progreso resumido en Perfil: la semana, el volumen, la última marca y la constancia de las últimas semanas. */
+/** Progreso reciente en Perfil: la semana, el volumen, la constancia de las últimas semanas y la última marca. */
 export function ProgressSummary({ now }: { now: number }) {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
@@ -33,7 +33,7 @@ export function ProgressSummary({ now }: { now: number }) {
   return (
     <section className="prof-progress rise" style={{ "--i": 2 } as CSSProperties} aria-labelledby="prof-progress-title">
       <div className="prof-progress-head">
-        <h2 id="prof-progress-title" className="meta">Tu progreso</h2>
+        <h2 id="prof-progress-title" className="meta">Progreso reciente</h2>
         <Link href="/progreso" className="prof-progress-link">Ver todo<ArrowRight size={14} aria-hidden="true" /></Link>
       </div>
       <MetricGrid>

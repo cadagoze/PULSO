@@ -19,7 +19,6 @@
 .prof-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(46px, 14vw, 66px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; color: var(--ink); overflow-wrap: break-word; text-wrap: balance; }
 .prof-goal { font-size: 16px; line-height: 1.4; color: var(--ink-2); max-width: 36ch; text-wrap: pretty; }
 .prof-goal b { color: var(--ink); font-weight: 600; }
-.prof-place { margin-top: -4px; font-size: 14px; color: var(--ink-2); }
 /* Tu progreso: cuatro números en una tarjeta, con enlace a Progreso. */
 .prof-progress { display: flex; flex-direction: column; gap: 18px; padding: 20px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); }
 .prof-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -46,13 +45,11 @@ button.prof-avatar:active { transform: scale(.96); }
 
 /* Plan actual: el foco como gran titular, los datos en una línea y el botón para editar. */
 .prof-plan { display: flex; flex-direction: column; gap: 22px; }
-.prof-plan-heading { display: flex; flex-direction: column; gap: 10px; }
 /* Más específico que `.card h2` del sistema. */
 .prof-plan .prof-plan-title { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(52px, 16vw, 80px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; overflow-wrap: break-word; }
 .prof-plan .prof-plan-title.is-long { font-size: clamp(38px, 11vw, 60px); line-height: .9; }
-.prof-plan-tagline { font-size: 17px; line-height: 1.35; color: var(--ink-2); max-width: 32ch; }
-.prof-plan-facts { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
-.prof-plan-meta { font-size: 16px; }
+.prof-plan-facts { display: flex; flex-direction: column; gap: 10px; }
+.prof-plan-meta { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(26px, 7.4vw, 34px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1.05; color: var(--ink-2); }
 .prof-plan-meta b { color: var(--ink); font-weight: 600; }
 .prof-plan-line { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
 .prof-plan-line svg { flex: none; margin-top: 1px; color: var(--ink-3); }
@@ -116,10 +113,6 @@ button.prof-avatar:active { transform: scale(.96); }
 .prof-plate[aria-pressed="true"] i { background: var(--ink); }
 
 /* Racha: el número en grande, la llama naranja sólo cuando hay racha. */
-.prof-streak { flex-direction: row; align-items: center; gap: 16px; padding: 18px; }
-.prof-streak-num { font-size: 56px; color: var(--ink); min-width: .7em; }
-.prof-streak-flame { flex: none; align-self: flex-start; color: var(--ink-3); }
-.prof-streak.active .prof-streak-flame { color: var(--gold); fill: color-mix(in srgb, var(--gold) 22%, transparent); }
 
 /* Datos. */
 .prof-persist .btn, .prof-persist .badge { flex: none; }
@@ -162,7 +155,6 @@ button.prof-avatar:active { transform: scale(.96); }
   .prof-settings { padding-top: 40px; }
   .prof-settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start; }
 }
-.prof-plan-food { margin-top: 4px; }
 
 /* ─── Apariencia: color de acento ──────────────────────────────────────── */
 .accent-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

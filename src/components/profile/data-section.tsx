@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/ui/app-link";
-import { Download, FileSpreadsheet, FileText, HardDriveDownload, ShieldCheck, Trash2, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, HardDriveDownload, ShieldCheck, Smartphone, Trash2, Upload } from "lucide-react";
 import { Button, Sheet, StatusBadge } from "@/components/ui";
 import { STORAGE_KEYS, clearAllData, readAllData, writeAllData } from "@/lib/store";
 import type { WorkoutEntry } from "@/types";
@@ -16,6 +16,8 @@ import { hasCloudSession } from "@/lib/cloud/status";
 import { cloudActions } from "@/lib/cloud/use-cloud";
 import { confirmAction } from "@/lib/confirm";
 import { disablePush, usePushSettings } from "@/lib/push";
+import { useInstallState } from "@/lib/install";
+import { InstallSheet } from "@/components/install/install-sheet";
 
 type PersistStatus = "checking" | "unsupported" | "persisted" | "idle" | "denied";
 
@@ -47,6 +49,9 @@ function RowText({ icon, title, detail, live = false }: { icon: ReactNode; title
 export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEntry[]; onToast: (message: string) => void; order?: number }) {
   const router = useRouter();
   const [push] = usePushSettings();
+  const install = useInstallState();
+  const [installing, setInstalling] = useState(false);
+  const canInstall = install.ready && !install.standalone && (install.platform !== "desktop" || install.canPrompt);
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [persist, setPersist] = useState<PersistStatus>("checking");
@@ -134,7 +139,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
 
   return (
     <>
-      <SettingsGroup id="datos" index="05" title="Datos y privacidad" description="Se guardan en este navegador y, si inicias sesión en Perfil, también en la nube." order={order}>
+      <SettingsGroup id="datos" index="05" title="Datos y privacidad" description="Se guardan en este teléfono y, si tienes cuenta, también en la nube." order={order}>
         <button type="button" className="list-row" onClick={exportBackup}>
           <RowText icon={<Download size={19} />} title="Exportar respaldo" detail="Un archivo .json con todo lo que has registrado." />
         </button>
@@ -154,6 +159,11 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
             (persist === "idle" || persist === "denied") && <Button variant="secondary" size="s" onClick={requestPersist}>Proteger</Button>
           )}
         </div>
+        {canInstall && (
+          <button type="button" className="list-row" onClick={() => setInstalling(true)}>
+            <RowText icon={<Smartphone size={19} />} title="Instalar en tu teléfono" detail="Se abre con un toque, a pantalla completa, y tus datos quedan más protegidos." />
+          </button>
+        )}
         <Link href="/privacidad" className="list-row">
           <RowText icon={<FileText size={19} />} title="Privacidad" detail="Qué guardamos, dónde y cómo borrarlo." />
         </Link>
@@ -178,6 +188,7 @@ export function DataSection({ workouts, onToast, order }: { workouts: WorkoutEnt
           </div>
         )}
       </Sheet>
+      <InstallSheet open={installing} onClose={() => setInstalling(false)} platform={install.platform} canPrompt={install.canPrompt} onDone={onToast} />
     </>
   );
 }

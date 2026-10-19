@@ -4,7 +4,7 @@ import { Copy, Play, Trash2, TriangleAlert, Trophy } from "lucide-react";
 import { Sheet } from "@/components/ui";
 import { Toast, useToast } from "@/components/ui/toast";
 import { exerciseName, kindLetters, kindNames, longDayLabel, recordValueLabel, volumeParts, type Unit } from "@/components/progress/format";
-import { workoutVolume } from "@/components/progress/period";
+import { workoutVolume } from "@/lib/training";
 import { recordKindLabels } from "@/lib/progression";
 import { useStartWorkout } from "@/lib/session";
 import { useRoutines, useSettings, useWorkouts } from "@/lib/store";

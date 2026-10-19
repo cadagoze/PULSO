@@ -5,9 +5,6 @@ import { WellnessAssessment } from "@/components/onboarding/wellness-assessment"
 import { weekStreak } from "@/lib/analytics";
 import { useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
-import { CloudAccount } from "@/components/cloud/cloud-account";
-import { InstallSheet } from "@/components/install/install-sheet";
-import { useInstallState } from "@/lib/install";
 import { PlanSection } from "./plan-section";
 import { profilePhoto } from "./photo";
 import { ProfileEditor } from "./profile-editor";
@@ -17,7 +14,7 @@ import { ProfileLinks } from "./profile-links";
 import { ProgressSummary } from "./progress-summary";
 import { Toast, useToast } from "@/components/ui/toast";
 
-/** Perfil: portada editorial (foto, nombre, objetivo, lugar y números), tu plan, tu progreso, la cuenta y las preferencias. */
+/** Perfil, la persona: portada (foto, nombre, objetivo, entrenamientos, racha y peso), tu plan, tu progreso reciente y, al final, Bienestar y Ajustes. */
 export function ProfileView() {
   const [profile, setProfile] = useProfile();
   const [workouts] = useWorkouts();
@@ -28,8 +25,6 @@ export function ProfileView() {
   const [editing, setEditing] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [assessing, setAssessing] = useState(false);
-  const [installing, setInstalling] = useState(false);
-  const install = useInstallState();
 
   const streak = useMemo(() => (now ? weekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks, new Date(now)).streak : 0), [now, settings.pausedWeeks, settings.weeklyGoal, workouts]);
 
@@ -65,8 +60,7 @@ export function ProfileView() {
       <div className="prof-side">
         <PlanSection onAssess={() => setAssessing(true)} onToast={show} />
         <ProgressSummary now={now} />
-        <CloudAccount onToast={show} />
-        <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} onInstall={install.ready && !install.standalone ? () => setInstalling(true) : undefined} />
+        <ProfileLinks />
       </div>
 
       <ProfileEditor key={editorKey} open={editing} onClose={() => setEditing(false)} name={settings.name} photo={photo} onSave={saveProfile} />
@@ -80,7 +74,6 @@ export function ProfileView() {
           onCancel={() => setAssessing(false)}
         />
       )}
-      <InstallSheet open={installing} onClose={() => setInstalling(false)} platform={install.platform} canPrompt={install.canPrompt} onDone={show} />
       <Toast toast={toast} />
     </div>
   );

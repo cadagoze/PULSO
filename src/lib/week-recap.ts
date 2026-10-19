@@ -1,6 +1,6 @@
 import { weekRange, weekStreak } from "@/lib/analytics";
 import { entryTotals } from "@/lib/nutrition";
-import { recordsVolume } from "@/lib/training";
+import { workoutVolume } from "@/lib/training";
 import { formatShortDate, localDateKey, weekNumber } from "@/lib/utils";
 import type { FoodEntry, WaterEntry, WeightEntry, WorkoutEntry } from "@/types";
 
@@ -72,7 +72,7 @@ export function weekRecap({ now, offset = 0, workouts, goal, pausedWeeks = [], f
     sessions: inWeek.length,
     goal,
     minutes: inWeek.reduce((sum, workout) => sum + workout.durationMinutes, 0),
-    volume: Math.round(inWeek.reduce((sum, workout) => sum + (workout.volume ?? (workout.records ? recordsVolume(workout.records) : 0)), 0)),
+    volume: Math.round(inWeek.reduce((sum, workout) => sum + workoutVolume(workout), 0)),
     prs: inWeek.reduce((sum, workout) => sum + (workout.prs?.length ?? 0), 0),
     streak: weekStreak(workouts, goal, pausedWeeks, offset === 0 ? now : closing).streak,
     days: keys.map((key) => ({ key, trained: inWeek.some((workout) => workout.date === key), future: key > today })),

@@ -4,17 +4,13 @@ import Link from "@/components/ui/app-link";
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowRight, ClipboardCheck, HeartPulse, House, Building2, SlidersHorizontal } from "lucide-react";
-import { Button, MetaLine, ProgressBar, SegmentedControl, Sheet } from "@/components/ui";
+import { Button, ProgressBar, SegmentedControl, Sheet } from "@/components/ui";
 import { durationOptions } from "@/lib/generator";
 import { nextProgramSession, programById, programTotalSessions } from "@/lib/programs";
-import { formatKcal } from "@/lib/nutrition";
 import { cleanDays, daysLabel } from "@/lib/training-days";
 import { usePreference, useProfile, useProgram, useSettings } from "@/lib/store";
-import { useNow } from "@/lib/use-now";
-import { useNutritionDay } from "@/lib/use-nutrition";
-import { cn } from "@/lib/utils";
 import type { TrainingLocation } from "@/types";
-import { careAreas, placeSummary, splitFocus } from "./profile-format";
+import { careAreas, placeSummary } from "./profile-format";
 import { EquipmentChips } from "@/components/train/equipment-picker";
 import { TrainingDaysField } from "@/components/train/training-days";
 
@@ -24,7 +20,7 @@ const locationOptions: Array<{ value: TrainingLocation; label: string }> = [
 ];
 const minuteOptions = durationOptions.map((minutes) => ({ value: String(minutes), label: `${minutes}` }));
 
-/** «Mi plan actual»: el foco en grande, frecuencia, duración, lugar y equipamiento, y el botón para editarlo. */
+/** «Mi plan»: días y minutos, dónde y con qué entrenas, zonas a cuidar, el programa (si hay) y editarlo. */
 export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToast: (message: string) => void }) {
   const [profile] = useProfile();
   const [settings] = useSettings();
@@ -36,8 +32,6 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
   const days = settings.weeklyGoal;
   const fixedDays = cleanDays(settings.trainingDays);
   const minutes = profile?.recommendation.sessionMinutes;
-  const focus = profile ? splitFocus(profile.recommendation.focus) : null;
-  const tagline = focus ? focus.rest : "Cinco preguntas breves y PULSO ajusta tiempos, ejercicios y zonas a cuidar.";
   const { place, gear } = placeSummary(preference);
   const areas = profile ? careAreas(profile) : [];
   const program = progress ? programById(progress.programId) : undefined;
@@ -54,20 +48,12 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
   return (
     <>
       <section className="card card-l prof-plan rise" style={{ "--i": 1 } as CSSProperties} aria-labelledby="prof-plan-title">
-        <p className="meta">Mi plan actual</p>
-        <div className="prof-plan-heading">
-          <h2 id="prof-plan-title" className={cn("prof-plan-title", (focus?.head.length ?? 0) > 7 && "is-long")}>{focus?.head || "Tu plan"}</h2>
-          {tagline && <p className="prof-plan-tagline">{tagline}</p>}
-        </div>
-
+        <p className="meta">Mi plan</p>
         <div className="prof-plan-facts">
-          <MetaLine
-            className="prof-plan-meta"
-            items={[
-              fixedDays.length ? <><b>{daysLabel(fixedDays)}</b></> : <><b className="num">{days}</b> {days === 1 ? "día" : "días"} por semana</>,
-              minutes !== undefined && <><b className="num">{minutes}</b> min</>,
-            ]}
-          />
+          <h2 id="prof-plan-title" className="prof-plan-meta">
+            {fixedDays.length ? <b>{daysLabel(fixedDays)}</b> : <><b className="num">{days}</b> {days === 1 ? "día" : "días"} por semana</>}
+            {minutes !== undefined && <> · <b className="num">{minutes}</b> min</>}
+          </h2>
           <p className="prof-plan-line">
             {preference.location === "gym" ? <Building2 size={17} aria-hidden="true" /> : <House size={17} aria-hidden="true" />}
             <span><b>{place}</b> · {gear}</span>
@@ -79,8 +65,6 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
             </p>
           )}
         </div>
-
-        <NutritionLine />
 
         {program && progress && (
           <Link href={`/entrenar/programas/${program.id}`} className="prof-plan-program pressable">
@@ -96,7 +80,7 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
 
         <div className="prof-plan-actions">
           {profile ? (
-            <Button size="l" block onClick={() => setOpen(true)}><SlidersHorizontal size={18} aria-hidden="true" />Editar mi plan</Button>
+            <Button variant="secondary" size="l" block onClick={() => setOpen(true)}><SlidersHorizontal size={18} aria-hidden="true" />Editar mi plan</Button>
           ) : (
             <>
               <Button size="l" block onClick={onAssess}><ClipboardCheck size={18} aria-hidden="true" />Hacer evaluación</Button>
@@ -106,7 +90,7 @@ export function PlanSection({ onAssess, onToast }: { onAssess: () => void; onToa
         </div>
       </section>
 
-      <Sheet open={open} onClose={close} eyebrow="Mi plan actual" title="Editar mi plan">
+      <Sheet open={open} onClose={close} eyebrow="Mi plan" title="Editar mi plan">
         <PlanForm
           onChange={() => { changed.current = true; }}
           onDone={close}
@@ -163,35 +147,5 @@ function PlanForm({ onChange, onDone, onAssess }: { onChange: () => void; onDone
 
       <Button size="l" block onClick={onDone}>Listo</Button>
     </div>
-  );
-}
-
-/** Nutrición dentro del plan: calorías y proteína del día, o la invitación a calcularlas. */
-function NutritionLine() {
-  const now = useNow();
-  const { profile, targets } = useNutritionDay(now);
-  return (
-    <Link href="/comidas" className="prof-plan-program prof-plan-food pressable">
-      <span className="prof-plan-program-text">
-        <span className="meta">Comidas</span>
-        {profile?.special === "eating-disorder" ? (
-          <>
-            <strong>Por saciedad</strong>
-            <small>Registras tus comidas sin contar calorías.</small>
-          </>
-        ) : targets ? (
-          <>
-            <strong><span className="num">{formatKcal(targets.kcal)}</span> kcal al día</strong>
-            <small className="num">{targets.protein} g proteína · {targets.carbs} g carbohidratos · {targets.fat} g grasa</small>
-          </>
-        ) : (
-          <>
-            <strong>Calcula tus calorías</strong>
-            <small>Según tu edad, estatura, peso, actividad y objetivo.</small>
-          </>
-        )}
-      </span>
-      <ArrowRight size={18} aria-hidden="true" />
-    </Link>
   );
 }

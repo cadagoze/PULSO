@@ -29,8 +29,11 @@ const unitOptions: Array<{ value: Settings["unit"]; label: string }> = [
 const restChoices = restOptions.map((seconds) => ({ value: String(seconds), label: restLabel(seconds) }));
 const barChoices = barOptions.map((kg) => ({ value: String(kg), label: `${kg} kg` }));
 
-/** Dónde y con qué entrenas, y cómo se comporta la sesión: unidades, descansos, avisos, pantalla y, si usas barra, barra y discos. */
-export function TrainingSection({ settings, update, order }: { settings: Settings; update: (patch: Partial<Settings>) => void; order?: number }) {
+/**
+ * Dónde y con qué entrenas, y cómo se comporta la sesión: unidades, descansos, avisos, pantalla, barra y
+ * discos (si usas barra) y la pausa de la racha para vacaciones, enfermedad o viaje.
+ */
+export function TrainingSection({ settings, update, paused, onTogglePause, order }: { settings: Settings; update: (patch: Partial<Settings>) => void; paused: boolean; onTogglePause: (paused: boolean) => void; order?: number }) {
   const [preference] = usePreference();
   // Barra y discos sólo tienen sentido si entrenas con barra (en casa o en tu gimnasio).
   const usesBarbell = availableEquipment(preference).has("barbell");
@@ -108,6 +111,11 @@ export function TrainingSection({ settings, update, order }: { settings: Setting
         }
       />
       </>}
+      <SettingRow
+        title="Pausar racha esta semana"
+        helper="Para vacaciones, enfermedad o viaje: la semana no suma ni corta tu racha. Descansar también es parte del plan."
+        control={<Switch checked={paused} onChange={onTogglePause} label="Pausar racha esta semana" />}
+      />
     </SettingsGroup>
   );
 }

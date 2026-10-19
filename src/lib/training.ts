@@ -42,6 +42,11 @@ export function recordsVolume(records: ExerciseRecord[]) {
   return records.reduce((sum, record) => record.unit !== "reps" ? sum : sum + record.sets.filter((set) => set.done && isWorkingSet(set)).reduce((acc, set) => acc + set.value * set.load, 0), 0);
 }
 
+/** Tonelaje de una sesión; los registros antiguos sin `volume` se calculan a partir de sus series. */
+export function workoutVolume(workout: WorkoutEntry) {
+  return workout.volume ?? (workout.records ? recordsVolume(workout.records) : 0);
+}
+
 export function durationSeconds(draft: TrainingDraft, now: number) {
   return draft.elapsedSeconds + (draft.runningSince === null ? 0 : Math.max(0, Math.floor((now - draft.runningSince) / 1000)));
 }
