@@ -11,13 +11,15 @@ import { useCloudStatus } from "@/lib/cloud/use-cloud";
 import { RestoreSheet } from "./restore-sheet";
 import { cn } from "@/lib/utils";
 
-// Pesas sobre el piso de un gimnasio en penumbra (rawpixel, CC0). El muro y la luz de la ventana son CSS.
-const floor = { src: "/images/editorial/splash-floor.webp", alt: "" };
+// Atleta encapuchado en un banco, gimnasio en penumbra (Alan Cordero en Pexels, licencia libre de Pexels).
+// Pasada a blanco y negro; la luz del techo, la viñeta y el brillo rojo son CSS.
+const hard = { src: "/images/editorial/splash-hard.webp", alt: "" };
 
 /**
- * Portada de bienvenida: gimnasio en penumbra con luz entrando por la ventana, la frase de marca en
- * mayúsculas angostas, el botón para empezar y «Ya tengo PULSO» para recuperar los datos (cuenta o
- * respaldo) sin repetir la evaluación. Al empezar se desvanece sobre la primera pregunta, que ya está debajo.
+ * Portada de bienvenida, estilo gimnasio duro: atleta encapuchado bajo la luz del techo, «DISCIPLINA.»
+ * espaciada sobre su cabeza, la frase de marca abajo, el botón para empezar y «Ya tengo PULSO» para
+ * recuperar los datos (cuenta o respaldo) sin repetir la evaluación. Al empezar se desvanece sobre la
+ * primera pregunta, que ya está debajo.
  */
 export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: number; leaving: boolean; onStart: () => void; onLeft: () => void }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -44,21 +46,19 @@ export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: n
   return (
     <section className={cn("onb-splash grain on-dark", leaving && "is-leaving")} aria-labelledby="onb-splash-title" inert={leaving} onAnimationEnd={onAnimationEnd}>
       <div className="onb-splash-scene" aria-hidden="true">
-        <span className="onb-splash-window" />
-        <span className="onb-splash-beams" />
-        <Image src={floor.src} alt={floor.alt} fill sizes="100vw" preload loading="eager" className="onb-splash-floor" />
+        <Image src={hard.src} alt={hard.alt} fill sizes="100vw" preload loading="eager" className="onb-splash-photo" />
+        <span className="onb-splash-beam" />
+        <span className="onb-splash-shade" />
       </div>
       <div className="onb-splash-content">
         <header className="onb-splash-top">
           <Logo gradient className="onb-splash-logo" />
         </header>
+        <p className="onb-splash-word rise" style={{ "--i": 2 } as CSSProperties}>Disciplina.</p>
         <div className="onb-splash-center">
-          <p className="onb-splash-kicker rise" style={{ "--i": 2 } as CSSProperties}>Disciplina</p>
-          <span className="onb-splash-rule rise" style={{ "--i": 2 } as CSSProperties} aria-hidden="true" />
           <h1 id="onb-splash-title" ref={titleRef} tabIndex={-1} className="onb-splash-title rise" style={{ "--i": 3 } as CSSProperties}>
             <span>Entrenamiento</span> <span>que se adapta</span> <span className="onb-splash-accent">a tu vida</span>
           </h1>
-          <span className="onb-splash-rule rise" style={{ "--i": 4 } as CSSProperties} aria-hidden="true" />
           <p className="onb-splash-kicker rise" style={{ "--i": 4 } as CSSProperties}>Entrena · Come bien · Avanza</p>
         </div>
         <div className="onb-splash-cta rise" style={{ "--i": 6 } as CSSProperties}>
