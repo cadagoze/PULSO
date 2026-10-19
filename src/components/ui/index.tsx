@@ -102,6 +102,11 @@ export function NumberMetric({ value, unit, label, size = "m", className, animat
   );
 }
 
+/** Rejilla de métricas: dos columnas, con aire entre número y número. */
+export function MetricGrid({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("metric-grid", className)}>{children}</div>;
+}
+
 /** Métrica compacta (número + etiqueta) para filas y tarjetas pequeñas. */
 export function Metric({ value, unit, label, className }: { value: ReactNode; unit?: ReactNode; label: ReactNode; className?: string }) {
   return <NumberMetric value={value} unit={unit} label={label} size="s" className={className} />;

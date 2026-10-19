@@ -6,8 +6,18 @@ import { Camera, Pencil, Settings as SettingsIcon, UserRound } from "lucide-reac
 import { Button, NumberMetric } from "@/components/ui";
 import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
 import { cn } from "@/lib/utils";
-import type { Settings } from "@/types";
+import { equipmentById, fullGym } from "@/data/equipment";
+import { usePreference } from "@/lib/store";
+import type { Settings, TrainingEquipment, TrainingLocation } from "@/types";
 import { goalsSentence, initialsOf, memberSince, splitFocus } from "./profile-format";
+
+/** «Casa · Mancuernas + Banco», «Casa · Peso corporal» o «Gimnasio · Completo». */
+function placeLine(location: TrainingLocation, equipment: TrainingEquipment[] | undefined) {
+  if (location === "gym") return equipment && equipment.length < fullGym.length ? `Gimnasio · ${equipment.length} de ${fullGym.length} equipos` : "Gimnasio · Completo";
+  const labels = (equipment ?? []).map((id) => equipmentById.get(id)?.label).filter((label): label is string => Boolean(label));
+  if (!labels.length) return "Casa · Peso corporal";
+  return `Casa · ${labels.slice(0, 2).join(" + ")}${labels.length > 2 ? ` y ${labels.length - 2} más` : ""}`;
+}
 
 /** Foto de perfil o, sin foto, las iniciales (o un ícono si aún no hay nombre). */
 export function Avatar({ name, photo }: { name: string; photo?: string }) {
@@ -22,7 +32,8 @@ type HeaderProps = {
   photo?: string;
   profile: AssessmentProfile | null;
   workouts: number;
-  bestStreak: number;
+  /** Semanas seguidas cumpliendo la meta. */
+  streak: number;
   /** Peso actual ya formateado («81,5»), o null si no hay registros. */
   weight: string | null;
   unit: Settings["unit"];
@@ -30,10 +41,11 @@ type HeaderProps = {
 };
 
 /**
- * Portada editorial del perfil: foto, nombre en grande, objetivo y tres números.
+ * Portada editorial del perfil: foto, nombre en grande, objetivo, dónde entrenas y tres números.
  * El fondo es atmósfera con grano; con foto, tu propia foto desenfocada.
  */
-export function ProfileHeader({ name, photo, profile, workouts, bestStreak, weight, unit, onEdit }: HeaderProps) {
+export function ProfileHeader({ name, photo, profile, workouts, streak, weight, unit, onEdit }: HeaderProps) {
+  const [preference] = usePreference();
   const displayName = name.trim();
   const since = memberSince(profile);
   const focus = profile ? splitFocus(profile.recommendation.focus).head : "";
@@ -63,11 +75,12 @@ export function ProfileHeader({ name, photo, profile, workouts, bestStreak, weig
             "Completa tu evaluación para personalizar PULSO."
           )}
         </p>
+        <p className="prof-place">{placeLine(preference.location, preference.location === "gym" ? preference.gymEquipment : preference.equipment)}</p>
       </div>
 
       <div className="prof-stats">
         <NumberMetric value={workouts} label={workouts === 1 ? "entrenamiento" : "entrenamientos"} />
-        <NumberMetric value={bestStreak} unit="sem" label="mejor racha" />
+        <NumberMetric value={streak} unit="sem" label="de racha" />
         {weight ? (
           <NumberMetric value={weight} unit={unit} label="peso actual" />
         ) : (

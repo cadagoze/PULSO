@@ -2,7 +2,7 @@
 
 import Link from "@/components/ui/app-link";
 import type { CSSProperties, ReactNode } from "react";
-import { Bell, BookOpen, ChevronRight, ClipboardCheck, DatabaseBackup, RotateCcw, Settings, Smartphone, Utensils } from "lucide-react";
+import { Bell, BookOpen, ChevronRight, ClipboardCheck, Dumbbell, Palette, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
 
 function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
@@ -17,40 +17,47 @@ function RowBody({ icon, title, detail }: { icon: ReactNode; title: string; deta
   );
 }
 
-/** Accesos ligeros bajo el plan: ajustes, avisos, nutrición, guía, evaluación y respaldo. */
+/** Preferencias agrupadas (entrenamiento, apariencia, datos y privacidad) y, debajo, lo demás. */
 export function ProfileLinks({ hasProfile, onAssess, onInstall }: { hasProfile: boolean; onAssess: () => void; onInstall?: () => void }) {
   return (
-    <section className="prof-links rise" style={{ "--i": 2 } as CSSProperties} aria-labelledby="prof-links-title">
-      <h2 id="prof-links-title" className="meta">Ajustes y más</h2>
-      <div className="list">
-        <Link href="/ajustes" className="list-row">
-          <RowBody icon={<Settings size={19} />} title="Ajustes" detail="Tema, unidades, descanso, sonido y racha." />
-        </Link>
-        <Link href="/ajustes#avisos" className="list-row">
-          <RowBody icon={<Bell size={19} />} title="Notificaciones" detail="Hora de entrenar, racha, comidas y agua." />
-        </Link>
-        <Link href="/comidas" className="list-row">
-          <RowBody icon={<Utensils size={19} />} title="Comidas" detail="Lo que comes, proteína, agua y hábitos del día." />
-        </Link>
-        <Link href="/guia" className="list-row">
-          <RowBody icon={<BookOpen size={19} />} title="Guía" detail="Lecturas breves sobre fuerza, descanso y alimentación." />
-        </Link>
-        <button type="button" className="list-row" onClick={onAssess}>
-          <RowBody
-            icon={hasProfile ? <RotateCcw size={19} /> : <ClipboardCheck size={19} />}
-            title={hasProfile ? "Rehacer evaluación" : "Hacer evaluación"}
-            detail="Toma unos dos minutos. Tus entrenamientos se conservan."
-          />
-        </button>
-        {onInstall && (
-          <button type="button" className="list-row" onClick={onInstall}>
-            <RowBody icon={<Smartphone size={19} />} title="Instalar en tu teléfono" detail="Ábrela con un toque desde tu pantalla de inicio." />
+    <>
+      <section className="prof-links rise" style={{ "--i": 3 } as CSSProperties} aria-labelledby="prof-links-title">
+        <h2 id="prof-links-title" className="meta">Preferencias</h2>
+        <div className="list">
+          <Link href="/ajustes#entrenamiento" className="list-row">
+            <RowBody icon={<Dumbbell size={19} />} title="Entrenamiento" detail="Lugar, equipamiento, descanso, sonido y pantalla." />
+          </Link>
+          <Link href="/ajustes#apariencia" className="list-row">
+            <RowBody icon={<Palette size={19} />} title="Apariencia" detail="Tema, color y fotos." />
+          </Link>
+          <Link href="/ajustes#avisos" className="list-row">
+            <RowBody icon={<Bell size={19} />} title="Notificaciones" detail="Hora de entrenar, racha, comidas y agua." />
+          </Link>
+          <Link href="/ajustes#datos" className="list-row">
+            <RowBody icon={<ShieldCheck size={19} />} title="Datos y privacidad" detail="Respaldo, exportación y cómo cuidamos tus datos." />
+          </Link>
+        </div>
+      </section>
+      <section className="prof-links rise" style={{ "--i": 4 } as CSSProperties} aria-labelledby="prof-more-title">
+        <h2 id="prof-more-title" className="meta">Más</h2>
+        <div className="list">
+          <Link href="/guia" className="list-row">
+            <RowBody icon={<BookOpen size={19} />} title="Guía" detail="Lecturas breves sobre fuerza, descanso y alimentación." />
+          </Link>
+          <button type="button" className="list-row" onClick={onAssess}>
+            <RowBody
+              icon={hasProfile ? <RotateCcw size={19} /> : <ClipboardCheck size={19} />}
+              title={hasProfile ? "Rehacer evaluación" : "Hacer evaluación"}
+              detail="Toma unos dos minutos. Tus entrenamientos se conservan."
+            />
           </button>
-        )}
-        <Link href="/ajustes#datos" className="list-row">
-          <RowBody icon={<DatabaseBackup size={19} />} title="Respaldo de datos" detail="Exporta o importa todo lo que has registrado." />
-        </Link>
-      </div>
-    </section>
+          {onInstall && (
+            <button type="button" className="list-row" onClick={onInstall}>
+              <RowBody icon={<Smartphone size={19} />} title="Instalar en tu teléfono" detail="Ábrela con un toque desde tu pantalla de inicio." />
+            </button>
+          )}
+        </div>
+      </section>
+    </>
   );
 }

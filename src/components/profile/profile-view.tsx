@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
-import { bestWeekStreak, weekStreak } from "@/lib/analytics";
+import { weekStreak } from "@/lib/analytics";
 import { useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { CloudAccount } from "@/components/cloud/cloud-account";
@@ -14,9 +14,10 @@ import { ProfileEditor } from "./profile-editor";
 import { latestWeight, weightNumber } from "./profile-format";
 import { ProfileHeader } from "./profile-header";
 import { ProfileLinks } from "./profile-links";
+import { ProgressSummary } from "./progress-summary";
 import { Toast, useToast } from "@/components/ui/toast";
 
-/** Perfil: portada editorial (foto, nombre, objetivo y números), el plan actual y accesos a ajustes. */
+/** Perfil: portada editorial (foto, nombre, objetivo, lugar y números), tu plan, tu progreso, la cuenta y las preferencias. */
 export function ProfileView() {
   const [profile, setProfile] = useProfile();
   const [workouts] = useWorkouts();
@@ -30,11 +31,7 @@ export function ProfileView() {
   const [installing, setInstalling] = useState(false);
   const install = useInstallState();
 
-  const bestStreak = useMemo(() => {
-    if (!now) return 0;
-    const current = weekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks, new Date(now));
-    return Math.max(current.streak, bestWeekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks));
-  }, [now, settings.pausedWeeks, settings.weeklyGoal, workouts]);
+  const streak = useMemo(() => (now ? weekStreak(workouts, settings.weeklyGoal, settings.pausedWeeks, new Date(now)).streak : 0), [now, settings.pausedWeeks, settings.weeklyGoal, workouts]);
 
   // Hasta hidratar no conocemos los datos guardados: evitamos mostrar un perfil vacío por error.
   if (!now) return <ProfileSkeleton />;
@@ -60,14 +57,15 @@ export function ProfileView() {
         photo={photo}
         profile={profile}
         workouts={workouts.length}
-        bestStreak={bestStreak}
+        streak={streak}
         weight={latest ? weightNumber(latest.weight, settings.unit) : null}
         unit={settings.unit}
         onEdit={openEditor}
       />
       <div className="prof-side">
-        <CloudAccount onToast={show} />
         <PlanSection onAssess={() => setAssessing(true)} onToast={show} />
+        <ProgressSummary now={now} />
+        <CloudAccount onToast={show} />
         <ProfileLinks hasProfile={Boolean(profile)} onAssess={() => setAssessing(true)} onInstall={install.ready && !install.standalone ? () => setInstalling(true) : undefined} />
       </div>
 
