@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { Undo2 } from "lucide-react";
-import { PageHeader, Sheet } from "@/components/ui";
+import { Plus, Undo2 } from "lucide-react";
+import { Button, PageHeader, Sheet } from "@/components/ui";
 import { DayBalance } from "@/components/content/day-balance";
 import { DayProgress } from "@/components/content/day-progress";
 import { HabitRows } from "@/components/content/habit-rows";
@@ -260,13 +260,19 @@ export default function NutritionPage() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has("registrar") && !params.has("calcular")) return;
     window.history.replaceState(null, "", window.location.pathname);
-    if (params.has("calcular") || !profile || !targets) openSetup();
-    else if (counting) openPicker(mealSlotAt(new Date()));
-    else {
-      const next = meals.find((meal) => !isLogged(meal));
-      if (next) openMeal(next.id);
-    }
+    if (params.has("calcular")) openSetup();
+    else startAdding();
   });
+
+  /** «Añadir comida»: el buscador para la comida de esta hora (si cuentas calorías) o la próxima comida sin registrar. */
+  function startAdding() {
+    if (counting && targets) {
+      openPicker(mealSlotAt(new Date()));
+      return;
+    }
+    const next = meals.find((meal) => !isLogged(meal)) ?? meals[0];
+    if (next) openMeal(next.id);
+  }
   const ready = now !== 0;
   useEffect(() => {
     if (!ready) return;
@@ -277,7 +283,7 @@ export default function NutritionPage() {
   if (!ready) return <div className="page cnt-page" aria-busy="true"><div className="nut-skeleton" /></div>;
 
   const subtitle = counting
-    ? "Tus calorías y macros de hoy, para entrenar con energía."
+    ? "Lo que comes hoy: proteína, energía y hábitos para entrenar bien."
     : profile
       ? "Reconoce patrones de energía y saciedad, sin contar calorías."
       : "Calcula cuánto comer según tu objetivo y registra tu día.";
@@ -288,11 +294,11 @@ export default function NutritionPage() {
         <PageHeader meta={formatLongDate(new Date(now))} title="Comidas" subtitle={subtitle} />
         {!targets && <SetupPrompt onStart={openSetup} missingWeight={Boolean(profile)} />}
         {counting && targets ? <CalorieSummary targets={targets} totals={totals} /> : <DayProgress meals={meals} habitsDone={habitsDone} habitsTotal={habits.length} />}
+        <Button size="l" block onClick={startAdding}><Plus size={18} />Añadir comida</Button>
         <WaterTracker className="nut-water" glasses={water.glasses} goal={water.goal} onChange={water.change} />
       </div>
 
       <div className="cnt-main">
-        {counting && review.status === "ready" && review.due && <WeeklyReviewCard review={review} onAnswer={answerReview} />}
         {counting ? (
           <section className="cnt-section" aria-labelledby="nut-meals-title">
             <div className="cnt-head">
@@ -311,6 +317,7 @@ export default function NutritionPage() {
           </section>
         )}
         {gap && <DayGapCard gap={gap} onAdd={addIdea} />}
+        {counting && review.status === "ready" && review.due && <WeeklyReviewCard review={review} onAnswer={answerReview} />}
 
         <section id="habitos" className="cnt-section" aria-labelledby="cnt-habits-title">
           <div className="cnt-head">

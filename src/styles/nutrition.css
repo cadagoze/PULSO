@@ -46,8 +46,9 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-meal-head strong { font-size: 16.5px; font-weight: 600; letter-spacing: -.015em; }
 .nut-meal-head small { font-size: 13px; color: var(--ink-2); }
 .nut-meal.has-items .nut-meal-head small { color: var(--ink); font-weight: 600; }
-.nut-add { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
-@media (hover: hover) { .nut-add:hover { background: var(--accent-bright); } }
+/* «+» de cada comida en tono suave: el rojo pleno es para «Añadir comida». */
+.nut-add { background: var(--accent-soft); color: var(--accent-text); box-shadow: none; }
+@media (hover: hover) { .nut-add:hover { background: rgb(var(--accent-rgb) / 22%); } }
 .nut-items { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
 .nut-item, .nut-food { position: relative; isolation: isolate; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 10px; border-radius: var(--radius-s); text-align: left; transition: background-color var(--motion-fast); }
 .nut-item::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--accent-soft); opacity: 0; }

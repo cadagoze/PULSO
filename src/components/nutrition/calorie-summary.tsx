@@ -4,7 +4,7 @@ import { formatKcal, type NutritionTargets, type Totals } from "@/lib/nutrition"
 import { cn } from "@/lib/utils";
 
 /**
- * El día en números: calorías restantes en grande, lo consumido frente al objetivo
+ * Resumen del día: calorías restantes (sin protagonismo excesivo), lo consumido frente al objetivo
  * y las barras de proteína, carbohidratos y grasa.
  */
 export function CalorieSummary({ targets, totals }: { targets: NutritionTargets; totals: Totals }) {
@@ -19,9 +19,9 @@ export function CalorieSummary({ targets, totals }: { targets: NutritionTargets;
 
   return (
     <section className="nut-summary" aria-labelledby="nut-summary-title">
-      <h2 id="nut-summary-title" className="meta">Hoy · Objetivo {formatKcal(targets.kcal)} kcal</h2>
+      <h2 id="nut-summary-title" className="meta">Resumen del día · Objetivo {formatKcal(targets.kcal)} kcal</h2>
       <NumberMetric
-        size="xl"
+        size="l"
         className={cn("nut-remaining", over && "is-over")}
         value={formatKcal(Math.abs(remaining))}
         label={over ? "kcal sobre tu objetivo" : remaining === 0 ? "Objetivo justo" : "kcal restantes"}
