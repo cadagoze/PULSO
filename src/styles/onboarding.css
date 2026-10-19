@@ -183,3 +183,12 @@
   .onb-result-title { font-size: clamp(52px, 5.4vw, 76px); }
   .onb-result-metrics .nmetric-value { font-size: clamp(150px, 14vw, 220px); }
 }
+
+/* «Ya tengo PULSO»: botón secundario translúcido sobre la portada y estado de la recuperación. */
+.onb-splash-cta .onb-splash-restore { background: rgb(255 255 255 / 9%); color: #fff; border-color: rgb(255 255 255 / 18%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 15px; white-space: normal; text-align: center; }
+@media (hover: hover) { .onb-splash-cta .onb-splash-restore:hover { background: rgb(255 255 255 / 15%); } }
+.onb-splash-cta .onb-splash-restore:active { transform: scale(.97); }
+.onb-splash-cta .btn:disabled { opacity: .55; }
+.onb-splash-status { padding: 10px 14px; border-radius: var(--radius); background: rgb(255 255 255 / 8%); font-size: 13.5px; line-height: 1.4; color: rgb(255 255 255 / 86%); text-align: center; }
+.onb-splash-status.is-busy::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 0 var(--brand); vertical-align: 1px; animation: pulse 1.4s infinite; }
+.onb-restore { display: flex; flex-direction: column; gap: 14px; }

@@ -39,7 +39,6 @@
 .cloud-privacy { font-size: 12px; line-height: 1.5; }
 
 /* Acceso desde la evaluación inicial. */
-.onb-splash-signin { display: inline; padding: 0; font: inherit; font-weight: 600; color: #fff; text-decoration: underline; text-underline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) { .cloud-status .cloud-dot { animation: none; } }
 
