@@ -2,8 +2,10 @@ import { pickPhoto, type Audience } from "@/lib/personalize";
 
 /**
  * Portadas de Inicio según la sesión del día y según a quién se muestran (mujeres, hombres o mixtas),
- * en blanco y negro con brillo de fuego (CSS). Fotos de StockSnap y rawpixel con licencia CC0
- * (uso libre, sin atribución). Donde hay dos, se alternan por día.
+ * en blanco y negro con brillo de fuego (CSS). Fotos de esfuerzo real que invitan a entrenar: Pexels
+ * (licencia de Pexels: uso comercial libre, sin atribución; el id va en el comentario) y una de StockSnap
+ * con licencia CC0. Vienen recortadas en 4:5 con el atleta en el tercio de arriba, para que el texto
+ * de la tarjeta no lo tape. Donde hay varias, se alternan por día.
  */
 
 export interface HeroPhoto { src: string; alt: string; position?: string }
@@ -11,26 +13,31 @@ export type HeroKind = "home" | "gym" | "cardio" | "mobility";
 
 const heroPhotos: Record<HeroKind, { female: HeroPhoto[]; male: HeroPhoto[] }> = {
   home: {
-    female: [{ src: "/images/editorial/hero-f-home-squat.webp", alt: "Mujer haciendo una sentadilla al aire libre", position: "center 22%" }],
-    male: [{ src: "/images/editorial/hero-home-pushup.webp", alt: "Hombre con polerón haciendo flexiones en una escalera de piedra", position: "center 35%" }],
+    // Pexels 2780762 · 14598858
+    female: [{ src: "/images/editorial/hero-f-home-pushup.webp", alt: "Mujer haciendo flexiones sobre una colchoneta, con luz lateral", position: "center 15%" }],
+    male: [{ src: "/images/editorial/hero-m-home-floor.webp", alt: "Hombre haciendo flexiones sobre un piso de cemento junto a un muro de ladrillo", position: "center 15%" }],
   },
   gym: {
+    // Pexels 14591521 · 14623740 · 5327530 · 5837244; la barra con magnesio es de StockSnap (CC0).
     female: [
-      { src: "/images/editorial/hero-f-gym-ropes.webp", alt: "Mujer entrenando con cuerdas de batalla en un gimnasio", position: "30% center" },
-      { src: "/images/editorial/hero-gym-back.webp", alt: "Mujer de espaldas, con la musculatura marcada, en un gimnasio oscuro", position: "62% 30%" },
+      { src: "/images/editorial/hero-f-gym-deadlift.webp", alt: "Mujer preparando un peso muerto frente a un muro de ladrillo", position: "center 15%" },
+      { src: "/images/editorial/hero-f-gym-pull.webp", alt: "Mujer levantando una barra cargada en un gimnasio oscuro", position: "center 15%" },
     ],
     male: [
+      { src: "/images/editorial/hero-m-gym-squat.webp", alt: "Hombre bajando en una sentadilla con barra dentro del rack", position: "center 15%" },
+      { src: "/images/editorial/hero-m-gym-grip.webp", alt: "Hombre concentrado tomando la barra antes de levantar", position: "center 15%" },
       { src: "/images/editorial/hero-gym-deadlift.webp", alt: "Manos con magnesio tomando una barra antes de un peso muerto", position: "center 40%" },
-      { src: "/images/editorial/hero-gym-plate.webp", alt: "Primer plano de una barra cargada con discos", position: "center 40%" },
     ],
   },
   cardio: {
-    female: [{ src: "/images/editorial/hero-f-cardio-run.webp", alt: "Mujer con polerón que dice RUN", position: "center 30%" }],
-    male: [{ src: "/images/editorial/hero-cardio-run.webp", alt: "Hombre corriendo junto a un muro de piedra", position: "center 30%" }],
+    // Pexels 1552108 · 27948294
+    female: [{ src: "/images/editorial/hero-f-cardio-ropes.webp", alt: "Mujer agitando cuerdas de batalla en un gimnasio en penumbra", position: "center 15%" }],
+    male: [{ src: "/images/editorial/hero-m-cardio-sprint.webp", alt: "Hombre saliendo en un sprint explosivo sobre una pista", position: "center 15%" }],
   },
   mobility: {
-    female: [{ src: "/images/editorial/hero-f-mobility-stretch.webp", alt: "Mujer estirando el cuádriceps en una pista de atletismo", position: "center 30%" }],
-    male: [{ src: "/images/editorial/hero-mobility-stretch.webp", alt: "Hombre estirando el cuádriceps en un sendero", position: "center 30%" }],
+    // Pexels 10039535 · 6388979
+    female: [{ src: "/images/editorial/hero-f-mobility-lunge.webp", alt: "Mujer en una zancada baja estirando la cadera en un gimnasio", position: "center 15%" }],
+    male: [{ src: "/images/editorial/hero-m-mobility-side.webp", alt: "Hombre en un estiramiento lateral con luz de ventana en un gimnasio", position: "center 15%" }],
   },
 };
 
