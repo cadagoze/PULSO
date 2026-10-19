@@ -14,7 +14,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; match?: string[]
 
 const items: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
-  { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios", "/pausas"] },
+  { href: "/entrenar", label: "Entrenar", icon: Dumbbell, match: ["/entrenar", "/ejercicios", "/pausas", "/herramientas"] },
   { href: "/comidas", label: "Comidas", icon: Salad },
   { href: "/progreso", label: "Progreso", icon: ChartNoAxesColumn },
   { href: "/perfil", label: "Perfil", icon: UserRound, match: ["/perfil", "/ajustes", "/guia", "/bienestar"] },
@@ -22,6 +22,8 @@ const items: NavItem[] = [
 
 /** Pantallas a pantalla completa, sin navegación. */
 export const focusRoutes = ["/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/pausas/"];
+/** Pantallas que ya muestran el entrenamiento en curso en su portada: ahí sobra el acceso permanente. */
+const draftRoutes = ["/", "/entrenar"];
 
 function activeIndex(pathname: string) {
   return items.findIndex((item) => item.href === "/" ? pathname === "/" : (item.match ?? [item.href]).some((href) => pathname.startsWith(href)));
@@ -34,7 +36,7 @@ export function BottomNavigation() {
 
   return (
     <>
-      <ResumeBanner />
+      {!draftRoutes.includes(pathname) && <ResumeBanner />}
       <nav className="bottom-nav on-dark" aria-label="Navegación principal">
         {/* En computador la barra pasa a un riel lateral con el isotipo arriba. */}
         <Link href="/" className="nav-brand" aria-label="PULSO, ir a Inicio"><Isotype /></Link>
@@ -61,6 +63,12 @@ export function BottomNavigation() {
  * los botones pausan o reanudan el reloj y abren las opciones para terminar o descartar.
  */
 function ResumeBanner() {
+  const { draft } = useDraftControls();
+  // El reloj de un segundo sólo corre mientras hay un entrenamiento en curso.
+  return draft ? <ResumeBar /> : null;
+}
+
+function ResumeBar() {
   const { draft, paused, togglePause } = useDraftControls();
   const [ending, setEnding] = useState(false);
   const now = useNow(1000);

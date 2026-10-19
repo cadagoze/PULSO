@@ -402,7 +402,7 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 .nav-resume .grow { flex: 1; min-width: 0; }
 .nav-resume .pulse-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.8s infinite; flex: none; }
 .nav-resume-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 44px; color: inherit; }
-.nav-resume .resume-btn { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; flex: none; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
+.nav-resume .resume-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex: none; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast); }
 .nav-resume .resume-btn:active { transform: scale(.9); }
 .nav-resume .resume-go { background: var(--accent); color: var(--accent-ink); }
 .nav-resume .resume-end { background: rgb(255 255 255 / 10%); color: var(--on-carbon); }
