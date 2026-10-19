@@ -448,6 +448,8 @@ body:has(.sheet-backdrop:not(.is-closing)) .toast { bottom: auto; top: calc(var(
 
 /* ─── Ejercicios (compartido) ─────────────────────────────────────────── */
 .exercise-visual { position: relative; overflow: hidden; background: var(--surface-2); border-radius: var(--radius); flex: none; }
+/* Fotos de demostración también en blanco y negro: la misma estética en toda la biblioteca. */
+.exercise-visual > img { filter: grayscale(1) contrast(1.06); }
 .exercise-visual img { object-fit: cover; }
 .exercise-visual-thumb { width: 56px; height: 56px; border-radius: 16px; }
 .exercise-visual-card { width: 100%; aspect-ratio: 4 / 3; }

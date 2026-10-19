@@ -1147,3 +1147,29 @@ test('conteo de cifras: lee y escribe números en formato chileno', () => {
   assert.equal(count.formatCount(36.2, 1), '36,2');
   assert.equal(count.formatCount(3, 0, 2), '03');
 });
+
+test('casa o gimnasio: el mismo movimiento con el equipo de cada lugar', () => {
+  const bench = training.exerciseById(60);
+  const home = generator.placeAlternative(bench, 'home');
+  assert.ok(home, 'el press de banca tiene versión en casa');
+  assert.equal(home.pattern, bench.pattern);
+  const { capabilitiesOf } = load('src/data/equipment.ts');
+  assert.ok(generator.isAvailable(home, capabilitiesOf(['dumbbells'])), `${home.name} se hace con mancuernas o sin nada`);
+  assert.equal(generator.placeAlternative(bench, 'gym'), null, 'ya es de gimnasio');
+  const pushup = training.exerciseById(31);
+  assert.equal(generator.placeAlternative(pushup, 'home'), null, 'las flexiones ya sirven en casa');
+  const gym = generator.placeAlternative(pushup, 'gym');
+  assert.ok(gym, 'las flexiones tienen versión de gimnasio');
+  assert.equal(gym.pattern, pushup.pattern);
+});
+
+test('medios de ejercicios: capa propia, local y sin conexión', () => {
+  const { exerciseMedia } = load('src/lib/exercise-media.ts');
+  for (const exercise of exercises) {
+    const media = exerciseMedia(exercise);
+    assert.equal(media.source, 'local');
+    assert.ok(media.image || media.illustration, `${exercise.name} tiene foto o ilustración`);
+  }
+  const photo = exerciseMedia(exercises.find((exercise) => exercise.image));
+  assert.match(photo.frames.start, /^\/images\/editorial\/.+-start\.webp$/);
+});

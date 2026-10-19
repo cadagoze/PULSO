@@ -77,6 +77,10 @@ PULSO es negra y blanca, premium y editorial, con una marca rojo-naranja muy fue
 
 Los ejercicios sin foto se muestran con una ilustración propia en dos viñetas (inicio → final). Cada una es una pose en `src/data/illustrations`: ángulos por segmento del cuerpo (0° abajo, 90° adelante, 180° arriba) y accesorios como bancos, barras, bandas o máquinas. `src/lib/illustration.ts` la convierte en SVG, apoya la figura en el suelo y destaca en lima los músculos principales. `npm test` falla si un ejercicio sin foto queda sin ilustración o si una figura se sale del cuadro.
 
+Todos los medios pasan por `src/lib/exercise-media.ts` (`ExerciseMedia`: foto, cuadros de inicio y final, ilustración y, a futuro, GIF o video con su `source`). La interfaz no conoce a ningún proveedor: si algún día se suma uno, se conecta ahí y, si falla, vuelve a lo local. En octubre de 2026 se evaluaron ExerciseDB y MuscleWiki y se descartaron por ahora: sus términos prohíben guardar los medios para usarlos sin conexión (la sesión activa debe funcionar sin internet) y el español es de pago. Para ampliar la biblioteca, los textos abiertos de wger (CC BY-SA) con ilustraciones propias.
+
+Cada ejercicio muestra su versión para casa y para el gimnasio (`placeAlternative` en `src/lib/generator.ts`): mismo patrón y músculos parecidos, con mancuernas o sin nada en casa, y con barra, máquinas o poleas en el gimnasio.
+
 ## Cómo decide PULSO
 
 - **Tus pesas** (`src/lib/loads.ts`): en casa puedes marcar los pesos que tienes (cada mancuerna, kettlebell, tobillera o balón; el máximo en barra y set unible). Cada ejercicio parte con una carga sugerida (fracción del peso corporal según ejercicio y nivel, o la de tu historial) y toma el peso más cercano que tengas. Si es liviano, sube las repeticiones (hasta 2×, tope 25) y suma una serie cuando falta mucho; si es pesado, baja las repeticiones (mínimo 5). Si las pesas no sirven (menos de 40 % o más de 1,6× la carga ideal), elige otro ejercicio del mismo tipo. El rango adaptado queda en el registro (`ExerciseRecord.range`) y la progresión lo respeta. En el gimnasio no se ajusta.

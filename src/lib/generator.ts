@@ -2,7 +2,7 @@ import { exercises } from "@/data/mock-data";
 import { progressedSets } from "@/lib/progression";
 import { lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
-import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingPreference, WorkoutEntry } from "@/types";
+import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingLocation, TrainingPreference, WorkoutEntry } from "@/types";
 import { capabilitiesOf, fullGym } from "@/data/equipment";
 import { availableLoads, fitLoad, loadCapability, nearestLoad, startingLoad, unfit } from "@/lib/loads";
 import { zoneById, type BodyZone } from "@/data/body-zones";
@@ -76,6 +76,20 @@ export function alternativesFor(exercise: Exercise, equipment?: Set<Equipment>) 
   return exercises
     .filter((item) => item.id !== exercise.id && item.category === exercise.category && item.pattern === exercise.pattern && (!equipment || isAvailable(item, equipment)))
     .sort((a, b) => sharedMuscles(b, exercise) - sharedMuscles(a, exercise) || Math.abs(a.level - exercise.level) - Math.abs(b.level - exercise.level));
+}
+
+const homeKit = capabilitiesOf(["dumbbells"]);
+const gymKit = capabilitiesOf(fullGym);
+
+/**
+ * El mismo movimiento para otro lugar (press de banca → flexiones; flexiones → press en máquina): en casa,
+ * con mancuernas o sin nada; en el gimnasio, con barra, máquinas o poleas. Mismo patrón y músculos parecidos.
+ * null si el ejercicio ya sirve en ese lugar o si no hay un equivalente.
+ */
+export function placeAlternative(exercise: Exercise, place: TrainingLocation): Exercise | null {
+  if (place === "home") return isAvailable(exercise, homeKit) ? null : alternativesFor(exercise, homeKit)[0] ?? null;
+  if (!isAvailable(exercise, homeKit)) return null;
+  return alternativesFor(exercise, gymKit).find((item) => !isAvailable(item, homeKit)) ?? null;
 }
 
 function sharedMuscles(a: Exercise, b: Exercise) {

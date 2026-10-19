@@ -9,7 +9,7 @@ import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { equipmentText } from "@/components/exercises/exercise-technique";
 import { AvailabilityHint, LevelDots, LibraryCard } from "@/components/library/library-card";
-import { alternativesFor, availableEquipment, isAvailable } from "@/lib/generator";
+import { alternativesFor, availableEquipment, isAvailable, placeAlternative } from "@/lib/generator";
 import { exerciseById } from "@/lib/training";
 import { usePreference } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,9 @@ export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
   const [preference] = usePreference();
   const equipment = useMemo(() => availableEquipment(preference), [preference]);
   const alternatives = useMemo(() => alternativesFor(exercise).slice(0, 6), [exercise]);
+  // El mismo movimiento en casa y en el gimnasio: uno de los dos es este ejercicio.
+  const homeAlt = useMemo(() => placeAlternative(exercise, "home"), [exercise]);
+  const gymAlt = useMemo(() => placeAlternative(exercise, "gym"), [exercise]);
   const easier = exercise.easier ? exerciseById(exercise.easier) : undefined;
   const harder = exercise.harder ? exerciseById(exercise.harder) : undefined;
   const mainMuscle = exercise.primary[0];
@@ -75,6 +78,19 @@ export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
           <LadderStep exercise={harder} label="Más difícil" fallback="Es la versión más exigente" />
         </ol>
       </section>
+
+      {(homeAlt || gymAlt) && (
+        <section className="lib-alt-section" aria-labelledby="lib-place-title">
+          <div className="lib-section-head">
+            <h3 id="lib-place-title" className="meta">Casa o gimnasio</h3>
+            <span className="meta lib-section-note">Mismo patrón</span>
+          </div>
+          <ol className="list lib-ladder">
+            <LadderStep exercise={homeAlt ?? exercise} label="En casa" current={!homeAlt} />
+            <LadderStep exercise={gymAlt ?? exercise} label="En el gimnasio" current={!gymAlt} />
+          </ol>
+        </section>
+      )}
 
       <section className="lib-alt-section" aria-labelledby="lib-alt-title">
         <div className="lib-section-head">
