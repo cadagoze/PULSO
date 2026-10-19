@@ -380,12 +380,6 @@
 
 /* ─── Foco en el entreno de hoy ────────────────────────────────────────── */
 .train-page > .page-header { align-items: center; }
-.place-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px 6px 14px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); text-align: left; }
-.place-chip > svg:first-child { color: var(--accent-text); }
-.place-chip > svg:last-child { color: var(--ink-3); }
-.place-chip-text { display: flex; flex-direction: column; line-height: 1.15; }
-.place-chip-text strong { font-size: 14px; font-weight: 600; }
-.place-chip-text small { font-size: 11.5px; color: var(--ink-2); }
 .equip-sheet-body { display: flex; flex-direction: column; gap: 20px; }
 
 .train-session { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -438,3 +432,10 @@
 .train-zones { display: flex; flex-direction: column; gap: 10px; margin-top: -6px; }
 .train-zones-row { flex-wrap: nowrap; margin: 0 calc(var(--gutter) * -1); padding: 2px var(--gutter); }
 .train-zones-row .chip { flex: none; }
+/* Casa | Gimnasio al inicio de Entrenar, con el equipamiento del lugar debajo. */
+.place-bar { display: flex; flex-direction: column; gap: 10px; }
+.place-bar-equip { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font-size: 14px; font-weight: 500; text-align: left; }
+.place-bar-equip > svg { flex: none; color: var(--accent-text); }
+.place-bar-equip .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place-bar-edit { display: inline-flex; align-items: center; gap: 2px; flex: none; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.train-hero .train-hero-context b { color: var(--ink); font-weight: 600; }

@@ -7,7 +7,7 @@ import { useDraft, useRoutines, useSettings } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn, weekNumber } from "@/lib/utils";
-import { PlaceChip } from "@/components/train/place-picker";
+import { PlaceBar } from "@/components/train/place-picker";
 import { RoutineEditor } from "@/components/train/routine-editor";
 import type { Routine } from "@/components/train/routines-section";
 import { TodayCard } from "@/components/train/today-card";
@@ -22,9 +22,9 @@ import { ZoneRow } from "@/components/train/zone-picker";
 const weekday = new Intl.DateTimeFormat("es-CL", { weekday: "long" });
 
 /**
- * Entrenar, enfocado en el entreno de hoy: la sesión con sus ejercicios y el botón para empezar a la
- * vista. Lugar y equipamiento van en un chip; programas, rutinas, biblioteca, herramientas y el
- * avance de la semana quedan plegados al final.
+ * Entrenar, enfocado en el entreno de hoy: primero Casa | Gimnasio y el equipamiento, luego la sesión
+ * con sus ejercicios y el botón para empezar a la vista; programas, rutinas, biblioteca, herramientas
+ * y el avance de la semana quedan plegados al final.
  */
 export function TrainHub() {
   const now = useNow();
@@ -80,7 +80,8 @@ export function TrainHub() {
 
   return (
     <div className={cn("page train-page", draft && "has-resume")}>
-      <PageHeader meta={`Semana ${weekNumber(date)} · ${weekday.format(date)}`} title="Entrenar" actions={<PlaceChip />} />
+      <PageHeader meta={`Semana ${weekNumber(date)} · ${weekday.format(date)}`} title="Entrenar" />
+      <PlaceBar />
       <TodayCard
         now={now}
         source={source}

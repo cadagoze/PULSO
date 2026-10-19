@@ -4,7 +4,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { CalendarDays, ChevronDown, Play, RotateCcw, Shuffle, SlidersHorizontal } from "lucide-react";
 import { Button, ButtonLink, MetaLine, ProgressBar, SegmentedControl } from "@/components/ui";
 import { Card } from "@/components/ui/cards";
-import { focusLabels } from "@/lib/generator";
+import { focusLabels, goalLabels } from "@/lib/generator";
+import { levelLabels } from "@/data/catalog";
 import { zoneById } from "@/data/body-zones";
 import { programSessionName } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
@@ -165,8 +166,8 @@ function CustomBody({ today, place, easier, listOpen, onToggleList, onAdjust }: 
 
   return (
     <>
-      <Head meta={restDay ? "Hoy es descanso · opcional" : "Tu rutina de hoy"} context={context} number={today.estimated} label="min" />
-      <Title details={[count(total, "ejercicio", "ejercicios"), place]} note={easier ? today.plan?.notes[0] : undefined}>
+      <Head meta={restDay ? "Hoy es descanso · opcional" : "Tu rutina de hoy"} context={<><b>{goalLabels[today.goal]}</b> · {context}</>} number={today.estimated} label="min" />
+      <Title details={[count(total, "ejercicio", "ejercicios"), place, levelLabels[today.level]]} note={easier ? today.plan?.notes[0] : undefined}>
         {zoneById(today.zone)?.label ?? focusLabels[today.focus]}
       </Title>
       <SessionList records={today.records} onMore={listOpen === false ? onToggleList : undefined} />

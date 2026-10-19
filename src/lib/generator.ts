@@ -10,6 +10,9 @@ import { zoneById, type BodyZone } from "@/data/body-zones";
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
 export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
 
+/** Objetivo de la sesión, en corto (tarjeta de la rutina de hoy). */
+export const goalLabels: Record<WorkoutGoal, string> = { strength: "Fuerza", weight: "Quemar grasa", energy: "Energía", habits: "Constancia" };
+
 export const focusLabels: Record<WorkoutFocus, string> = {
   full: "Cuerpo completo",
   upper: "Torso",

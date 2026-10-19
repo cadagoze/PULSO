@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput } from "@/lib/generator";
+import { estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, trainingGoal } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { progressedSets } from "@/lib/progression";
 import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
-import type { Exercise, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
+import type { Exercise, ExerciseLevel, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { zoneById, type BodyZone } from "@/data/body-zones";
 
@@ -86,6 +86,8 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const exercises = records.map((record) => exerciseById(record.exerciseId)).filter((item): item is Exercise => Boolean(item));
   const primary = [...new Set(exercises.flatMap((exercise) => exercise.primary))];
   const secondary = [...new Set(exercises.flatMap((exercise) => exercise.secondary))].filter((muscle: MuscleGroup) => !primary.includes(muscle));
+  // Dificultad de la sesión: el nivel promedio de sus ejercicios.
+  const level = (exercises.length ? Math.min(3, Math.max(1, Math.round(exercises.reduce((sum, exercise) => sum + exercise.level, 0) / exercises.length))) : 1) as ExerciseLevel;
 
   return {
     ready: Boolean(plan),
@@ -105,6 +107,8 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     edited,
     primary,
     secondary,
+    level,
+    goal: trainingGoal(profile?.goals, nutrition?.goal),
     includeWarmup,
     workouts,
     setIncludeWarmup,
