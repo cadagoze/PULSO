@@ -23,11 +23,7 @@ export function recordsForExercises(items: Exercise[], short = false): ExerciseR
   return (short ? items.slice(0, 3) : items).map((exercise) => recordFor(exercise, short ? 2 : exercise.sets));
 }
 
-export function defaultRecords(short = false): ExerciseRecord[] {
-  return recordsForExercises([1, 2, 3, 4, 5].map(exerciseById).filter((exercise): exercise is Exercise => Boolean(exercise)), short);
-}
 
-export const defaultRoutine: TrainingRoutine = { id: "rutina-base", name: "Fuerza en casa", days: [0, 2, 4], restSeconds: 60, records: defaultRecords() };
 
 export function isWorkingSet(set: SetRecord) {
   return set.kind !== "warmup";

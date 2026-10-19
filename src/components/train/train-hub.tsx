@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { useDraft, useRoutines, useSettings } from "@/lib/store";
 import { newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
-import { cn, weekNumber } from "@/lib/utils";
+import { localDateKey, weekNumber } from "@/lib/utils";
 import { PlaceBar } from "@/components/train/place-picker";
 import { RoutineEditor } from "@/components/train/routine-editor";
 import type { Routine } from "@/components/train/routines-section";
@@ -17,23 +17,26 @@ import type { TodaySource } from "@/components/train/today-plan";
 import { AdjustSheet } from "@/components/train/today-sheets";
 import { TrainMore } from "@/components/train/train-more";
 import { Toast, useToast } from "@/components/ui/toast";
-import { ZoneRow } from "@/components/train/zone-picker";
 
 const weekday = new Intl.DateTimeFormat("es-CL", { weekday: "long" });
 
 /**
- * Entrenar, enfocado en el entreno de hoy: primero Casa | Gimnasio y el equipamiento, luego la sesión
- * con sus ejercicios y el botón para empezar a la vista; programas, rutinas, biblioteca, herramientas
- * y el avance de la semana quedan plegados al final.
+ * Entrenar, enfocado en el entreno de hoy: Casa | Gimnasio y el equipamiento, la sesión con un solo
+ * botón para empezar y, en «Ajustar», todo lo demás (programa o a tu medida, duración, enfoque, zona,
+ * cómo estás, editar). Al final, tres filas: rutinas, biblioteca y Herramientas.
  */
 export function TrainHub() {
   const now = useNow();
   const ready = now !== 0;
   const params = useSearchParams();
-  // Enlaces antiguos: `?tab=programas|rutinas|herramientas` o `#objetivo` abren su panel al final.
+  const router = useRouter();
+  // Enlaces antiguos: `?tab=programas|rutinas` abren las rutinas; `?tab=herramientas`, la pantalla Herramientas.
   const [initialPanel] = useState(() => params.get("tab") ?? (typeof window === "undefined" ? null : window.location.hash.slice(1) || null));
   const [draft] = useDraft();
   const [, setRoutines] = useRoutines();
+  useEffect(() => {
+    if (initialPanel === "herramientas") router.replace("/herramientas");
+  }, [initialPanel, router]);
   const [settings] = useSettings();
   const today = useTodayPlan(now, params.get("zona"));
   const active = useActiveProgram();
@@ -78,36 +81,32 @@ export function TrainHub() {
 
   const date = new Date(now);
 
+  function showList() {
+    setListOpen(true);
+    window.requestAnimationFrame(() => document.getElementById("train-exercises")?.scrollIntoView({ block: "start" }));
+  }
+
   return (
-    <div className={cn("page train-page", draft && "has-resume")}>
+    <div className="page train-page">
       <PageHeader meta={`Semana ${weekNumber(date)} · ${weekday.format(date)}`} title="Entrenar" />
       <PlaceBar />
-      <TodayCard
-        now={now}
-        source={source}
-        sources={sources}
-        onSource={setPicked}
-        today={today}
-        active={active}
-        listOpen={listOpen}
-        onToggleList={() => setListOpen((value) => !value)}
-        onAdjust={() => setAdjustOpen(true)}
-        notify={toast.show}
-      />
-      <ZoneRow
-        value={today.zone}
-        onChange={(zone) => {
-          today.setZone(zone);
-          if (zone) setPicked("custom");
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      />
+      <TodayCard now={now} source={source} today={today} active={active} onShowList={showList} onAdjust={() => setAdjustOpen(true)} notify={toast.show} />
       <div className="train-extra">
         <TodayExercises source={source} today={today} active={active} visible={listOpen} onSaveRoutine={saveToday} />
       </div>
-      <TrainMore now={now} initial={initialPanel} onCreate={createRoutine} onEdit={(routine) => openEditor(routine, false)} notify={toast.show} />
+      <TrainMore initial={initialPanel} onCreate={createRoutine} onEdit={(routine) => openEditor(routine, false)} notify={toast.show} />
 
-      <AdjustSheet open={adjustOpen} onClose={() => setAdjustOpen(false)} today={today} />
+      <AdjustSheet
+        open={adjustOpen}
+        onClose={() => setAdjustOpen(false)}
+        today={today}
+        todayKey={localDateKey(date)}
+        source={source}
+        canChoose={sources.includes("program") && source !== "draft"}
+        onSource={setPicked}
+        active={active}
+        onEditList={showList}
+      />
       {editor && (
         <RoutineEditor
           key={`editor-${editor.key}`}
@@ -118,7 +117,7 @@ export function TrainHub() {
           onSave={saveRoutine}
         />
       )}
-      <Toast toast={toast.toast} className={cn("train-toast", draft && "is-raised")} />
+      <Toast toast={toast.toast} className="train-toast" />
     </div>
   );
 }

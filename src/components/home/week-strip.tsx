@@ -87,7 +87,7 @@ function ChallengeLine() {
   if (!current) return null;
   const Icon = challengeIcons[current.def.kind];
   return (
-    <Link href="/progreso?tab=retos" className="home-week-challenge">
+    <Link href="/herramientas?tab=retos" className="home-week-challenge">
       <Icon size={16} aria-hidden="true" />
       <span className="grow"><b>{current.def.title}</b> · <span className="num">{current.count}/{current.target}</span>{current.daysLeft === 1 ? " · último día" : ` · quedan ${current.daysLeft} días`}</span>
       <ChevronRight size={16} className="subtle" aria-hidden="true" />

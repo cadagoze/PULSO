@@ -14,7 +14,7 @@ const ASSETS = `${VERSION}-assets`;
 
 const ROUTES = [
   "/", "/entrenar", "/entrenar/sesion", "/entrenar/intervalos", "/entrenar/test", "/pausas", "/ejercicios",
-  "/progreso", "/perfil", "/ajustes", "/guia", "/comidas", "/bienestar",
+  "/progreso", "/perfil", "/ajustes", "/guia", "/comidas", "/bienestar", "/herramientas",
 ];
 const STATIC_FILES = [
   "/offline.html", "/manifest.webmanifest", "/icon/192", "/icon/512", "/apple-icon",

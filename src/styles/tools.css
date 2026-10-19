@@ -1,0 +1,4 @@
+/* PULSO — Herramientas: filas agrupadas (entrenar, calcular, medir, aprender) y las vistas de test y retos. */
+
+.tools-page { display: flex; flex-direction: column; gap: 26px; }
+.tools-group { display: flex; flex-direction: column; gap: 12px; }

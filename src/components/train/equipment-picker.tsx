@@ -3,9 +3,8 @@
 import { Fragment, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
-import { Button, SegmentedControl, Sheet, ToggleChip } from "@/components/ui";
-import { placeOptions } from "@/components/train/shared";
-import { equipmentById, equipmentCategoryLabels, equipmentFor, fullGym, type EquipmentCategory, type EquipmentItem } from "@/data/equipment";
+import { Button, Sheet, ToggleChip } from "@/components/ui";
+import { equipmentById, equipmentCategoryLabels, equipmentFor, fullGym, simpleEquipment, type EquipmentCategory, type EquipmentItem } from "@/data/equipment";
 import { usePreference, useSettings } from "@/lib/store";
 import { formatNumber, toDisplayWeight } from "@/lib/utils";
 import type { TrainingEquipment, TrainingLocation } from "@/types";
@@ -160,22 +159,65 @@ function EquipmentSheet({ place, open, onClose }: { place: TrainingLocation; ope
   );
 }
 
-/** Dónde entrenas y con qué, en una sola hoja: lugar arriba y el equipamiento de ese lugar. */
+/**
+ * Tu equipamiento en una hoja, primero lo simple. En casa: «Sin equipamiento» y lo más común (con los
+ * pesos que tienes); en el gimnasio se asume todo. El catálogo completo, al pedirlo.
+ */
 export function PlaceSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [preference, setPreference] = usePreference();
+  const [preference] = usePreference();
   const place = preference.location;
+  const [more, setMore] = useState(false);
   if (typeof document === "undefined") return null;
   return createPortal(
-    <Sheet open={open} onClose={onClose} eyebrow="Tu entreno" title="Dónde entrenas">
-      <div className="equip-sheet">
-        <SegmentedControl<TrainingLocation> size="l" label="Lugar de entrenamiento" options={placeOptions} value={place} onChange={(location) => setPreference((current) => ({ ...current, location }))} />
-        <p className="muted equip-sheet-lead">{leads[place]}</p>
-        <div key={place} className="equip-sheet-body train-swap">
-          <EquipmentList place={place} />
-        </div>
-        <EquipmentActions place={place} onClose={onClose} />
+    <Sheet open={open} onClose={onClose} eyebrow={place === "home" ? "En casa" : "En el gimnasio"} title="Tu equipamiento">
+      <div key={place} className="equip-sheet train-swap">
+        {place === "home" ? <HomeSimple /> : <GymSimple />}
+        {more ? (
+          <div className="equip-sheet-body">
+            <p className="muted equip-sheet-lead">{leads[place]}</p>
+            <EquipmentList place={place} />
+          </div>
+        ) : (
+          <button type="button" className="chip equip-more equip-more-row" onClick={() => setMore(true)}>
+            <Plus size={14} strokeWidth={2.6} aria-hidden="true" />{place === "home" ? "Más equipamiento" : "Mi gimnasio no tiene todo"}
+          </button>
+        )}
+        <Button block onClick={onClose}>Listo</Button>
       </div>
     </Sheet>,
     document.body,
+  );
+}
+
+/** Casa: «Sin equipamiento», lo más común y, para lo que tiene pesos, cuáles tienes. */
+function HomeSimple() {
+  const { selected, set, toggle } = useEquipment("home");
+  const withLoads = simpleEquipment
+    .filter((simple) => selected.includes(simple.id))
+    .map((simple) => equipmentById.get(simple.id))
+    .filter((item): item is EquipmentItem => Boolean(item?.loads));
+  return (
+    <>
+      <div className="chips" role="group" aria-label="Equipamiento en casa">
+        <ToggleChip pressed={selected.length === 0} onChange={() => set([])}>Sin equipamiento</ToggleChip>
+        {simpleEquipment.map((item) => (
+          <ToggleChip key={item.id} pressed={selected.includes(item.id)} onChange={() => toggle(item.id)}>{item.label}</ToggleChip>
+        ))}
+      </div>
+      {withLoads.map((item) => <LoadPicker key={item.id} item={item} />)}
+    </>
+  );
+}
+
+/** Gimnasio: equipamiento completo salvo que digas lo contrario. */
+function GymSimple() {
+  const { selected, set } = useEquipment("gym");
+  const complete = fullGym.every((id) => selected.includes(id));
+  return (
+    <div className="equip-gym">
+      <p><strong>{complete ? "Gimnasio completo" : `${selected.length} de ${fullGym.length} equipos disponibles`}</strong></p>
+      <p className="muted">Asumimos máquinas, poleas, barras, mancuernas y cardio. Si a tu gimnasio le falta algo, desmárcalo y tu rutina no lo usará.</p>
+      {!complete && <Button variant="ghost" size="s" onClick={() => set(fullGym)}>Volver a gimnasio completo</Button>}
+    </div>
   );
 }

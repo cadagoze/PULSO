@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AchievementsTab } from "@/components/progress/achievements-tab";
 import { BodyTab } from "@/components/progress/body-tab";
-import { ChallengesTab } from "@/components/progress/challenges-tab";
-import { FitnessTestTab } from "@/components/fitness-test/fitness-test-tab";
 import { HistoryTab } from "@/components/progress/history-tab";
 import { isPeriod, type Period } from "@/components/progress/period";
 import type { ChartMetric } from "@/components/progress/period-chart";
@@ -19,9 +17,10 @@ const subtitles: Record<ProgressSubview, string> = {
   records: "Tus mejores marcas, ejercicio por ejercicio.",
   cuerpo: "Peso y medidas: cambios que se ven con el tiempo.",
   logros: "Hitos de constancia, fuerza y volumen.",
-  retos: "30 días, una meta. Se cuenta sola con lo que registras.",
-  test: "Cuatro pruebas cada 4 semanas: tu condición física en números.",
 };
+
+/** Retos y test físico viven ahora en Herramientas; los enlaces antiguos llevan ahí. */
+const movedToTools = new Set(["retos", "test"]);
 
 /**
  * Progreso: por defecto, el resumen del periodo (Semana | Mes | Año, en `?periodo=`).
@@ -36,6 +35,10 @@ export function ProgressView() {
   // El periodo responde al instante; la URL se actualiza después para conservarlo al volver.
   const [period, setPeriod] = useState<Period>(isPeriod(initial) ? initial : "semana");
   const [metric, setMetric] = useState<ChartMetric | null>(null);
+
+  useEffect(() => {
+    if (tab && movedToTools.has(tab)) router.replace(`/herramientas?tab=${tab}`);
+  }, [router, tab]);
 
   function changePeriod(next: Period) {
     setPeriod(next);
@@ -66,8 +69,6 @@ function Subview({ view }: { view: ProgressSubview }) {
         {view === "records" && <RecordsTab />}
         {view === "cuerpo" && <BodyTab />}
         {view === "logros" && <AchievementsTab />}
-        {view === "retos" && <ChallengesTab />}
-        {view === "test" && <FitnessTestTab />}
       </div>
     </div>
   );

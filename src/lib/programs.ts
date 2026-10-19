@@ -1,10 +1,28 @@
 import { programs } from "@/data/programs";
 import { progressedSets } from "@/lib/progression";
 import { exerciseById, isWorkingSet, lastRecordFor } from "@/lib/training";
-import type { ExerciseRecord, Program, ProgramProgress, WorkoutEntry } from "@/types";
+import type { ExerciseRecord, Program, ProgramProgress, TrainingLocation, WorkoutEntry } from "@/types";
 
 export function programById(id: string): Program | undefined {
   return programs.find((program) => program.id === id);
+}
+
+/**
+ * Los tres programas que se ofrecen primero (más «Personalizada», que es crear tu rutina): Full Body
+ * (de casa o de gimnasio, según tu lugar, nivel y pesas), Torso / Pierna y Push / Pull / Legs. Los
+ * demás siguen disponibles en «Más programas».
+ */
+export function featuredPrograms({ location, level, hasDumbbells }: { location: TrainingLocation; level: number; hasDumbbells: boolean }): Program[] {
+  const fullBody = location === "gym" ? "full-body-gimnasio" : level > 1 && hasDumbbells ? "fuerza-mancuernas" : "base-casa";
+  return [fullBody, "torso-pierna", "push-pull-legs"].map(programById).filter((program): program is Program => Boolean(program));
+}
+
+/** El que PULSO recomienda: en casa, Full Body; en el gimnasio, por días (4 o más → Torso / Pierna) y objetivo (músculo → PPL). */
+export function recommendedProgram(featured: Program[], { location, days, goal }: { location: TrainingLocation; days: number; goal: string }): Program | undefined {
+  if (location === "home") return featured[0];
+  if (days >= 4) return featured.find((program) => program.id === "torso-pierna") ?? featured[0];
+  if (goal === "muscle") return featured.find((program) => program.id === "push-pull-legs") ?? featured[0];
+  return featured[0];
 }
 
 export function sessionKey(week: number, day: number) {

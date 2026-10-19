@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import type { SetStateAction } from "react";
 import { meals as initialMeals } from "@/data/mock-data";
 import type { AssessmentProfile } from "@/lib/assessment";
-import { defaultRoutine, defaultTrainingPreference, routineWithId } from "@/lib/training";
+import { defaultTrainingPreference, routineWithId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { removePersistentKey, removePersistentMemory, usePersistentState } from "@/lib/use-persistent-state";
 import { localDateKey } from "@/lib/utils";
@@ -183,14 +183,17 @@ export function useSettings() {
   return [settings, update] as const;
 }
 
-/** Rutinas guardadas. Si sólo existe la rutina única anterior, se migra al vuelo. */
+/**
+ * Rutinas guardadas. Si sólo existe la rutina única anterior, se migra al vuelo. Sin nada guardado no hay
+ * rutinas: ya no se muestra una de ejemplo como si fuera tuya (las guardadas, incluida esa, se conservan).
+ */
 export function useRoutines() {
   const [stored, setStored] = usePersistentState<TrainingRoutine[] | null>(STORAGE_KEYS.routines, null);
   const [legacy] = usePersistentState<TrainingRoutine | null>(STORAGE_KEYS.routine, null);
-  const routines = useMemo(() => (stored ?? [legacy ?? defaultRoutine]).map(routineWithId), [legacy, stored]);
+  const routines = useMemo(() => (stored ?? (legacy ? [legacy] : [])).map(routineWithId), [legacy, stored]);
   const setRoutines = useCallback((next: SetStateAction<Array<TrainingRoutine & { id: string }>>) => {
     return setStored((current) => {
-      const base = (current ?? [legacy ?? defaultRoutine]).map(routineWithId);
+      const base = (current ?? (legacy ? [legacy] : [])).map(routineWithId);
       return typeof next === "function" ? next(base) : next;
     });
   }, [legacy, setStored]);

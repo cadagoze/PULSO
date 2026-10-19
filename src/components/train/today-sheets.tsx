@@ -2,7 +2,8 @@
 
 import Link from "@/components/ui/app-link";
 import { useState } from "react";
-import { ArrowRight, Info, Minus, Plus, Shuffle, Zap } from "lucide-react";
+import { ArrowRight, Info, ListChecks, Minus, Plus, Shuffle } from "lucide-react";
+import { BodyCheck } from "@/components/home/body-check";
 import { Button, MetaLine, SegmentedControl, Sheet } from "@/components/ui";
 import { durationOptions, focusLabels } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
@@ -11,71 +12,85 @@ import { useSettings } from "@/lib/store";
 import { lastRecordFor } from "@/lib/training";
 import { cn, formatNumber, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
 import { loadStep, targetLabel, topLoad } from "@/components/train/shared";
-import type { TodayPlan } from "@/components/train/today-plan";
-import type { Exercise, ExerciseRecord, ReadinessEntry } from "@/types";
+import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
+import type { Exercise, ExerciseRecord } from "@/types";
 import { ZoneChips } from "@/components/train/zone-picker";
 import { zoneById } from "@/data/body-zones";
 
 const durations = durationOptions.map((value) => ({ value: String(value), label: `${value} min` }));
 const focuses = Object.keys(focusLabels) as WorkoutFocus[];
 
-const readinessText: Record<ReadinessEntry["recommendation"], string> = {
-  planned: "Listo para lo planificado",
-  short: "Mejor una sesión corta",
-  recovery: "Día para recuperar",
-};
-
-/** Duración, enfoque y variante de la sesión a tu medida. Los cambios se ven al instante en la tarjeta. */
-export function AdjustSheet({ open, onClose, today }: { open: boolean; onClose: () => void; today: TodayPlan }) {
-  const entry = today.readiness;
+/**
+ * «Ajustar entrenamiento»: todo lo que no es empezar. Programa o sesión a tu medida, duración, enfoque,
+ * una zona del cuerpo, cómo estás hoy, editar ejercicios y otra variante. Los cambios se ven al instante.
+ */
+export function AdjustSheet({ open, onClose, today, todayKey, source, canChoose, onSource, active, onEditList }: {
+  open: boolean;
+  onClose: () => void;
+  today: TodayPlan;
+  todayKey: string;
+  source: TodaySource;
+  /** Hay un programa activo con sesión pendiente: se puede elegir entre él y una sesión a tu medida. */
+  canChoose: boolean;
+  onSource: (source: TodaySource) => void;
+  active: ActiveProgram | null;
+  onEditList: () => void;
+}) {
+  const custom = source === "custom";
   return (
-    <Sheet open={open} onClose={onClose} eyebrow="Tu rutina de hoy" title="Ajustar sesión" className="train-adjust">
-      <MetaLine
-        className="train-adjust-summary"
-        items={[zoneById(today.zone)?.label ?? focusLabels[today.focus], <><b className="num">{today.records.length}</b> ejercicios</>, <><b className="num">{today.estimated}</b> min</>]}
-      />
-      <div className="train-field">
-        <p className="train-field-label">Duración</p>
-        <SegmentedControl options={durations} value={String(today.minutes)} onChange={(value) => today.setMinutes(Number(value))} label="Duración de la sesión" />
-      </div>
-      <div className="train-field">
-        <p className="train-field-label">Enfoque</p>
-        <div className="chips train-focus">
-          {focuses.map((option) => (
-            <button key={option} type="button" className="chip" aria-pressed={!today.zone && today.focus === option} onClick={() => today.setFocus(option)}>
-              {focusLabels[option]}
-              {option === today.suggested && <span className="train-suggested">Sugerido</span>}
-            </button>
-          ))}
+    <Sheet open={open} onClose={onClose} eyebrow="Tu rutina de hoy" title="Ajustar entrenamiento" className="train-adjust">
+      {canChoose && (
+        <div className="train-field">
+          <p className="train-field-label">Hoy entrenas</p>
+          <SegmentedControl<TodaySource> options={[{ value: "program", label: "Mi programa" }, { value: "custom", label: "A tu medida" }]} value={source} onChange={onSource} label="Qué entrenas hoy" />
         </div>
-      </div>
-      <div className="train-field">
-        <p className="train-field-label">O una zona del cuerpo</p>
-        <ZoneChips value={today.zone} onChange={today.setZone} className="train-focus" />
-      </div>
-      {entry ? (
-        <div className="train-readiness" data-tone={entry.recommendation}>
-          <span className="train-readiness-score num">{entry.score}</span>
-          <span className="grow">
-            <strong>Preparación de hoy</strong>
-            <small>{readinessText[entry.recommendation]} · el enfoque sugerido la tiene en cuenta</small>
-          </span>
-        </div>
-      ) : (
-        <Link href="/" className="train-readiness missing" onClick={onClose}>
-          <span className="train-readiness-icon" aria-hidden="true"><Zap size={16} /></span>
-          <span className="grow">
-            <strong>¿Cómo llegas hoy?</strong>
-            <small>Haz el chequeo en Inicio y ajustamos la sesión</small>
-          </span>
+      )}
+      {custom ? (
+        <>
+          <MetaLine
+            className="train-adjust-summary"
+            items={[zoneById(today.zone)?.label ?? focusLabels[today.focus], <><b className="num">{today.records.length}</b> ejercicios</>, <><b className="num">{today.estimated}</b> min</>]}
+          />
+          <div className="train-field">
+            <p className="train-field-label">Duración</p>
+            <SegmentedControl options={durations} value={String(today.minutes)} onChange={(value) => today.setMinutes(Number(value))} label="Duración de la sesión" />
+          </div>
+          <div className="train-field">
+            <p className="train-field-label">Enfoque</p>
+            <div className="chips train-focus">
+              {focuses.map((option) => (
+                <button key={option} type="button" className="chip" aria-pressed={!today.zone && today.focus === option} onClick={() => today.setFocus(option)}>
+                  {focusLabels[option]}
+                  {option === today.suggested && <span className="train-suggested">Sugerido</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="train-field">
+            <p className="train-field-label">Entrenar una zona</p>
+            <ZoneChips value={today.zone} onChange={today.setZone} className="train-focus" />
+          </div>
+        </>
+      ) : active && (
+        <Link href={`/entrenar/programas/${active.program.id}`} className="train-adjust-program" onClick={onClose}>
+          <span className="grow"><strong>{active.program.name}</strong><small>Ver semanas, días y ejercicios del programa</small></span>
           <ArrowRight size={16} aria-hidden="true" />
         </Link>
       )}
-      <div className="train-sheet-actions">
-        <Button variant="secondary" onClick={today.reroll}>
-          <Shuffle size={16} />
-          Otra variante
-        </Button>
+      <BodyCheck today={todayKey} />
+      <div className={cn("train-sheet-actions", custom && "is-triple")}>
+        {custom && (
+          <>
+            <Button variant="secondary" onClick={() => { onEditList(); onClose(); }}>
+              <ListChecks size={16} />
+              Editar ejercicios
+            </Button>
+            <Button variant="secondary" onClick={today.reroll}>
+              <Shuffle size={16} />
+              Otra variante
+            </Button>
+          </>
+        )}
         <Button onClick={onClose}>Listo</Button>
       </div>
     </Sheet>

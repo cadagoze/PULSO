@@ -5,7 +5,6 @@
 /* ─── Página ───────────────────────────────────────────────────────────── */
 .train-page { gap: 20px; }
 /* Con un entrenamiento en curso, el acceso flotante ocupa espacio sobre la barra: deja sitio al final. */
-.train-page.has-resume, .train-detail.has-resume { padding-bottom: 72px; }
 .train-soft { color: var(--ink-3); }
 .train-danger { color: var(--danger); }
 @media (hover: hover) { .btn-icon.train-danger:hover { background: var(--danger-soft); color: var(--danger); } }
@@ -14,10 +13,7 @@
 @keyframes train-swap { from { opacity: 0; transform: translateY(6px); } }
 
 /* ─── Lugar y equipamiento ─────────────────────────────────────────────── */
-.train-place { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .train-equip { display: flex; flex-direction: column; gap: 12px; }
-.train-equip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.train-equip-count { font-size: 13px; color: var(--ink-2); }
 .train-chips { gap: 8px; }
 .train-chips .chip { min-height: 44px; }
 
@@ -27,9 +23,6 @@
 /* Profundidad sutil detrás del número (no es textura: la tarjeta sigue limpia). */
 /* Dentro de los bordes de la tarjeta: si sobresaliera, la tarjeta se podría desplazar al enfocar algo. */
 .train-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(70% 46% at 92% 4%, rgb(var(--accent-rgb) / 9%), transparent 72%); pointer-events: none; }
-.train-hero-switch { align-self: flex-start; max-width: 100%; background: rgb(255 255 255 / 7%); }
-.train-hero-switch .segmented-indicator { background: rgb(255 255 255 / 15%); box-shadow: none; }
-.train-hero-switch button { padding: 0 14px; font-size: 13px; }
 .train-hero-body { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
 .train-hero-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .train-hero-copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 4px; }
@@ -46,22 +39,12 @@
 .train-hero-actions { display: flex; gap: 10px; margin-top: 4px; }
 .train-hero-actions > .btn-primary { flex: 1; }
 .train-hero-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin: -4px -8px 0; padding-top: 6px; box-shadow: inset 0 1px 0 var(--line); }
-.train-hero-foot .btn-ghost { min-height: 40px; padding: 0 10px; color: var(--ink-2); }
+.train-hero-foot .btn-ghost { min-height: 44px; padding: 0 10px; color: var(--ink-2); }
 @media (hover: hover) { .train-hero-foot .btn-ghost:hover:not(:disabled) { color: var(--ink); background: rgb(255 255 255 / 7%); } }
-.train-hero-reroll:active svg { transform: rotate(-90deg); }
-.train-hero-reroll svg, .train-hero-toggle svg { transition: transform var(--motion-base) var(--ease-standard); }
-.train-hero-toggle { margin-left: auto; }
-.train-hero-toggle.is-open svg { transform: rotate(180deg); }
 .train-hero-progress { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; max-width: 240px; padding-left: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .train-hero-progress .progress-track { flex: 1; }
 .train-live-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.8s infinite; }
 .train-hero-skeleton { height: 58px; border-radius: var(--radius-pill); background: rgb(255 255 255 / 10%); animation: train-shimmer 1.4s ease-in-out infinite; }
-.train-hero-switch.is-triple { align-self: stretch; }
-.train-hero-switch.is-triple button { padding: 0 8px; }
-@media (max-width: 380px) {
-  .train-hero-switch { align-self: stretch; }
-  .train-hero-switch button, .train-hero-switch.is-triple button { padding: 0 6px; font-size: 12.5px; }
-}
 
 /* ─── Ejercicios de hoy ────────────────────────────────────────────────── */
 .train-extra { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -119,15 +102,6 @@
 .train-focus .chip { min-height: 44px; }
 .train-suggested { padding: 3px 7px; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-text); font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
 .chip[aria-pressed="true"] .train-suggested { background: var(--accent); color: var(--accent-ink); }
-.train-readiness { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); text-align: left; }
-.train-readiness .grow { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
-.train-readiness strong { font-size: 14px; font-weight: 600; }
-.train-readiness small { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
-.train-readiness-score { display: grid; place-items: center; width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 17px; font-weight: 600; letter-spacing: -.008em; }
-.train-readiness[data-tone="short"] .train-readiness-score { background: var(--warning-soft); color: var(--warning); }
-.train-readiness[data-tone="recovery"] .train-readiness-score { background: var(--gold-soft); color: var(--gold-text); }
-.train-readiness-icon { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
-.train-readiness.missing > svg { flex: none; color: var(--ink-3); }
 .train-sheet-actions { display: flex; gap: 10px; }
 .train-sheet-actions .btn { flex: 1; }
 
@@ -146,9 +120,8 @@
 .train-load-caption { margin-top: -4px; text-align: center; font-size: 14px; color: var(--ink-2); }
 
 /* ─── Rutinas sugeridas, tus rutinas y herramientas ────────────────────── */
-.train-more { display: flex; flex-direction: column; gap: 36px; min-width: 0; }
 .train-section { gap: 12px; }
-.train-section, .train-tools { scroll-margin-top: calc(20px + var(--safe-t)); }
+.train-section { scroll-margin-top: calc(20px + var(--safe-t)); }
 .train-section .section-head .meta { white-space: nowrap; }
 .train-section-line { margin-top: -6px; font-size: 14px; color: var(--ink-2); }
 .train-carousel { gap: 12px; padding-top: 6px; padding-bottom: 8px; }
@@ -172,11 +145,6 @@
 .train-routine-actions .grow { flex: 1; }
 .train-routine-actions .btn-primary { margin-right: 6px; }
 
-.train-tools { display: flex; flex-direction: column; gap: 12px; }
-.train-tools-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.train-tool { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 18px 0 8px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: var(--shadow); font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; transition: transform var(--motion-fast) var(--ease-standard); }
-.train-tool:active { transform: scale(.96); }
-.train-tool-icon { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--surface-2); color: var(--ink); }
 
 /* ─── Editor de rutinas ────────────────────────────────────────────────── */
 .train-editor { width: min(100%, 680px); }
@@ -306,10 +274,7 @@
 .train-day-items .num { flex: none; font-size: 12.5px; }
 
 /* ─── Avisos y esqueletos ──────────────────────────────────────────────── */
-.train-toast.is-raised { bottom: calc(var(--nav-h) + var(--nav-gap) + 86px + var(--safe-b)); }
 .train-skeleton { border-radius: var(--radius-l); background: var(--surface-2); animation: train-shimmer 1.4s ease-in-out infinite; }
-.train-skeleton-segmented { height: 56px; border-radius: var(--radius-pill); }
-.train-skeleton-chips { height: 100px; }
 .train-skeleton-hero { height: 520px; border-radius: var(--radius-xl); }
 .train-skeleton-plan { height: 132px; border-radius: var(--radius-xl); }
 @keyframes train-shimmer { 50% { opacity: .55; } }
@@ -339,25 +304,6 @@
 
 
 /* ─── Tu semana según el objetivo ──────────────────────────────────────── */
-.goal-week { scroll-margin-top: 24px; }
-.goal-week-met { animation: pop var(--motion-base) var(--ease-spring) backwards; }
-.goal-week-count { flex: none; display: inline-flex; align-items: baseline; font-size: 13px; color: var(--ink-3); }
-.goal-week-count b { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 24px; font-weight: 600; letter-spacing: -.008em; color: var(--ink); }
-.goal-week-focus { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; padding: 18px 20px; border-radius: var(--radius-l); background: var(--surface-2); font-size: 14px; line-height: 1.55; color: var(--ink-2); }
-.goal-week-focus b { color: var(--ink); font-weight: 600; }
-.goal-week-note { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-weight: 500; }
-.goal-week-note svg { flex: none; margin-top: 3px; color: var(--accent-text); }
-.goal-week-foot { display: flex; align-items: center; gap: 12px; margin-top: 10px; min-height: 52px; padding: 0 6px 0 4px; font-size: 14px; color: var(--ink-2); }
-.goal-week-foot .grow { flex: 1; min-width: 0; }
-.goal-week-foot b { color: var(--ink); font-weight: 600; }
-.goal-week-foot-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); }
-@media (min-width: 1024px) {
-  .goal-week { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; column-gap: 24px; row-gap: 12px; align-items: start; }
-  .goal-week > .section-head, .goal-week > .train-section-line { grid-column: 1 / -1; }
-  .goal-week > .list { grid-column: 1; grid-row: 3 / 5; }
-  .goal-week-focus { grid-column: 2; grid-row: 3; margin-top: 0; }
-  .goal-week-foot { grid-column: 2; grid-row: 4; margin-top: 0; }
-}
 
 /* ─── Equipamiento: «Más equipamiento» y catálogo ──────────────────────── */
 .equip-more { border-style: dashed; color: var(--ink-2); }
@@ -397,20 +343,15 @@
 .train-hero-actions > .btn { flex: 1; }
 .train-hero-foot { justify-content: flex-start; gap: 4px; }
 
-.train-more { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.train-week-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 16px 12px 18px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); text-align: left; }
-.train-week-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.train-week-row strong { font-size: 15px; font-weight: 600; color: var(--ink); }
-.train-week-row > svg, .train-tile > svg { flex: none; color: var(--ink-3); transition: transform var(--motion-base) var(--ease-standard); }
-.train-week-row.is-open > svg { transform: rotate(180deg); }
-.train-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.train-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 92px; padding: 14px 14px 12px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); text-align: left; transition: box-shadow var(--motion-fast); }
-.train-tile.is-open { box-shadow: inset 0 0 0 2px var(--accent); }
-.train-tile-icon { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 8px; border-radius: 11px; background: var(--surface-2); color: var(--accent-text); }
-.train-tile strong { font-size: 15px; font-weight: 600; }
-.train-tile small { font-size: 12.5px; color: var(--ink-2); }
+.train-more { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.train-links-chevron { transition: transform var(--motion-base) var(--ease-standard); }
+.train-links .list-row.is-open .train-links-chevron { transform: rotate(180deg); }
+.train-more-programs { margin-top: 4px; }
+.train-more-programs summary { display: flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer; list-style: none; }
+.train-more-programs summary::-webkit-details-marker { display: none; }
+.train-more-programs summary::after { content: "+"; margin-left: 8px; color: var(--ink-3); }
+.train-more-programs[open] summary::after { content: "–"; }
 .train-panel { display: flex; flex-direction: column; gap: 14px; padding-top: 6px; scroll-margin-top: 24px; }
-@media (min-width: 720px) { .train-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @keyframes train-plate-in { from { opacity: 0; transform: scale(.86); } }
 .equip-loads { display: flex; flex-direction: column; gap: 10px; padding: 4px 16px 16px; }
 .equip-loads p { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
@@ -429,9 +370,6 @@
 .days-note { font-size: 13px; line-height: 1.45; }
 
 /* ─── Rutina por zona ──────────────────────────────────────────────────── */
-.train-zones { display: flex; flex-direction: column; gap: 10px; margin-top: -6px; }
-.train-zones-row { flex-wrap: nowrap; margin: 0 calc(var(--gutter) * -1); padding: 2px var(--gutter); }
-.train-zones-row .chip { flex: none; }
 /* Casa | Gimnasio al inicio de Entrenar, con el equipamiento del lugar debajo. */
 .place-bar { display: flex; flex-direction: column; gap: 10px; }
 .place-bar-equip { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font-size: 14px; font-weight: 500; text-align: left; }
@@ -439,3 +377,21 @@
 .place-bar-equip .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .place-bar-edit { display: inline-flex; align-items: center; gap: 2px; flex: none; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .train-hero .train-hero-context b { color: var(--ink); font-weight: 600; }
+
+/* ─── Tarjeta de hoy: un solo «Ajustar entrenamiento» y, en descanso, movilidad primero ── */
+.train-hero-adjust { align-self: flex-start; }
+.train-hero-rest { flex-direction: column; align-items: stretch; gap: 2px; }
+.train-hero-anyway { align-self: center; min-height: 44px; padding: 0 12px; font-size: 14px; font-weight: 600; }
+.train-adjust-program { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); color: var(--ink); }
+.train-adjust-program .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.train-adjust-program strong { font-size: 15px; font-weight: 600; }
+.train-adjust-program small { font-size: 12.5px; color: var(--ink-2); }
+.train-adjust .home-body { padding-top: 4px; }
+.train-sheet-actions.is-triple { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.train-sheet-actions.is-triple > :last-child { grid-column: 1 / -1; }
+
+/* ─── Equipamiento simple: casa con lo más común; gimnasio completo por defecto ── */
+.equip-gym { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; border-radius: var(--radius); background: var(--surface-2); }
+.equip-gym strong { font-size: 16px; font-weight: 600; }
+.equip-gym .muted { font-size: 13.5px; line-height: 1.45; }
+.equip-more-row { align-self: flex-start; }

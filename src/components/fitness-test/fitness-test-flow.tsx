@@ -176,7 +176,7 @@ export function FitnessTestFlow() {
 }
 
 function ExitButton() {
-  return <Link href="/progreso?tab=test" className="ses-glass ses-round" aria-label="Salir del test"><X size={20} /></Link>;
+  return <Link href="/herramientas?tab=test" className="ses-glass ses-round" aria-label="Salir del test"><X size={20} /></Link>;
 }
 
 function Intro({ age, onAge, resumeAt, onStart, onRestart }: { age: number; onAge: (age: number) => void; resumeAt: number | null; onStart: () => void; onRestart: () => void }) {
@@ -467,7 +467,7 @@ function Done({ entry, previous }: { entry: FitnessTestEntry | null; previous: F
         </header>
         {entry ? <TestReport entry={entry} previous={previous} /> : <p className="ses-summary-sub">Saltaste todas las pruebas, así que no hay nada que guardar.</p>}
         <div className="ses-summary-actions">
-          <ButtonLink href="/progreso?tab=test" size="l" block>Ver en Progreso</ButtonLink>
+          <ButtonLink href="/herramientas?tab=test" size="l" block>Ver resultados</ButtonLink>
           <ButtonLink href="/" variant="ghost" block>Volver a Inicio</ButtonLink>
         </div>
       </div>

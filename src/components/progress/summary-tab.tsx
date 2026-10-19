@@ -100,7 +100,7 @@ export function SummaryTab({ period, onPeriod, metric, onMetric }: { period: Per
           <div className="prog-area-marks rise" style={rise(4)}><BestMarks summary={summary} workouts={workouts} unit={settings.unit} /></div>
           <div className="prog-area-weight rise" style={rise(5)}><WeightSummary period={period} nowMs={now} /></div>
           <div className="prog-area-muscles rise" style={rise(6)}><MusclesSection workouts={workouts} summary={summary} nowMs={now} /></div>
-          <div className="prog-area-more rise" style={rise(7)}><MoreList workouts={workouts} nowMs={now} onShare={() => setSharing(true)} /></div>
+          <div className="prog-area-more rise" style={rise(7)}><MoreList workouts={workouts} nowMs={now} /></div>
         </div>
       )}
       {!empty && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}

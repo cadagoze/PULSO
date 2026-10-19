@@ -15,13 +15,3 @@ export function ZoneChips({ value, onChange, className }: { value: BodyZone | nu
     </div>
   );
 }
-
-/** Fila bajo la rutina de hoy: «¿Una zona?» con las zonas en una línea deslizable. */
-export function ZoneRow({ value, onChange }: { value: BodyZone | null; onChange: (zone: BodyZone | null) => void }) {
-  return (
-    <section className="train-zones" aria-labelledby="train-zones-title">
-      <h2 id="train-zones-title" className="meta">{value ? "Rutina por zona · toca de nuevo para quitarla" : "¿Quieres trabajar una zona?"}</h2>
-      <ZoneChips value={value} onChange={onChange} className="scroll-x train-zones-row" />
-    </section>
-  );
-}

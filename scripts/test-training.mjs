@@ -50,9 +50,9 @@ function workout(daysAgo, records, extra = {}) {
 }
 const set = (value, load, extra = {}) => ({ value, load, done: true, kind: 'normal', ...extra });
 
-test('las rutinas base conservan los ejercicios originales y empiezan sin series marcadas', () => {
-  const records = training.defaultRecords();
-  assert.deepEqual(Array.from(records, (record) => record.exerciseId), [1, 2, 3, 4, 5]);
+test('las series nuevas de un ejercicio empiezan sin marcar', () => {
+  const records = training.recordsForExercises([1, 2, 4].map(training.exerciseById));
+  assert.deepEqual(Array.from(records, (record) => record.exerciseId), [1, 2, 4]);
   assert.equal(training.completedSets(records), 0);
   assert.equal(records.find((record) => record.exerciseId === 4).unit, 'seconds');
 });

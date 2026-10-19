@@ -1,5 +1,5 @@
 import type { Audience } from "@/lib/personalize";
-import type { Program, TrainingLocation } from "@/types";
+import type { Program } from "@/types";
 
 type Photo = { src: string; alt: string; position?: string };
 
@@ -33,10 +33,4 @@ export function programPhoto(program: Program, audience: Audience = "male"): Pho
   if (audience !== "mixed") return set[audience];
   const index = Object.keys(photos).indexOf(program.id);
   return index % 2 === 0 ? set.female : set.male;
-}
-
-/** Orden del carrusel: el programa activo, luego los de tu lugar, los de cualquier lugar y el resto. */
-export function orderPrograms(list: Program[], location: TrainingLocation, activeId?: string) {
-  const rank = (program: Program) => (program.id === activeId ? 0 : program.location === location ? 1 : program.location === "any" ? 2 : 3);
-  return [...list].sort((a, b) => rank(a) - rank(b));
 }
