@@ -9,10 +9,10 @@ import { zoneById, type BodyZone } from "@/data/body-zones";
 import { painLimitations } from "@/lib/readiness";
 
 export type WorkoutFocus = "full" | "upper" | "lower" | "conditioning" | "mobility";
-export type WorkoutGoal = "strength" | "weight" | "energy" | "habits";
+export type WorkoutGoal = "strength" | "muscle" | "weight" | "energy" | "habits";
 
 /** Objetivo de la sesión, en corto (tarjeta de la rutina de hoy). */
-export const goalLabels: Record<WorkoutGoal, string> = { strength: "Fuerza", weight: "Quemar grasa", energy: "Energía", habits: "Constancia" };
+export const goalLabels: Record<WorkoutGoal, string> = { strength: "Fuerza", muscle: "Músculo", weight: "Bajar grasa", energy: "En forma", habits: "Moverme más" };
 
 export const focusLabels: Record<WorkoutFocus, string> = {
   full: "Cuerpo completo",
@@ -115,6 +115,7 @@ function restFor(exercise: Exercise, goal: WorkoutGoal, focus: WorkoutFocus) {
   const compound = !["isolation", "core", "carry"].includes(exercise.pattern);
   if (goal === "strength") return compound ? 150 : 75;
   if (goal === "weight" || goal === "energy") return compound ? 75 : 45;
+  // Músculo y constancia: descansos medios.
   return compound ? 90 : 60;
 }
 
@@ -240,7 +241,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   let adaptedReps = false;
   let suggestedLoads = false;
   const records: ExerciseRecord[] = chosen.map((exercise) => {
-    const count = Math.max(2, Math.min(5, exercise.sets + setDelta + (goal === "strength" && level > 1 && exercise.pattern !== "core" ? 1 : 0) - (input.minutes <= 10 ? 1 : 0)));
+    const count = Math.max(2, Math.min(5, exercise.sets + setDelta + ((goal === "strength" || goal === "muscle") && level > 1 && exercise.pattern !== "core" ? 1 : 0) - (input.minutes <= 10 ? 1 : 0)));
     const record: ExerciseRecord = {
       exerciseId: exercise.id,
       unit: exercise.unit,
@@ -312,13 +313,13 @@ export function levelFromActivities(activities: string[] = []): ExerciseLevel {
 
 export function goalFromProfile(goals: string[] = []): WorkoutGoal {
   const first = goals[0];
-  return first === "weight" || first === "energy" || first === "habits" || first === "strength" ? first : "strength";
+  return first === "weight" || first === "energy" || first === "habits" || first === "strength" || first === "muscle" ? first : "strength";
 }
 
-/** El objetivo de Nutrición manda sobre la evaluación: bajar grasa → descansos cortos; ganar músculo → más series. */
+/** El objetivo de Comidas manda sobre la evaluación: bajar grasa → descansos cortos; ganar músculo → más series. */
 export function trainingGoal(goals: string[] = [], nutritionGoal?: NutritionGoal): WorkoutGoal {
   if (nutritionGoal === "lose") return "weight";
-  if (nutritionGoal === "gain") return "strength";
+  if (nutritionGoal === "gain") return "muscle";
   return goalFromProfile(goals);
 }
 

@@ -31,9 +31,9 @@
 
 /* Opciones: tarjetas grandes y táctiles (presión .985); al elegir, lima suave y check con rebote. */
 .onb-options { display: flex; flex-direction: column; gap: 10px; }
-.onb-options > *, .onb-name { animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; animation-delay: calc(24ms + var(--i, 0) * 22ms); }
+.onb-options > * { animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; animation-delay: calc(24ms + var(--i, 0) * 22ms); }
 .onb-option { display: flex; align-items: center; gap: 14px; min-height: 74px; padding: 14px 16px 14px 14px; border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); }
-.onb-option.is-selected, .onb-other.is-selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 45%, transparent); }
+.onb-option.is-selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 45%, transparent); }
 .onb-option-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 15px; background: var(--surface-2); color: var(--ink-2); transition: background-color var(--motion-base), color var(--motion-base); }
 .is-selected .onb-option-icon { background: var(--surface); color: var(--ink); }
 .onb-option-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -44,35 +44,17 @@
 .is-selected .onb-check { background: var(--accent); box-shadow: none; }
 .onb-check svg { animation: pop var(--motion-base) var(--ease-spring) backwards; }
 
-/* «Otro»: la misma tarjeta, que se abre con el campo de texto dentro. */
-.onb-other { border-radius: var(--radius-l); background: var(--surface); box-shadow: var(--shadow); transition: transform var(--motion-base) var(--ease-standard), background-color var(--motion-base), box-shadow var(--motion-base); }
-.onb-other:has(> .onb-option:active) { transform: scale(.985); }
-.onb-other > .onb-option { background: transparent; box-shadow: none; }
-.onb-other > .onb-option:active { transform: none; }
-.onb-other-field { display: flex; flex-direction: column; gap: 6px; padding: 0 14px 14px; animation: rise-in var(--motion-base) var(--ease-standard) backwards; }
-.onb-other-field textarea { width: 100%; min-height: 80px; padding: 12px 14px; border: 0; border-radius: var(--radius-s); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); font-size: 16px; line-height: 1.4; resize: none; transition: box-shadow var(--motion-fast); }
-.onb-other-field textarea:focus { outline: none; box-shadow: inset 0 0 0 2px var(--ink); }
-.onb-other-field textarea::placeholder { color: var(--ink-3); }
-.onb-other-field small { align-self: flex-end; font-size: 12px; color: var(--ink-3); }
-
-/* Casa o gimnasio: dos tarjetas grandes; con «En casa», el equipamiento aparece debajo. */
-.onb-options-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.onb-options-two .onb-option { position: relative; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 22px; min-height: 172px; padding: 16px; }
-.onb-options-two .onb-option-text { flex: none; gap: 6px; }
-.onb-options-two .onb-option-text strong { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 23px; letter-spacing: -.008em; line-height: 1.05; }
-.onb-options-two .onb-check { position: absolute; top: 16px; right: 16px; }
-.onb-equipment { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: var(--radius-l); background: var(--surface-2); animation: rise-in var(--motion-slow) var(--ease-standard) backwards; }
-.onb-equipment-head { display: flex; flex-direction: column; gap: 6px; }
-.onb-equipment h2 { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: 21px; font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1.1; }
-.onb-equipment p { font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+/* Equipamiento: «Sin equipamiento», lo más común y, al pedirlo, el resto. */
+.onb-equipment { display: flex; flex-direction: column; gap: 14px; animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; }
 .onb-equipment .chip { min-height: 44px; }
+.onb-equipment-more { animation: rise-in var(--motion-base) var(--ease-standard) backwards; }
 
-/* Nombre: un campo grande, con la tipografía de los títulos. */
-.onb-name { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
-.onb-name-input { width: 100%; min-height: 72px; padding: 0 2px; border: 0; border-bottom: 2px solid var(--line-strong); border-radius: 0; background: transparent; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: 600; letter-spacing: -.008em; transition: border-color var(--motion-fast); }
-.onb-name-input:focus { outline: none; border-bottom-color: var(--ink); }
-.onb-name-input::placeholder { color: var(--ink-3); }
-.onb-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+/* Días y minutos: dos controles segmentados grandes con su etiqueta. */
+.onb-time { display: flex; flex-direction: column; gap: 22px; animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; }
+.onb-time-row { display: flex; flex-direction: column; gap: 10px; }
+.onb-time-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+.onb-note { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .onb-note svg { flex: none; color: var(--ink-3); }
 
 /* Atrás / Continuar: píldoras fijas abajo, respetando el área segura. */
@@ -126,14 +108,15 @@
 .onb-result-metrics .nmetric { gap: 12px; }
 .onb-result-metrics .nmetric-value { font-size: clamp(100px, 31vw, 170px); }
 .onb-result-metrics .nmetric-label { font-size: 14px; }
-.onb-result-habit { display: flex; align-items: flex-start; gap: 14px; padding: 18px; border-radius: var(--radius-l); background: rgb(255 255 255 / 7%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 9%); }
-.onb-result-habit-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
-.onb-result-habit strong { display: block; margin-top: 4px; font-size: 16px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
 .onb-result-rows { display: flex; flex-direction: column; margin: 0; }
 .onb-result-rows > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--line); }
 .onb-result-rows > div:last-child { border-bottom: 1px solid var(--line); }
 .onb-result-rows dd { margin: 0; font-size: 15px; font-weight: 500; line-height: 1.4; }
 .onb-result-caution p { line-height: 1.45; }
+.onb-result-name { display: flex; flex-direction: column; gap: 8px; }
+.onb-result-name input { width: 100%; min-height: 52px; padding: 0 16px; border: 0; border-radius: var(--radius); background: rgb(255 255 255 / 8%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%); color: var(--ink); font-size: 17px; font-weight: 500; transition: box-shadow var(--motion-fast); }
+.onb-result-name input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--ink); }
+.onb-result-name input::placeholder { color: var(--ink-3); }
 .onb-result-actions { display: flex; flex-direction: column; gap: 6px; }
 .onb-result-links { display: flex; justify-content: space-between; gap: 8px; }
 .onb-result-links .btn { min-height: 44px; padding: 0 12px; }
@@ -199,24 +182,6 @@
   .onb-splash-cta { margin: 0; }
   .onb-splash-lead, .onb-splash-note { text-align: left; justify-content: flex-start; }
 }
-
-
-/* «Tu cuerpo»: edad, estatura y peso en grande, situaciones especiales y la energía estimada en vivo. */
-.onb-body { display: flex; flex-direction: column; gap: 18px; margin-top: 4px; animation: onb-slide var(--motion-slow) var(--ease-standard) backwards; }
-.onb-body-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.onb-body-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.onb-body-input { display: flex; align-items: baseline; gap: 4px; padding: 0 2px 6px; border-bottom: 2px solid var(--line-strong); transition: border-color var(--motion-fast); }
-.onb-body-field:focus-within .onb-body-input { border-bottom-color: var(--ink); }
-.onb-body-field.is-invalid .onb-body-input { border-bottom-color: var(--danger); }
-.onb-body-input input { width: 100%; min-width: 0; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--ink); font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.onb-body-input input:focus { outline: none; }
-.onb-body-input input::placeholder { color: var(--ink-3); opacity: .6; }
-.onb-body-input small { flex: none; font-size: 13px; color: var(--ink-2); }
-.onb-body-error { font-size: 13px; color: var(--danger); }
-.onb-body-sex { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
-.onb-body-special { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; border: 0; }
-.onb-body-special legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--ink); }
-.onb-body-preview { padding: 14px 16px; border-radius: var(--radius); background: var(--accent-soft); color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.4; }
 
 /* Fotos de esfuerzo en la evaluación: entran con un fundido al cambiar de paso; en el teléfono, una franja
    detrás del número del paso que se funde con el fondo. */

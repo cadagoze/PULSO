@@ -79,6 +79,16 @@ export const fullGym: TrainingEquipment[] = equipmentFor("gym").map((item) => it
 /** Lista base para la evaluación inicial y el inicio de Casa (lo que más se compra para el hogar). */
 export const homeBase = equipmentCatalog.filter((item) => item.base.includes("home"));
 
+/** Primera vista del equipamiento (evaluación y Entrenar): lo más común, en corto. El resto, en «Más equipamiento». */
+export const simpleEquipment: Array<{ id: TrainingEquipment; label: string }> = [
+  { id: "dumbbells", label: "Mancuernas" },
+  { id: "barbell", label: "Barra" },
+  { id: "bands", label: "Bandas" },
+  { id: "kettlebell", label: "Kettlebell" },
+  { id: "bench", label: "Banco" },
+  { id: "pullup-bar", label: "Dominadas" },
+];
+
 /** Capacidades que aportan los equipos marcados. */
 export function capabilitiesOf(items: TrainingEquipment[]): Set<Equipment> {
   const result = new Set<Equipment>();

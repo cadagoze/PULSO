@@ -4,7 +4,7 @@ import Link from "@/components/ui/app-link";
 import type { CSSProperties } from "react";
 import { Camera, Pencil, Settings as SettingsIcon, UserRound } from "lucide-react";
 import { Button, NumberMetric } from "@/components/ui";
-import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
+import type { AssessmentProfile } from "@/lib/assessment";
 import { cn } from "@/lib/utils";
 import { equipmentById, fullGym } from "@/data/equipment";
 import { usePreference } from "@/lib/store";

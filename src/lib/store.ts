@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import type { SetStateAction } from "react";
 import { meals as initialMeals } from "@/data/mock-data";
-import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
+import type { AssessmentProfile } from "@/lib/assessment";
 import { defaultRoutine, defaultTrainingPreference, routineWithId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { removePersistentKey, removePersistentMemory, usePersistentState } from "@/lib/use-persistent-state";

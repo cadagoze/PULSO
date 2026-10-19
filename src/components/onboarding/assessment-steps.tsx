@@ -1,42 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Check, Lock, PenLine } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { SegmentedControl, ToggleChip } from "@/components/ui";
-import { homeBase } from "@/data/equipment";
+import { equipmentFor, simpleEquipment } from "@/data/equipment";
+import { dayOptions, minuteOptions } from "@/lib/assessment";
 import { cn } from "@/lib/utils";
-import type { NutritionSpecialCase, Sex, TrainingEquipment, TrainingLocation } from "@/types";
-import type { ChoiceStep, SelectionValue } from "./wellness-assessment";
+import type { TrainingEquipment } from "@/types";
 
-const otherMax = 180;
-
-export function NameStep({ value, onChange, onSubmit }: { value: string; onChange: (value: string) => void; onSubmit: () => void }) {
-  return (
-    <form
-      className="onb-name"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-    >
-      <label className="sr-only" htmlFor="onb-name-input">Tu nombre</label>
-      <input
-        id="onb-name-input"
-        className="onb-name-input"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="Tu nombre"
-        autoComplete="given-name"
-        enterKeyHint="next"
-        maxLength={40}
-      />
-      <p className="onb-note"><Lock size={14} aria-hidden="true" />Tus datos quedan en este dispositivo y, si creas una cuenta, en la nube.</p>
-    </form>
-  );
-}
-
-/** Opción grande y táctil: se tiñe de lima suave y el check aparece con un pequeño rebote. */
+/** Opción grande y táctil: se marca con el check y un pequeño rebote. */
 function OptionCard({ selected, label, detail, icon, onClick, round = false, index }: { selected: boolean; label: string; detail: string; icon: ReactNode; onClick: () => void; round?: boolean; index: number }) {
   return (
     <button
@@ -58,204 +31,70 @@ function OptionCard({ selected, label, detail, icon, onClick, round = false, ind
   );
 }
 
-export function ChoiceStepView({ step, selected, custom, onToggle, onCustom }: { step: ChoiceStep; selected: SelectionValue[]; custom: string; onToggle: (value: SelectionValue) => void; onCustom: (value: string) => void }) {
-  const [open, setOpen] = useState(custom.length > 0);
-  // Si cierras «Otro», el texto se guarda aquí y vuelve al abrirlo de nuevo.
-  const saved = useRef("");
-  const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const filled = custom.trim().length > 0;
-  const fieldId = `onb-other-${step.key}`;
-
-  function toggleOther() {
-    if (open) {
-      saved.current = custom;
-      onCustom("");
-      setOpen(false);
-      return;
-    }
-    setOpen(true);
-    if (saved.current) onCustom(saved.current);
-    requestAnimationFrame(() => fieldRef.current?.focus());
-  }
-
-  return (
-    <div className="onb-options" role="group" aria-labelledby="onb-step-title">
-      {step.options.map((option, index) => (
-        <OptionCard
-          key={option.value}
-          index={index}
-          selected={selected.includes(option.value)}
-          label={option.label}
-          detail={option.detail}
-          icon={option.icon}
-          onClick={() => onToggle(option.value)}
-        />
-      ))}
-      <div className={cn("onb-other", open && "is-open", filled && "is-selected")} style={{ "--i": step.options.length } as CSSProperties}>
-        <button
-          type="button"
-          className="onb-option pressable"
-          aria-expanded={open}
-          aria-controls={open ? fieldId : undefined}
-          onClick={toggleOther}
-        >
-          <span className="onb-option-icon" aria-hidden="true"><PenLine size={20} /></span>
-          <span className="onb-option-text">
-            <strong>Otro</strong>
-            <small>{open ? "Escríbelo con tus palabras" : "Agrega una respuesta propia"}</small>
-          </span>
-          <span className="onb-check" aria-hidden="true">{filled && <Check size={14} strokeWidth={3} />}</span>
-        </button>
-        {open && (
-          <div className="onb-other-field">
-            <label className="sr-only" htmlFor={fieldId}>Otra respuesta (opcional)</label>
-            <textarea
-              id={fieldId}
-              ref={fieldRef}
-              value={custom}
-              onChange={(event) => onCustom(event.target.value)}
-              placeholder={step.otherPlaceholder}
-              maxLength={otherMax}
-              rows={2}
-            />
-            <small className="num" aria-hidden="true">{custom.length}/{otherMax}</small>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Cómo te identificas: una opción a la vez (elige fotos y color; se cambia en Ajustes). */
-export function SexStep<T extends string>({ options, value, onChange }: { options: Array<{ value: T; label: string; detail: string; icon: ReactNode }>; value: T | null; onChange: (value: T) => void }) {
+/** Opciones de un paso: `round` para elegir una sola, cuadradas para marcar varias. */
+export function OptionList<T extends string>({ options, isSelected, onPick, round = false }: {
+  options: Array<{ value: T; label: string; detail: string; icon: ReactNode }>;
+  isSelected: (value: T) => boolean;
+  onPick: (value: T) => void;
+  round?: boolean;
+}) {
   return (
     <div className="onb-options" role="group" aria-labelledby="onb-step-title">
       {options.map((option, index) => (
-        <OptionCard key={option.value} index={index} round selected={value === option.value} label={option.label} detail={option.detail} icon={option.icon} onClick={() => onChange(option.value)} />
+        <OptionCard key={option.value} index={index} round={round} selected={isSelected(option.value)} label={option.label} detail={option.detail} icon={option.icon} onClick={() => onPick(option.value)} />
       ))}
     </div>
   );
 }
 
-export function LocationStep({ options, location, equipment, onLocation, onEquipment }: {
-  options: Array<{ value: TrainingLocation; label: string; detail: string; icon: ReactNode }>;
-  location: TrainingLocation | null;
-  equipment: TrainingEquipment[];
-  onLocation: (value: TrainingLocation) => void;
-  onEquipment: (value: TrainingEquipment[]) => void;
-}) {
-  function toggle(value: TrainingEquipment) {
-    onEquipment(equipment.includes(value) ? equipment.filter((item) => item !== value) : [...equipment, value]);
+/** Lo que hay en casa: «Sin equipamiento», lo más común y, si hace falta, el resto del catálogo. */
+export function EquipmentStep({ value, onChange }: { value: TrainingEquipment[]; onChange: (value: TrainingEquipment[]) => void }) {
+  const simpleIds = simpleEquipment.map((item) => item.id);
+  const extra = equipmentFor("home").filter((item) => !simpleIds.includes(item.id));
+  const [more, setMore] = useState(() => value.some((id) => !simpleIds.includes(id)));
+
+  function toggle(id: TrainingEquipment) {
+    onChange(value.includes(id) ? value.filter((item) => item !== id) : [...value, id]);
   }
+
   return (
-    <>
-      <div className="onb-options onb-options-two" role="group" aria-labelledby="onb-step-title">
-        {options.map((option, index) => (
-          <OptionCard
-            key={option.value}
-            index={index}
-            round
-            selected={location === option.value}
-            label={option.label}
-            detail={option.detail}
-            icon={option.icon}
-            onClick={() => onLocation(option.value)}
-          />
+    <div className="onb-equipment">
+      <div className="chips" role="group" aria-labelledby="onb-step-title">
+        <ToggleChip pressed={value.length === 0} onChange={() => onChange([])}>Sin equipamiento</ToggleChip>
+        {simpleEquipment.map((item) => (
+          <ToggleChip key={item.id} pressed={value.includes(item.id)} onChange={() => toggle(item.id)}>{item.label}</ToggleChip>
         ))}
+        {!more && (
+          <button type="button" className="chip equip-more" onClick={() => setMore(true)}>
+            <Plus size={14} strokeWidth={2.6} aria-hidden="true" />Más equipamiento
+          </button>
+        )}
       </div>
-      {location === "home" && (
-        <section className="onb-equipment" aria-labelledby="onb-equipment-title">
-          <div className="onb-equipment-head">
-            <h2 id="onb-equipment-title">¿Qué tienes en casa?</h2>
-            <p>Marca lo que tengas. Si no marcas nada, entrenaremos con tu peso corporal. Después puedes agregar más en Entrenar.</p>
-          </div>
-          <div className="chips">
-            {homeBase.map((option) => (
-              <ToggleChip key={option.id} pressed={equipment.includes(option.id)} onChange={() => toggle(option.id)}>
-                {option.label}
-              </ToggleChip>
-            ))}
-          </div>
-        </section>
+      {more && (
+        <div className="chips onb-equipment-more" role="group" aria-label="Más equipamiento">
+          {extra.map((item) => (
+            <ToggleChip key={item.id} pressed={value.includes(item.id)} onChange={() => toggle(item.id)}>{item.label}</ToggleChip>
+          ))}
+        </div>
       )}
-    </>
+      <p className="onb-note">Sin equipamiento entrenamos con tu peso corporal. Después lo ajustas en Entrenar.</p>
+    </div>
   );
 }
 
-export interface BodyInputs {
-  age: string;
-  height: string;
-  weight: string;
-  /** Sexo que usa la fórmula del metabolismo (sólo se pregunta si elegiste «Prefiero no decir»). */
-  formulaSex: Sex;
-  special: NutritionSpecialCase;
-}
-
-const specialChoices: Array<{ value: NutritionSpecialCase; label: string }> = [
-  { value: "none", label: "Ninguna" },
-  { value: "pregnancy", label: "Embarazo o lactancia" },
-  { value: "eating-disorder", label: "Antecedente de trastorno alimentario" },
-];
-
-/**
- * «Tu cuerpo»: edad, estatura y peso para estimar la energía del día. Opcional; si se completa, muestra
- * el resultado en vivo. Las situaciones especiales evitan proponer déficit (o contar calorías, con TCA).
- */
-export function BodyStep({ value, unit, askSex, sex, errors, preview, onChange }: {
-  value: BodyInputs;
-  unit: "kg" | "lb";
-  askSex: boolean;
-  /** Sexo con que se calcula: sin embarazo ni lactancia para «Hombre». */
-  sex: Sex;
-  errors: { age: string; height: string; weight: string };
-  preview: string | null;
-  onChange: (patch: Partial<BodyInputs>) => void;
-}) {
-  const filled = Boolean(value.age || value.height || value.weight);
-  const fields = [
-    { key: "age" as const, label: "Edad", suffix: "años", placeholder: "30", mode: "numeric" as const },
-    { key: "height" as const, label: "Estatura", suffix: "cm", placeholder: "170", mode: "numeric" as const },
-    { key: "weight" as const, label: "Peso", suffix: unit, placeholder: unit === "kg" ? "72" : "160", mode: "decimal" as const },
-  ];
+/** Días por semana y minutos por sesión: el punto de partida, que cada día se puede ajustar. */
+export function TimeStep({ days, minutes, onDays, onMinutes }: { days: number; minutes: number; onDays: (value: number) => void; onMinutes: (value: number) => void }) {
   return (
-    <div className="onb-body">
-      <div className="onb-body-grid">
-        {fields.map((field) => (
-          <label key={field.key} className={cn("onb-body-field", filled && value[field.key] && errors[field.key] && "is-invalid")}>
-            <span className="meta">{field.label}</span>
-            <span className="onb-body-input">
-              <input
-                inputMode={field.mode}
-                value={value[field.key]}
-                placeholder={field.placeholder}
-                maxLength={5}
-                onChange={(event) => onChange({ [field.key]: event.target.value.replace(/[^\d.,]/g, "") })}
-                aria-invalid={Boolean(filled && value[field.key] && errors[field.key])}
-              />
-              <small>{field.suffix}</small>
-            </span>
-          </label>
-        ))}
+    <div className="onb-time">
+      <div className="onb-time-row">
+        <span className="onb-time-label">Días por semana</span>
+        <SegmentedControl size="l" label="Días por semana" options={dayOptions.map((value) => ({ value: String(value), label: String(value) }))} value={String(days)} onChange={(value) => onDays(Number(value))} />
       </div>
-      {filled && (errors.age || errors.height || errors.weight) && (
-        <p className="onb-body-error">{[value.age && errors.age, value.height && errors.height, value.weight && errors.weight].filter(Boolean).join(" ") || "Completa los tres datos para calcular."}</p>
-      )}
-      {askSex && (
-        <div className="onb-body-sex">
-          <span>La fórmula del metabolismo usa el sexo biológico:</span>
-          <SegmentedControl<Sex> label="Sexo para la fórmula" options={[{ value: "female", label: "Mujer" }, { value: "male", label: "Hombre" }]} value={value.formulaSex} onChange={(formulaSex) => onChange({ formulaSex })} />
-        </div>
-      )}
-      <fieldset className="onb-body-special">
-        <legend>¿Alguna de estas te aplica?</legend>
-        <div className="chips">
-          {specialChoices.filter((choice) => sex === "female" || choice.value !== "pregnancy").map((choice) => (
-            <ToggleChip key={choice.value} pressed={value.special === choice.value} onChange={() => onChange({ special: choice.value })}>{choice.label}</ToggleChip>
-          ))}
-        </div>
-      </fieldset>
-      {preview && <p className="onb-body-preview" aria-live="polite">{preview}</p>}
-      <p className="onb-note"><Lock size={14} aria-hidden="true" />Sólo para calcular tu energía diaria. Puedes cambiarlo después en Comidas.</p>
+      <div className="onb-time-row">
+        <span className="onb-time-label">Minutos por sesión</span>
+        <SegmentedControl size="l" label="Minutos por sesión" options={minuteOptions.map((value) => ({ value: String(value), label: `${value} min` }))} value={String(minutes)} onChange={(value) => onMinutes(Number(value))} />
+      </div>
+      <p className="onb-note">Cada día puedes pedir una sesión más corta o más larga en Entrenar.</p>
     </div>
   );
 }

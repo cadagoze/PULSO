@@ -114,7 +114,7 @@ export function nutritionTargets(profile: NutritionProfile, weightKg: number, no
 
 /** Objetivo a partir de la evaluación inicial, mientras no hay un plan de alimentación. */
 export function goalFromAssessment(goals: string[] = []): NutritionGoal {
-  return goals[0] === "weight" ? "lose" : "maintain";
+  return goals[0] === "weight" ? "lose" : goals[0] === "muscle" ? "gain" : "maintain";
 }
 
 /** Valores iniciales razonables a partir de la evaluación (actividad y objetivo). */

@@ -1,6 +1,6 @@
 import { bodyAreaLabels } from "@/data/catalog";
 import { equipmentLabel, fullGym } from "@/data/equipment";
-import type { AssessmentProfile } from "@/components/onboarding/wellness-assessment";
+import type { AssessmentProfile } from "@/lib/assessment";
 import { toDisplayWeight } from "@/lib/utils";
 import type { BodyArea, Settings, TrainingPreference, WeightEntry } from "@/types";
 

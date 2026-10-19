@@ -356,7 +356,8 @@ test('energía: semana de entrenamiento y nivel de actividad sugerido', () => {
 
 test('el objetivo de alimentación ajusta la rutina y la guía semanal', () => {
   assert.equal(generator.trainingGoal(['habits'], 'lose'), 'weight');
-  assert.equal(generator.trainingGoal(['habits'], 'gain'), 'strength');
+  assert.equal(generator.trainingGoal(['habits'], 'gain'), 'muscle');
+  assert.equal(generator.trainingGoal(['muscle']), 'muscle');
   assert.equal(generator.trainingGoal(['energy'], 'maintain'), 'energy');
   assert.equal(generator.trainingGoal(['energy']), 'energy');
   assert.equal(nutrition.goalFromAssessment(['weight']), 'lose');
@@ -598,8 +599,8 @@ test('personalización: fotos y color según cómo te identificas, con elección
   }
   const onboarding = load('src/data/onboarding-photos.ts');
   for (const photo of onboarding.allOnboardingPhotos) assert.ok(fs.existsSync(path.join(root, 'public', photo)), `falta ${photo}`);
-  assert.notEqual(onboarding.onboardingPhoto(0, null), onboarding.onboardingPhoto(1, null), 'sin identidad, se alternan');
-  assert.equal(onboarding.onboardingPhoto(2, 'female'), '/images/editorial/hero-f-gym-deadlift.webp');
+  assert.notEqual(onboarding.onboardingPhoto('goal', null), onboarding.onboardingPhoto('place', null), 'sin identidad, se alternan');
+  assert.equal(onboarding.onboardingPhoto('place', 'female'), '/images/editorial/hero-f-gym-deadlift.webp');
   assert.equal(onboarding.resultPhoto('gym', 'male'), '/images/editorial/hero-m-gym-squat.webp');
 });
 
@@ -1287,4 +1288,46 @@ test('chequeo rápido: un toque se guarda con la forma de siempre y ajusta la se
   // Programa con chequeo «cansado»: una serie menos donde hay tres o más.
   const records = [{ exerciseId: 1, unit: 'reps', sets: [set(8, 10), set(8, 10), set(8, 10), set(8, 10)] }, { exerciseId: 2, unit: 'reps', sets: [set(8, 0), set(8, 0)] }];
   assert.deepEqual(plain(programs.easierRecords(records).map((record) => record.sets.length)), [3, 2]);
+});
+
+const assessment = load('src/lib/assessment.ts');
+
+test('evaluación: cinco decisiones arman el perfil de siempre y repetirla conserva lo tuyo', () => {
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  assert.deepEqual(plain(assessment.assessmentSteps('gym')), ['goal', 'place', 'time', 'consider'], 'en el gimnasio no se pregunta el equipamiento');
+  assert.equal(assessment.assessmentSteps(null).length, 5);
+  assert.deepEqual(plain(assessment.toggleConsideration(['beginner'], 'none')), ['none']);
+  assert.deepEqual(plain(assessment.toggleConsideration(['none'], 'knees')), ['knees']);
+
+  const at = new Date('2026-10-19T12:00:00Z');
+  const answers = { goal: 'muscle', place: 'both', equipment: ['dumbbells'], days: 4, minutes: 60, considerations: ['knees', 'beginner'] };
+  const profile = assessment.buildProfile(answers, null, at);
+  assert.equal(profile.location, 'gym', '«Ambos»: el gimnasio por defecto');
+  assert.deepEqual(plain(profile.equipment), ['dumbbells'], 'y el equipo de casa a mano');
+  assert.deepEqual(plain(profile.goals), ['muscle']);
+  assert.deepEqual(plain(profile.activities), ['walking'], 'principiante → nivel 1');
+  assert.deepEqual(plain(profile.limitations), ['knees']);
+  assert.equal(profile.recommendation.sessionsPerWeek, 4);
+  assert.equal(profile.recommendation.sessionMinutes, 60);
+  assert.match(profile.recommendation.caution, /rodillas/);
+  assert.deepEqual(Object.keys(profile.customAnswers).sort(), ['activities', 'barriers', 'goals', 'limitations', 'times'], 'formato compatible');
+  // Lo que usa el generador sale igual que antes.
+  assert.equal(generator.levelFromActivities(profile.activities), 1);
+  assert.deepEqual(plain(generator.profileLimitations(profile.limitations)), ['knees']);
+  assert.equal(generator.goalFromProfile(profile.goals), 'muscle');
+  assert.equal(assessment.buildProfile({ ...answers, considerations: ['none'], days: 5 }, null, at).activities[0], 'regular');
+  assert.deepEqual(plain(assessment.buildProfile({ ...answers, place: 'gym' }, null, at).equipment), [], 'sólo gimnasio: sin equipo de casa');
+
+  // Repetir: conserva fecha de inicio, nombre e identidad; parte de tus respuestas actuales.
+  const previous = { ...profile, createdAt: '2026-01-02T10:00:00.000Z', name: 'Ana', sex: 'female', goals: ['weight'], recommendation: { ...profile.recommendation, sessionMinutes: 20 } };
+  const again = assessment.buildProfile(answers, previous, at);
+  assert.equal(again.createdAt, '2026-01-02T10:00:00.000Z');
+  assert.equal(again.name, 'Ana');
+  assert.equal(again.sex, 'female');
+  const prefilled = assessment.answersFromProfile(previous, 'home', ['bands'], 3);
+  assert.equal(prefilled.goal, 'energy', '«Mejorar mi peso» pasa a «Estar en forma»');
+  assert.equal(prefilled.place, 'home');
+  assert.deepEqual(plain(prefilled.equipment), ['bands']);
+  assert.equal(prefilled.minutes, 30, 'los minutos se acercan a las opciones nuevas');
+  assert.deepEqual(plain(prefilled.considerations), ['beginner', 'knees']);
 });

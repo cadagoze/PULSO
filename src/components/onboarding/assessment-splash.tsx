@@ -62,7 +62,7 @@ export function AssessmentSplash({ steps, leaving, onStart, onLeft }: { steps: n
           <p className="onb-splash-kicker rise" style={{ "--i": 4 } as CSSProperties}>Entrena · Come bien · Avanza</p>
         </div>
         <div className="onb-splash-cta rise" style={{ "--i": 6 } as CSSProperties}>
-          <p className="onb-splash-lead">{steps} preguntas · 2 minutos · tu primer plan, para casa o gimnasio.</p>
+          <p className="onb-splash-lead">{steps} preguntas · 1 minuto · tu plan para casa o gimnasio.</p>
           {status && <p className={cn("onb-splash-status", restoring && "is-busy")} role="status">{status}</p>}
           <Button size="l" block onClick={onStart} disabled={restoring}>
             Empezar
