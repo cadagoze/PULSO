@@ -88,6 +88,11 @@ Cada ejercicio muestra su versión para casa y para el gimnasio (`placeAlternati
 
 - **Tus pesas** (`src/lib/loads.ts`): en casa puedes marcar los pesos que tienes (cada mancuerna, kettlebell, tobillera o balón; el máximo en barra y set unible). Cada ejercicio parte con una carga sugerida (fracción del peso corporal según ejercicio y nivel, o la de tu historial) y toma el peso más cercano que tengas. Si es liviano, sube las repeticiones (hasta 2×, tope 25) y suma una serie cuando falta mucho; si es pesado, baja las repeticiones (mínimo 5). Si las pesas no sirven (menos de 40 % o más de 1,6× la carga ideal), elige otro ejercicio del mismo tipo. El rango adaptado queda en el registro (`ExerciseRecord.range`) y la progresión lo respeta. En el gimnasio no se ajusta.
 - **Progresión doble:** sube repeticiones dentro del rango y, cuando todas las series llegan al tope con al menos 1 repetición en reserva, sugiere más carga.
+- **Aprende de ti** (todo con tu historial, en el teléfono, y el porqué visible en Inicio o en la sesión):
+  - Esfuerzo (`effortFor` en `src/lib/progression.ts`): si tu última sesión con un ejercicio fue «Difícil», mantiene la carga; tras dos difíciles seguidas, apunta a la parte baja del rango; si fue «Fácil», sube las repeticiones más rápido.
+  - Cansancio acumulado y molestias (`src/lib/adaptation.ts`): dos sesiones difíciles recientes, o la zona marcada en «Sentí molestias» al terminar, bajan el volumen de hoy aunque no hagas el chequeo (si lo haces, manda el chequeo; la molestia aparece marcada y con «No» se quita).
+  - Nivel (`trainingLevel` en `src/lib/generator.ts`): con 5 semanas de dos o más sesiones entre las últimas 11 pasas a intermedio; con 10, a avanzado. Nunca baja de lo que respondiste al empezar, e Inicio avisa el día que subes.
+  - Gustos: cada vez que sustituyes un ejercicio (en la sesión o en «Ajustar») se anota en `Settings.swappedOut`; con dos, el generador deja de proponerlo si hay alternativa. Si después lo completas, se olvida.
 - **1RM estimado:** fórmula de Epley; las repeticiones en reserva cuentan como repeticiones posibles.
 - **Recuperación muscular:** la fatiga de cada músculo baja en 48 h (pequeños) o 72 h (grandes); principal cuenta 1 serie y secundario 0,5.
 - **Volumen semanal:** 10–20 series por músculo (6–10 para principiantes).

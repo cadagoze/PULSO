@@ -7,7 +7,7 @@ import { BodyCheck } from "@/components/home/body-check";
 import { Button, MetaLine, SegmentedControl, Sheet } from "@/components/ui";
 import { durationOptions, focusLabels } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
-import { suggestNext } from "@/lib/progression";
+import { effortFor, suggestNext } from "@/lib/progression";
 import { useSettings } from "@/lib/store";
 import { lastRecordFor } from "@/lib/training";
 import { cn, formatNumber, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
@@ -115,7 +115,7 @@ export function LoadSheet({ open, onClose, exercise, record, workouts, onChange 
   const display = record ? toDisplayWeight(topLoad(record), unit) : 0;
   const step = exercise ? loadStep(exercise, unit) : 1;
   const max = unit === "lb" ? 660 : 300;
-  const suggestion = exercise ? suggestNext(exercise, lastRecordFor(workouts, exercise.id), unit, (kg) => toDisplayWeight(kg, unit)) : null;
+  const suggestion = exercise ? suggestNext(exercise, lastRecordFor(workouts, exercise.id), unit, (kg) => toDisplayWeight(kg, unit), effortFor(workouts, exercise.id)) : null;
 
   function change(delta: number) {
     const next = Math.max(0, Math.min(max, Math.round((display + delta) * 100) / 100));

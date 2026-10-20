@@ -141,13 +141,62 @@ export interface Suggestion {
   value: number;
   load: number;
   message: string;
+  /** Si el esfuerzo que marcaste cambió la sugerencia: fácil, difícil o dos difíciles seguidas. */
+  because?: "easy" | "hard" | "hard-streak";
+}
+
+/** Cómo te fue con un ejercicio: el esfuerzo de la última sesión que lo tuvo (2 fácil, 3 bien, 4 difícil) y cuántas seguidas fueron difíciles. */
+export interface EffortContext {
+  effort?: number;
+  hardStreak: number;
+}
+
+/** El esfuerzo que marcaste en las últimas sesiones con este ejercicio (sin contar un entrenamiento, si se indica). */
+export function effortFor(workouts: WorkoutEntry[], exerciseId: number, excludeId?: string): EffortContext {
+  let effort: number | undefined;
+  let hardStreak = 0;
+  for (const workout of sortedWorkouts(workouts)) {
+    if (workout.id === excludeId || !workout.records?.some((record) => record.exerciseId === exerciseId && record.sets.some((set) => set.done))) continue;
+    if (effort === undefined) effort = workout.effort ?? 3;
+    if ((workout.effort ?? 0) >= 4) hardStreak += 1;
+    else break;
+  }
+  return { effort, hardStreak };
 }
 
 /**
- * Doble progresión: primero sube repeticiones dentro del rango; cuando todas las series de trabajo
- * llegan al tope con al menos 1 repetición en reserva, sube la carga y vuelve a la parte baja del rango.
+ * Doble progresión ajustada a cómo te fue: primero sube repeticiones dentro del rango; cuando todas las
+ * series de trabajo llegan al tope con al menos 1 repetición en reserva, sube la carga y vuelve a la parte
+ * baja. Si tu última sesión con el ejercicio fue difícil, mantiene (con dos difíciles seguidas, apunta a
+ * la parte baja del rango); si fue fácil, sube las repeticiones más rápido.
  */
-export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel = "kg", toDisplay: (kg: number) => number = (kg) => kg): Suggestion {
+export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel = "kg", toDisplay: (kg: number) => number = (kg) => kg, context?: EffortContext): Suggestion {
+  const base = baseSuggestion(exercise, last, unitLabel, toDisplay);
+  if (!context?.effort || base.kind === "start" || base.kind === "deload" || !last) return base;
+  const [low, high] = last.range ?? exercise.range;
+  const word = exercise.unit === "reps" ? "repeticiones" : "segundos";
+  const withLoad = (load: number) => (load > 0 ? ` con ${toDisplay(load)} ${unitLabel}` : "");
+  const sets = workingDone(last);
+  const topLoad = Math.max(0, ...sets.map((set) => set.load));
+  const minValue = Math.min(...sets.filter((set) => set.load === topLoad).map((set) => set.value));
+  if (context.hardStreak >= 2) {
+    return { kind: "hold", value: low, load: topLoad, because: "hard-streak", message: `Tras dos sesiones difíciles seguidas, apunta a ${low} ${word}${withLoad(topLoad)}.` };
+  }
+  if (context.effort >= 4 && (base.kind === "load" || base.kind === "harder" || base.kind === "reps")) {
+    const value = base.kind === "reps" ? minValue : Math.min(high, minValue);
+    return { kind: "hold", value, load: topLoad, because: "hard", message: `Como tu última sesión fue difícil, repite ${value} ${word}${withLoad(topLoad)}.` };
+  }
+  if (context.effort <= 2 && base.kind === "reps") {
+    const value = Math.min(high, minValue + (exercise.unit === "seconds" ? 10 : 2));
+    return { ...base, value, because: "easy", message: `Como tu última sesión fue fácil, intenta ${value} ${word}${withLoad(base.load)}.` };
+  }
+  if (context.effort <= 2 && base.kind === "load") {
+    return { ...base, because: "easy", message: `Como tu última sesión fue fácil, sube a ${toDisplay(base.load)} ${unitLabel} y vuelve a ${base.value} ${word}.` };
+  }
+  return base;
+}
+
+function baseSuggestion(exercise: Exercise, last: ExerciseRecord | undefined, unitLabel: string, toDisplay: (kg: number) => number): Suggestion {
   const [low, high] = last?.range ?? exercise.range;
   const sets = last ? workingDone(last) : [];
   if (!sets.length) {
@@ -187,9 +236,9 @@ export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel
   return { kind: "reps", value, load: topLoad, message: `Suma ${exercise.unit === "reps" ? "una repetición" : "5 segundos"}: objetivo ${value}${topLoad ? ` con ${toDisplay(topLoad)} ${unitLabel}` : ""}.` };
 }
 
-/** Prepara las series de una nueva sesión a partir de la última vez y la sugerencia de progresión. */
-export function progressedSets(exercise: Exercise, count: number, last?: ExerciseRecord): SetRecord[] {
-  const suggestion = suggestNext(exercise, last);
+/** Prepara las series de una nueva sesión a partir de la última vez, cómo te fue y la sugerencia de progresión. */
+export function progressedSets(exercise: Exercise, count: number, last?: ExerciseRecord, context?: EffortContext): SetRecord[] {
+  const suggestion = suggestNext(exercise, last, "kg", (kg) => kg, context);
   return Array.from({ length: count }, () => ({ value: suggestion.value, load: suggestion.load, done: false, kind: "normal" as const }));
 }
 

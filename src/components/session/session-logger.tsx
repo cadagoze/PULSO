@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
 import { beep, primeAudio, speak, useWakeLock, vibrate, voiceOn } from "@/lib/feedback";
-import { exerciseBests, progressedSets } from "@/lib/progression";
-import type { ExerciseBests } from "@/lib/progression";
+import { addSwap, forgetSwaps } from "@/lib/adaptation";
+import { effortFor, exerciseBests, progressedSets } from "@/lib/progression";
+import type { EffortContext, ExerciseBests } from "@/lib/progression";
 import { markProgramSession } from "@/lib/programs";
 import { useDraft, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { completedSets, exerciseById, lastRecordFor, recordHeading, recordsVolume, sessionSets, setHeading, warmupCount } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
-import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft } from "@/types";
+import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft, WorkoutEntry } from "@/types";
 import { ExerciseMenu } from "./exercise-menu";
 import type { MenuTarget, MenuView } from "./exercise-menu";
 import { ExerciseSets } from "./exercise-sets";
@@ -101,6 +102,7 @@ interface ActiveSessionProps {
 function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProps) {
   const [workouts, setWorkouts] = useWorkouts();
   const [, setProgram] = useProgram();
+  const [, updateSettings] = useSettings();
   // Ejercicio en pantalla: al volver a la sesión se retoma donde quedaron series pendientes.
   const [current, setCurrent] = useState(() => firstPendingRecord(draft.records));
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -265,22 +267,29 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     return lastRecordFor(workouts, exercise.id, draft.id);
   }
 
+  function effortOf(exercise: Exercise) {
+    return effortFor(workouts, exercise.id, draft.id);
+  }
+
   function addExercises(items: Exercise[]) {
     const records = items.map<ExerciseRecord>((exercise) => ({
       exerciseId: exercise.id,
       unit: exercise.unit,
-      sets: progressedSets(exercise, exercise.sets, lastFor(exercise)),
+      sets: progressedSets(exercise, exercise.sets, lastFor(exercise), effortOf(exercise)),
     }));
     patch((current) => ({ ...current, records: [...current.records, ...records] }));
     if (records.length) showToast(records.length === 1 ? "Ejercicio agregado" : `${records.length} ejercicios agregados`);
   }
 
   function replaceExercise(position: number, exercise: Exercise) {
+    // Lo que cambias seguido deja de proponerse en tus próximas sesiones.
+    const previous = draftRef.current.records[position]?.exerciseId;
+    if (previous !== undefined && previous !== exercise.id) updateSettings({ swappedOut: addSwap(settingsRef.current.swappedOut, previous) });
     updateRecord(position, (record) => {
       const replaced: ExerciseRecord = {
         exerciseId: exercise.id,
         unit: exercise.unit,
-        sets: progressedSets(exercise, Math.max(1, record.sets.length), lastFor(exercise)),
+        sets: progressedSets(exercise, Math.max(1, record.sets.length), lastFor(exercise), effortOf(exercise)),
         ...(record.restSeconds !== undefined ? { restSeconds: record.restSeconds } : {}),
         ...(record.group ? { group: record.group } : {}),
       };
@@ -339,10 +348,10 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setDraft(null);
   }
 
-  function save(effort: Effort, feltPain: boolean) {
+  function save(effort: Effort, feltPain: boolean, painAreas: WorkoutEntry["painAreas"] = []) {
     const current = draftRef.current;
     if (!completedSets(current.records)) return;
-    const entry = buildWorkoutEntry(current, workouts, { effort, feltPain }, Date.now());
+    const entry = buildWorkoutEntry(current, workouts, { effort, feltPain, painAreas }, Date.now());
     const stored = setWorkouts((items) => [entry, ...items.filter((item) => item.id !== entry.id)]);
     if (!stored) {
       // Sin espacio en el dispositivo: se conserva el borrador para no perder el entrenamiento.
@@ -351,6 +360,9 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     }
     const source = current.source;
     if (source?.type === "program") setProgram((progress) => markProgramSession(progress, source.programId, source.week, source.day));
+    // Lo que completaste ya no cuenta como «lo cambias seguido».
+    const swaps = forgetSwaps(settingsRef.current.swappedOut, entry.records?.map((record) => record.exerciseId) ?? []);
+    if (swaps !== settingsRef.current.swappedOut) updateSettings({ swappedOut: swaps });
     setFinishOpen(false);
     onSaved();
     setDraft(null);
@@ -370,9 +382,9 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const letters = useMemo(() => supersetLetters(draft.records), [draft.records]);
   const exerciseIds = draft.records.map((record) => record.exerciseId).join(",");
   const history = useMemo(() => {
-    const map = new Map<number, { last?: ExerciseRecord; bests: ExerciseBests }>();
+    const map = new Map<number, { last?: ExerciseRecord; bests: ExerciseBests; effort: EffortContext }>();
     for (const id of exerciseIds.split(",").filter(Boolean).map(Number)) {
-      map.set(id, { last: lastRecordFor(workouts, id, draft.id), bests: exerciseBests(workouts, id, draft.id) });
+      map.set(id, { last: lastRecordFor(workouts, id, draft.id), bests: exerciseBests(workouts, id, draft.id), effort: effortFor(workouts, id, draft.id) });
     }
     return map;
   }, [draft.id, exerciseIds, workouts]);
@@ -508,6 +520,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             record={record}
             exercise={exercise}
             last={info?.last}
+            effort={info?.effort}
             bests={info?.bests ?? exerciseBests([], record.exerciseId)}
             loadUnit={unit}
             focusedSet={setIndex}

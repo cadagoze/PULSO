@@ -3,7 +3,7 @@
 import { MuscleMap } from "@/components/ui/muscle-map";
 import { MuscleEvidence, MuscleList, muscleHeat, muscleVolume } from "@/components/progress/muscle-volume";
 import { summarizePeriod } from "@/components/progress/period";
-import { levelFromActivities } from "@/lib/generator";
+import { levelFromActivities, trainingLevel } from "@/lib/generator";
 import { useProfile, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 
@@ -16,7 +16,7 @@ export function MusclesView() {
   const [workouts] = useWorkouts();
   const now = useNow();
   if (!now) return null;
-  const beginner = levelFromActivities(profile?.activities) === 1;
+  const beginner = (now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities)) === 1;
   const week = summarizePeriod(workouts, "semana", now);
   const data = muscleVolume(workouts, week.start, week.end, week.activeWeeks, beginner);
 

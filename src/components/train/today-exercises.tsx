@@ -15,6 +15,7 @@ import { warmupMinutes, warmupTarget } from "@/lib/warmup";
 import { restText, targetLabel, topLoad } from "@/components/train/shared";
 import { LoadSheet } from "@/components/train/today-sheets";
 import { recordForExercise } from "@/components/train/today-plan";
+import { addSwap } from "@/lib/adaptation";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, MuscleGroup } from "@/types";
 
@@ -33,7 +34,7 @@ export function TodayExercises({ source, today, active, visible, onSaveRoutine }
 }
 
 function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; visible: boolean; onSaveRoutine: () => void }) {
-  const [settings] = useSettings();
+  const [settings, updateSettings] = useSettings();
   const unit = settings.unit;
   const [picker, setPicker] = useState<Picker | null>(null);
   const [load, setLoad] = useState<{ index: number; open: boolean } | null>(null);
@@ -55,6 +56,9 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
     if (picker.mode === "replace") {
       const [exercise] = selected;
       if (!exercise) return;
+      // Lo que cambias seguido deja de proponerse en tus próximas sesiones.
+      const previous = records[picker.index]?.exerciseId;
+      if (previous !== undefined && previous !== exercise.id) updateSettings({ swappedOut: addSwap(settings.swappedOut, previous) });
       today.editRecords((current) => current.map((record, index) => index === picker.index
         ? recordForExercise(exercise, today.workouts, record.sets.length, record.restSeconds)
         : record));

@@ -1345,6 +1345,97 @@ test('progreso relevante: un solo dato, el más valioso', () => {
   assert.equal(pick([on('2026-10-19', press(20))]), null, 'nada destaca: no se inventa');
 });
 
+test('aprende de ti: el esfuerzo que marcas ajusta la progresión', () => {
+  const press = training.exerciseById(12); // rango 8–12, +2 kg
+  const at = (date, sets, effort) => ({ id: date, date, completedAt: `${date}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 1, sets: sets.length, mode: 'full', effort, records: [{ exerciseId: 12, unit: 'reps', sets }] });
+  const top = [set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 })];
+  const mid = [set(10, 20), set(10, 20), set(10, 20)];
+  const suggest = (workouts) => progression.suggestNext(press, training.lastRecordFor(workouts, 12), 'kg', (kg) => kg, progression.effortFor(workouts, 12));
+  // Bien: doble progresión de siempre.
+  assert.equal(suggest([at('2026-10-18', top, 3)]).kind, 'load');
+  assert.equal(suggest([at('2026-10-18', top, 3)]).load, 22);
+  // Difícil: mantiene la carga aunque completaste el rango, y dice por qué.
+  const hard = suggest([at('2026-10-18', top, 4)]);
+  assert.deepEqual({ kind: hard.kind, load: hard.load, value: hard.value, because: hard.because }, { kind: 'hold', load: 20, value: 12, because: 'hard' });
+  assert.match(hard.message, /^Como tu última sesión fue difícil, repite 12 repeticiones con 20 kg\.$/);
+  assert.equal(suggest([at('2026-10-18', mid, 4)]).value, 10, 'difícil en medio del rango: repite');
+  // Dos difíciles seguidas: apunta a la parte baja del rango.
+  const streak = suggest([at('2026-10-18', mid, 4), at('2026-10-15', mid, 4)]);
+  assert.deepEqual({ kind: streak.kind, value: streak.value, because: streak.because }, { kind: 'hold', value: 8, because: 'hard-streak' });
+  // Fácil: dos repeticiones más (sin pasar el tope) o la subida de carga, con su porqué.
+  const easy = suggest([at('2026-10-18', mid, 2)]);
+  assert.deepEqual({ kind: easy.kind, value: easy.value, because: easy.because }, { kind: 'reps', value: 12, because: 'easy' });
+  assert.match(suggest([at('2026-10-18', top, 2)]).message, /^Como tu última sesión fue fácil, sube a 22 kg/);
+  // Sin esfuerzo anotado o sin historial, nada cambia.
+  assert.equal(suggest([at('2026-10-18', top)]).because, undefined);
+  assert.equal(progression.suggestNext(press, undefined, 'kg', (kg) => kg, { effort: 4, hardStreak: 2 }).kind, 'start');
+  // effortFor: la última sesión con el ejercicio y la racha de difíciles.
+  assert.deepEqual({ ...progression.effortFor([at('2026-10-18', mid, 4), at('2026-10-15', mid, 4), at('2026-10-12', mid, 3)], 12) }, { effort: 4, hardStreak: 2 });
+  assert.deepEqual({ ...progression.effortFor([], 12) }, { effort: undefined, hardStreak: 0 });
+  // Las series de la próxima sesión ya vienen ajustadas.
+  const sets = Array.from(progression.progressedSets(press, 3, { exerciseId: 12, unit: 'reps', sets: top }, { effort: 4, hardStreak: 1 }));
+  assert.ok(sets.every((item) => item.load === 20 && item.value === 12));
+});
+
+test('aprende de ti: cansancio acumulado, molestias al terminar y lo que cambias', () => {
+  const adapt = load('src/lib/adaptation.ts');
+  const now = new Date(2026, 9, 20, 9);
+  const on = (date, extra = {}) => ({ id: date + Math.random(), date, completedAt: `${date}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 3, sets: 9, mode: 'full', ...extra });
+  assert.equal(adapt.recentHardStreak([on('2026-10-19', { effort: 4 }), on('2026-10-17', { effort: 4 }), on('2026-10-15', { effort: 3 })], now), 2);
+  assert.equal(adapt.recentHardStreak([on('2026-10-19', { effort: 4 }), on('2026-10-17', { effort: 3 })], now), 1);
+  assert.equal(adapt.recentHardStreak([on('2026-10-14', { effort: 4 }), on('2026-10-13', { effort: 4 })], now), 0, 'tras varios días de descanso, ya pasó');
+  assert.deepEqual(Array.from(adapt.carriedPain([on('2026-10-19', { feltPain: true, painAreas: ['knees'] })], now)), ['knees']);
+  assert.deepEqual(Array.from(adapt.carriedPain([on('2026-10-17', { feltPain: true, painAreas: ['knees'] })], now)), [], 'de hace días, ya no');
+  assert.deepEqual(Array.from(adapt.carriedPain([on('2026-10-19'), on('2026-10-18', { painAreas: ['back'] })], now)), [], 'sólo la última sesión');
+  let swaps = adapt.addSwap(undefined, 12);
+  swaps = adapt.addSwap(swaps, 12);
+  assert.deepEqual({ ...swaps }, { 12: 2 });
+  assert.deepEqual({ ...adapt.forgetSwaps(swaps, [12]) }, {}, 'si lo completas, ya no lo evitas');
+  assert.equal(adapt.forgetSwaps(swaps, [14]), swaps, 'sin cambios, el mismo objeto');
+  // El generador deja de proponer lo que cambias seguido (si hay alternativa).
+  const input = { preference: { location: 'home', equipment: ['dumbbells', 'bench'] }, minutes: 30, focus: 'upper', goal: 'muscle', level: 2, seed: 4 };
+  const first = generator.generateWorkout(input).records[0].exerciseId;
+  const avoided = generator.generateWorkout({ ...input, avoid: { [first]: 2 } }).records.map((record) => record.exerciseId);
+  assert.ok(!avoided.includes(first), `ya no propone ${first}`);
+});
+
+test('aprende de ti: el nivel sube con constancia y nunca baja de lo que dijiste', () => {
+  const now = new Date(2026, 9, 20, 9);
+  const weeks = (count) => Array.from({ length: count }, (_, week) => [1, 3].map((day) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - 7 * (week + 1) + day - ((now.getDay() + 6) % 7));
+    const key = utils.localDateKey(date);
+    return { id: `${week}-${day}`, date: key, completedAt: `${key}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 3, sets: 9, mode: 'full' };
+  })).flat();
+  assert.equal(generator.trainingLevel([], [], now), 1);
+  assert.equal(generator.trainingLevel([], weeks(4), now), 1);
+  assert.equal(generator.trainingLevel([], weeks(5), now), 2, '5 semanas constantes: intermedio');
+  assert.equal(generator.trainingLevel([], weeks(10), now), 3, '10 semanas: avanzado');
+  assert.equal(generator.trainingLevel(['regular'], [], now), 3, 'nunca baja de lo que respondiste');
+});
+
+test('aprende de ti: el coach explica lo aprendido cuando no hay chequeo', () => {
+  const coachLib = load('src/lib/daily-coach.ts');
+  const fresh = Object.fromEntries(analytics.allMuscles.map((muscle) => [muscle, 100]));
+  const base = { now: new Date(2026, 9, 20, 9), draft: null, trainedToday: false, restDay: false, readiness: null, recovery: fresh, focus: 'full', focusByRecovery: false, workouts: [], week: { done: 1, goal: 3 }, short: false, minutes: 38 };
+  let result = coachLib.dailyCoach({ ...base, adaptation: { carriedPain: ['knees'], hardStreak: 0 } });
+  assert.equal(result.recommendation, 'train-reduced');
+  assert.equal(result.status, 'Cuidando rodillas');
+  assert.equal(result.reason, 'Al terminar tu última sesión marcaste molestia en las rodillas: hoy cuidamos esa zona.');
+  result = coachLib.dailyCoach({ ...base, adaptation: { carriedPain: [], hardStreak: 2 } });
+  assert.equal(result.recommendation, 'train-reduced');
+  assert.equal(result.status, 'Cansancio acumulado');
+  assert.match(result.reason, /dos últimas sesiones fueron difíciles/);
+  // Si hoy hiciste el chequeo, manda el chequeo.
+  result = coachLib.dailyCoach({ ...base, readiness: { recommendation: 'planned', feel: 'good' }, adaptation: { carriedPain: ['knees'], hardStreak: 3 } });
+  assert.equal(result.recommendation, 'train-normal');
+  // Al terminar: la zona queda en el historial.
+  const sessionUtils = load('src/components/session/session-utils.ts');
+  const draft = { id: 'd', name: 'Torso', records: [{ exerciseId: 12, unit: 'reps', sets: [set(10, 20)] }], elapsedSeconds: 1800, runningSince: null, restUntil: null, notes: '', restSeconds: 90 };
+  assert.deepEqual(Array.from(sessionUtils.buildWorkoutEntry(draft, [], { effort: 4, feltPain: true, painAreas: ['shoulders'] }, Date.now()).painAreas), ['shoulders']);
+  assert.equal(sessionUtils.buildWorkoutEntry(draft, [], { effort: 3, feltPain: false, painAreas: ['shoulders'] }, Date.now()).painAreas, undefined);
+});
+
 test('conteo de cifras: lee y escribe números en formato chileno', () => {
   const count = load('src/lib/count.ts');
   const parsed = (text) => { const value = count.parseCount(text); return value && { ...value }; };

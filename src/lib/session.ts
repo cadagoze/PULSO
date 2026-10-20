@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { primeAudio } from "@/lib/feedback";
-import { generateWorkout, levelFromActivities, profileLimitations } from "@/lib/generator";
-import { useDraft, usePreference, useProfile, useSettings } from "@/lib/store";
+import { generateWorkout, profileLimitations, trainingLevel } from "@/lib/generator";
+import { useDraft, usePreference, useProfile, useSettings, useWorkouts } from "@/lib/store";
 import { newId } from "@/lib/training";
 import type { ExerciseRecord, TrainingDraft, TrainingPreference, WorkoutSource } from "@/types";
 import { confirmAction } from "@/lib/confirm";
@@ -56,15 +56,16 @@ export function useStartMobility() {
   const start = useStartWorkout();
   const [preference] = usePreference();
   const [profile] = useProfile();
+  const [workouts] = useWorkouts();
   return useCallback(() => {
     const workout = generateWorkout({
       preference,
       minutes: 10,
       focus: "mobility",
-      level: levelFromActivities(profile?.activities),
+      level: trainingLevel(profile?.activities, workouts, new Date()),
       limitations: profileLimitations(profile?.limitations),
       seed: localDaySeed(Date.now()),
     });
     return start({ name: "Movilidad 10 min", records: workout.records, restSeconds: workout.restSeconds, source: { type: "generated" } });
-  }, [preference, profile, start]);
+  }, [preference, profile, start, workouts]);
 }

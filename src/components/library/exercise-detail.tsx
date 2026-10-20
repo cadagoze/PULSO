@@ -14,7 +14,7 @@ import { ExerciseProgress } from "@/components/library/exercise-progress";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { availableEquipment, isAvailable } from "@/lib/generator";
 import { useStartWorkout } from "@/lib/session";
-import { progressedSets } from "@/lib/progression";
+import { effortFor, progressedSets } from "@/lib/progression";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { useDraft, usePreference, useWorkouts } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
       records: [{
         exerciseId: exercise.id,
         unit: exercise.unit,
-        sets: progressedSets(exercise, exercise.sets, lastRecordFor(workouts, exercise.id)),
+        sets: progressedSets(exercise, exercise.sets, lastRecordFor(workouts, exercise.id), effortFor(workouts, exercise.id)),
       }],
       source: { type: "free" },
     });

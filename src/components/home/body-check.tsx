@@ -1,8 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { carriedPain } from "@/lib/adaptation";
 import { trainingLoad } from "@/lib/analytics";
-import { feelOptions, painOptions, painSafety, quickReadiness, readinessAdvice, readinessFeel, type Feel, type PainArea } from "@/lib/readiness";
+import { feelOptions, painAreasText, painOptions, painSafety, quickReadiness, readinessAdvice, readinessFeel, type Feel, type PainArea } from "@/lib/readiness";
 import { useReadiness, useWellness, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { usePersonalization } from "@/lib/use-personalize";
@@ -24,7 +25,9 @@ export function BodyCheck({ today, title = "Cómo estás hoy", embedded = false 
   const now = useNow();
   const saved = entries.find((entry) => entry.date === today);
   const feel = saved ? readinessFeel(saved) : null;
-  const pain = saved?.pain ?? [];
+  // Sin chequeo hoy, parte con lo que marcaste al terminar tu última sesión (con «No» se quita).
+  const carried = useMemo(() => (now ? carriedPain(workouts, new Date(now)) : []), [now, workouts]);
+  const pain = saved ? saved.pain ?? [] : carried;
   const [askPain, setAskPain] = useState(false);
   const showPain = askPain || pain.length > 0;
 
@@ -77,7 +80,7 @@ export function BodyCheck({ today, title = "Cómo estás hoy", embedded = false 
             )}
           </>
         ) : (
-          <p className="body-hint">Un toque y ajustamos tu sesión de hoy.</p>
+          <p className="body-hint">{carried.length ? `Al terminar tu última sesión marcaste molestia en ${painAreasText(carried)}. Un toque y ajustamos tu sesión.` : "Un toque y ajustamos tu sesión de hoy."}</p>
         )}
       </div>
     </Wrapper>

@@ -147,6 +147,8 @@ export interface WorkoutEntry {
   notes?: string;
   effort?: 1 | 2 | 3 | 4 | 5;
   feltPain?: boolean;
+  /** Dónde molestó (si lo marcaste al terminar): la sesión siguiente cuida esas zonas. */
+  painAreas?: Array<BodyArea | "other">;
   feedbackAt?: string;
   location?: TrainingLocation;
   equipment?: TrainingEquipment[];
@@ -249,6 +251,11 @@ export interface Settings {
   voice?: boolean;
   /** Calentamiento enfocado en la sesión al empezar (pulso, movilidad y activación). Sin valor: incluido. */
   warmup?: boolean;
+  /** Veces que cambiaste cada ejercicio por otro (id → veces): con dos o más, deja de proponerse. */
+  swappedOut?: Record<string, number>;
+  /** Nivel que PULSO ya te anunció y el día en que lo alcanzaste (para avisarlo una sola vez). */
+  levelReached?: ExerciseLevel;
+  levelReachedOn?: string;
   barWeight: number;
   plates: number[];
   /** Color de acento elegido; sin valor, automático según cómo te identificas. */

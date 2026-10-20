@@ -69,6 +69,13 @@ export function painLimitations(pain: readonly PainArea[] | undefined): BodyArea
 
 const areaNames: Record<BodyArea, string> = { knees: "las rodillas", back: "la espalda", shoulders: "los hombros" };
 
+/** «las rodillas y la espalda» (o «una zona» si sólo marcaste otra zona; null sin molestias). */
+export function painAreasText(pain: readonly PainArea[] | undefined) {
+  const areas = painLimitations(pain).map((area) => areaNames[area]);
+  if (!areas.length) return pain?.length ? "una zona" : null;
+  return areas.length === 1 ? areas[0] : `${areas.slice(0, -1).join(", ")} y ${areas.at(-1)}`;
+}
+
 /** «Hoy evitamos ejercicios que exijan las rodillas y la espalda.» */
 export function painNote(pain: readonly PainArea[] | undefined) {
   const areas = painLimitations(pain).map((area) => areaNames[area]);

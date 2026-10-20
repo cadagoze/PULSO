@@ -1,5 +1,5 @@
 import { programs } from "@/data/programs";
-import { progressedSets } from "@/lib/progression";
+import { effortFor, progressedSets } from "@/lib/progression";
 import { exerciseById, isWorkingSet, lastRecordFor } from "@/lib/training";
 import type { ExerciseRecord, Program, ProgramProgress, TrainingLocation, WorkoutEntry } from "@/types";
 
@@ -52,7 +52,7 @@ export function programSessionRecords(program: Program, week: number, day: numbe
     const exercise = exerciseById(item.exerciseId);
     if (!exercise) return [];
     const sets = Math.max(1, item.sets + delta);
-    const prefilled = progressedSets({ ...exercise, range: item.range }, sets, lastRecordFor(workouts, exercise.id));
+    const prefilled = progressedSets({ ...exercise, range: item.range }, sets, lastRecordFor(workouts, exercise.id), effortFor(workouts, exercise.id));
     // El rango del programa viaja con la sesión: se ve al entrenar y queda en el historial.
     return [{ exerciseId: exercise.id, unit: exercise.unit, sets: prefilled, restSeconds: item.restSeconds, range: item.range }];
   });

@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Flame, ListOrdered, Minus, Plus, TrendingUp } from "lucide-react";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { suggestNext } from "@/lib/progression";
-import type { ExerciseBests } from "@/lib/progression";
+import type { EffortContext, ExerciseBests } from "@/lib/progression";
 import { cn, toDisplayWeight } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, SetRecord } from "@/types";
 import { SetListRow } from "./set-row";
@@ -16,11 +16,13 @@ type Neighbour = { index: number; exercise: Exercise; record: ExerciseRecord } |
  * Debajo del pliegue: la sugerencia de progresión, la nota, todas las series del ejercicio
  * (toca una para editarla arriba), agregar o quitar series y el paso al ejercicio siguiente.
  */
-export function ExerciseSets({ recordIndex, record, exercise, last, bests, loadUnit, focusedSet, previousExercise, nextExercise, onFocus, onToggle, onSet, onAddSet, onRemoveSet, onGo, onOpenSession }: {
+export function ExerciseSets({ recordIndex, record, exercise, last, effort, bests, loadUnit, focusedSet, previousExercise, nextExercise, onFocus, onToggle, onSet, onAddSet, onRemoveSet, onGo, onOpenSession }: {
   recordIndex: number;
   record: ExerciseRecord;
   exercise: Exercise;
   last?: ExerciseRecord;
+  /** Cómo te fue la última vez con este ejercicio (ajusta la sugerencia y dice por qué). */
+  effort?: EffortContext;
   bests: ExerciseBests;
   loadUnit: WeightUnit;
   focusedSet: number;
@@ -34,7 +36,7 @@ export function ExerciseSets({ recordIndex, record, exercise, last, bests, loadU
   onGo: (index: number) => void;
   onOpenSession: () => void;
 }) {
-  const suggestion = suggestNext(exercise, last, loadUnit, (kg) => toDisplayWeight(kg, loadUnit));
+  const suggestion = suggestNext(exercise, last, loadUnit, (kg) => toDisplayWeight(kg, loadUnit), effort);
   const done = record.sets.filter((set) => set.done).length;
   // En el calentamiento no hay progresión que seguir: sólo el ritmo.
   const warmup = record.sets.length > 0 && record.sets.every((set) => set.kind === "warmup");

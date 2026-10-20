@@ -207,7 +207,7 @@ export function sourceLabel(source?: WorkoutSource) {
 }
 
 /** Entrenamiento listo para el historial: sólo series realizadas y ejercicios con al menos una. */
-export function buildWorkoutEntry(draft: TrainingDraft, history: WorkoutEntry[], feedback: { effort: Effort; feltPain: boolean }, now: number): WorkoutEntry {
+export function buildWorkoutEntry(draft: TrainingDraft, history: WorkoutEntry[], feedback: { effort: Effort; feltPain: boolean; painAreas?: WorkoutEntry["painAreas"] }, now: number): WorkoutEntry {
   const records = draft.records
     .map((record) => ({ ...record, sets: record.sets.filter((set) => set.done) }))
     .filter((record) => record.sets.length > 0);
@@ -226,6 +226,7 @@ export function buildWorkoutEntry(draft: TrainingDraft, history: WorkoutEntry[],
     notes: draft.notes.trim() || undefined,
     effort: feedback.effort,
     feltPain: feedback.feltPain,
+    ...(feedback.feltPain && feedback.painAreas?.length ? { painAreas: feedback.painAreas } : {}),
     feedbackAt: stamp,
     location: draft.location,
     equipment: draft.equipment,

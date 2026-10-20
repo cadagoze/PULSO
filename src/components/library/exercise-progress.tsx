@@ -5,7 +5,7 @@ import { Play, Sparkles, Trophy } from "lucide-react";
 import { Button, NumberMetric } from "@/components/ui";
 import { Card } from "@/components/ui/cards";
 import { ProgressChart } from "@/components/library/progress-chart";
-import { estimateOneRepMax, exerciseBests, suggestNext } from "@/lib/progression";
+import { effortFor, estimateOneRepMax, exerciseBests, suggestNext } from "@/lib/progression";
 import { isWorkingSet, lastRecordFor, sortedWorkouts } from "@/lib/training";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { formatNumber, formatShortDate, toDisplayWeight } from "@/lib/utils";
@@ -55,7 +55,7 @@ export function ExerciseProgress({ exercise, onStart }: { exercise: Exercise; on
   const bests = useMemo(() => exerciseBests(workouts, exercise.id), [exercise.id, workouts]);
   const last = useMemo(() => lastRecordFor(workouts, exercise.id), [exercise.id, workouts]);
   const recent = useMemo(() => recentSessions(workouts, exercise.id, 5), [exercise.id, workouts]);
-  const suggestion = suggestNext(exercise, last, unit, (kg) => toDisplayWeight(kg, unit));
+  const suggestion = suggestNext(exercise, last, unit, (kg) => toDisplayWeight(kg, unit), effortFor(workouts, exercise.id));
 
   if (!bests.sessions.length) {
     return (

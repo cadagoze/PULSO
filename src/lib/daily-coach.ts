@@ -1,7 +1,7 @@
 import { workoutMuscleSets } from "@/lib/analytics";
 import type { WorkoutFocus } from "@/lib/generator";
-import { suggestNext } from "@/lib/progression";
-import { painLimitations, painNote, readinessFeel } from "@/lib/readiness";
+import { effortFor, suggestNext } from "@/lib/progression";
+import { painAreasText, painLimitations, painNote, readinessFeel } from "@/lib/readiness";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { formatNumber, localDateKey } from "@/lib/utils";
 import type { BodyArea, ExerciseRecord, MuscleGroup, ReadinessEntry, WorkoutEntry } from "@/types";
@@ -48,6 +48,8 @@ export interface DailyCoachInput {
   short: boolean;
   /** Minutos de la sesión de hoy. */
   minutes: number;
+  /** Lo aprendido de tus últimas sesiones: molestias que marcaste al terminar y sesiones difíciles seguidas. */
+  adaptation?: { carriedPain: Array<BodyArea | "other">; hardStreak: number };
 }
 
 const DAY = 86_400_000;
@@ -72,16 +74,25 @@ function regionOf(workout: WorkoutEntry): "legs" | "upper" | null {
   return legs > upper * 1.5 ? "legs" : upper > legs * 1.5 ? "upper" : null;
 }
 
-/** Lectura del cuerpo: el chequeo de hoy manda; si no, la recuperación estimada. */
+/** «rodillas», «rodillas y espalda». */
+function areasLabel(pain: ReadonlyArray<BodyArea | "other"> | undefined) {
+  const areas = painLimitations(pain).map((area) => areaNames[area]);
+  return areas.length ? (areas.length === 1 ? areas[0] : `${areas.slice(0, -1).join(", ")} y ${areas.at(-1)}`) : null;
+}
+
+/** Lectura del cuerpo: el chequeo de hoy manda; si no, lo que marcaste al terminar y la recuperación estimada. */
 function bodyStatus(input: DailyCoachInput): { status: string; positive: boolean } {
   const { readiness, recovery } = input;
-  const areas = painLimitations(readiness?.pain).map((area) => areaNames[area]);
-  if (areas.length) return { status: `Cuidando ${areas.length === 1 ? areas[0] : `${areas.slice(0, -1).join(", ")} y ${areas.at(-1)}`}`, positive: false };
-  if (readiness?.pain?.length) return { status: "Con una molestia", positive: false };
+  const pain = readiness ? readiness.pain : input.adaptation?.carriedPain;
+  const areas = areasLabel(pain);
+  if (areas) return { status: `Cuidando ${areas}`, positive: false };
+  if (pain?.length) return { status: "Con una molestia", positive: false };
   if (readiness) {
     const feel = readinessFeel(readiness);
     if (feel === "exhausted") return { status: "Energía muy baja", positive: false };
     if (feel === "tired") return { status: "Energía baja", positive: false };
+  } else if ((input.adaptation?.hardStreak ?? 0) >= 2) {
+    return { status: "Cansancio acumulado", positive: false };
   }
   const ready = average(recovery, LEGS) >= READY && average(recovery, UPPER) >= READY;
   return ready ? { status: "Recuperación buena", positive: true } : { status: "Recuperación parcial", positive: true };
@@ -149,6 +160,28 @@ export function dailyCoach(input: DailyCoachInput): DailyCoachResult {
       duration: minutes,
     };
   }
+  // Sin chequeo hoy, lo aprendido de tus últimas sesiones también ajusta (y se dice por qué).
+  const learned = readiness ? null : input.adaptation;
+  if (learned?.carriedPain.length) {
+    return {
+      recommendation: "train-reduced",
+      ...body,
+      title: "Hoy bajamos un poco el volumen.",
+      reason: `Al terminar tu última sesión marcaste molestia en ${painAreasText(learned.carriedPain)}: hoy cuidamos esa zona.`,
+      primaryAction: "Empezar entrenamiento",
+      duration: minutes,
+    };
+  }
+  if (learned && learned.hardStreak >= 2) {
+    return {
+      recommendation: "train-reduced",
+      ...body,
+      title: "Hoy bajamos un poco el volumen.",
+      reason: `Tus ${learned.hardStreak === 2 ? "dos" : learned.hardStreak} últimas sesiones fueron difíciles: hoy, menos volumen para recuperar margen.`,
+      primaryAction: "Empezar entrenamiento",
+      duration: minutes,
+    };
+  }
   const met = input.week.done >= input.week.goal;
   return {
     recommendation: "train-normal",
@@ -184,8 +217,10 @@ export function dailyTip({ recommendation, records, workouts, unit = "kg", toDis
   for (const exercise of main) {
     const last = lastRecordFor(workouts, exercise.id);
     if (!last) continue;
-    const next = suggestNext(exercise, last, unit, toDisplay);
+    const next = suggestNext(exercise, last, unit, toDisplay, effortFor(workouts, exercise.id));
     const name = lowerFirst(exercise.name);
+    // Si tu esfuerzo cambió la sugerencia, el consejo dice por qué («como tu última sesión fue difícil…»).
+    if (next.because) return `Hoy en ${name}: ${lowerFirst(next.message)}`;
     if (next.kind === "load") return `Hoy en ${name}: sube a ${load(next.load)} y vuelve a ${next.value} repeticiones.`;
     if (next.kind === "reps") return `Hoy en ${name}: intenta ${next.value} ${exercise.unit === "reps" ? "repeticiones" : "segundos"}${next.load > 0 ? ` con ${load(next.load)}` : ""}.`;
     if (next.kind === "harder") return `Hoy en ${name}: ${lowerFirst(next.message)}`;

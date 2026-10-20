@@ -1,5 +1,6 @@
 import { exercises } from "@/data/mock-data";
-import { progressedSets } from "@/lib/progression";
+import { weeklySeries } from "@/lib/analytics";
+import { effortFor, progressedSets } from "@/lib/progression";
 import { isWorkingSet, lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingLocation, TrainingPreference, WorkoutEntry } from "@/types";
@@ -49,6 +50,8 @@ export interface GeneratorInput {
   bodyKg?: number;
   /** Zona del cuerpo a trabajar (glúteos, brazos…): manda sobre el enfoque. */
   zone?: BodyZone;
+  /** Veces que cambiaste cada ejercicio (id → veces): pierden prioridad y, con dos o más, sólo salen si no hay otro. */
+  avoid?: Record<string, number>;
 }
 
 export interface GeneratedWorkout {
@@ -178,6 +181,8 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     const target = idealLoad(exercise);
     return !unfit(target / nearestLoad(target, available));
   };
+  // Lo que sueles cambiar por otro baja en la selección (no se excluye: sigue si no hay alternativa).
+  const avoided = (exercise: Exercise) => Math.min(3, input.avoid?.[exercise.id] ?? 0) * 25;
   const usable = exercises.filter((exercise) =>
     isAvailable(exercise, equipment)
     && loadFits(exercise)
@@ -206,7 +211,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
         const rotation = hash(exercise.id * 7919 + seed) % 14;
         // Más específico, mejor: una extensión de tríceps antes que un press de banca para «brazos».
         const specific = exercise.primary.length ? primary / exercise.primary.length : 0;
-        return { exercise, primary, score: Math.min(primary, 1.5) * 20 + specific * 30 + hits(exercise.secondary) * 6 + levelFit + loaded + rotation - repeat - sameMuscle };
+        return { exercise, primary, score: Math.min(primary, 1.5) * 20 + specific * 30 + hits(exercise.secondary) * 6 + levelFit + loaded + rotation - repeat - sameMuscle - avoided(exercise) };
       }).sort((a, b) => b.score - a.score);
       // Primero lo que trabaja la zona como músculo principal; si no alcanza, lo que la apoya.
       const pick = scored.find((item) => item.primary >= 1) ?? scored.find((item) => item.primary > 0) ?? scored[0];
@@ -232,7 +237,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
       const levelFit = 10 - Math.abs(exercise.level - level) * 6;
       const overlap = chosen.some((item) => item.primary.some((muscle) => exercise.primary.includes(muscle))) ? -25 : 0;
       const rotation = hash(exercise.id * 7919 + seed) % 18;
-      return { exercise, fresh, score: fresh * 0.5 + loaded + levelFit + overlap + rotation };
+      return { exercise, fresh, score: fresh * 0.5 + loaded + levelFit + overlap + rotation - avoided(exercise) };
     }).sort((a, b) => b.score - a.score);
     const pick = scored.find((item) => item.fresh >= 45) ?? (focus === "mobility" || focus === "conditioning" ? scored[0] : undefined);
     if (!pick) {
@@ -256,7 +261,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     const record: ExerciseRecord = {
       exerciseId: exercise.id,
       unit: exercise.unit,
-      sets: progressedSets(exercise, count, input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined),
+      sets: progressedSets(exercise, count, input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined, input.workouts ? effortFor(input.workouts, exercise.id) : undefined),
       restSeconds: restFor(exercise, goal, focus),
     };
     // Ajuste a tus pesas: carga más cercana a la ideal y repeticiones (o una serie más) para compensar.
@@ -307,6 +312,18 @@ export function suggestedFocus(recovery: Record<MuscleGroup, number> | undefined
   return upper >= lower ? "upper" : "lower";
 }
 
+/**
+ * Nivel para elegir ejercicios: el de tu evaluación y, con constancia, más. Cuenta las semanas con dos o
+ * más sesiones entre las últimas 11 terminadas: con 5, intermedio; con 10, avanzado. Nunca baja de lo que
+ * respondiste al empezar.
+ */
+export function trainingLevel(activities: string[] | undefined, workouts: WorkoutEntry[], now: Date): ExerciseLevel {
+  const base = levelFromActivities(activities);
+  const steady = weeklySeries(workouts, 12, now).slice(0, -1).filter((week) => week.sessions >= 2).length;
+  const earned: ExerciseLevel = steady >= 10 ? 3 : steady >= 5 ? 2 : 1;
+  return Math.max(base, earned) as ExerciseLevel;
+}
+
 /** Nivel orientativo a partir de la evaluación inicial. */
 export function levelFromActivities(activities: string[] = []): ExerciseLevel {
   if (activities.includes("regular")) return 3;
@@ -344,7 +361,7 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, pain, recovery, now, minutes, focus, zone, variant = 0, bodyKg }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, pain, recovery, now, minutes, focus, zone, variant = 0, bodyKg, avoid }: {
   profile: ProfileForToday;
   nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
@@ -359,6 +376,8 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
   zone?: BodyZone;
   variant?: number;
   bodyKg?: number | null;
+  /** Ejercicios que sueles cambiar (Ajustes). */
+  avoid?: Record<string, number>;
 }): GeneratorInput {
   const zoneInfo = zoneById(zone);
   return {
@@ -367,12 +386,13 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
     focus: zoneInfo ? zoneInfo.base : focus ?? suggestedFocus(recovery, readiness),
     ...(zoneInfo ? { zone: zoneInfo.id } : {}),
     goal: trainingGoal(profile?.goals, nutritionGoal),
-    level: levelFromActivities(profile?.activities),
+    level: trainingLevel(profile?.activities, workouts, new Date(now)),
     limitations: todayLimitations(profile?.limitations, pain),
     readiness,
     recovery,
     workouts,
     seed: localDaySeed(now) + variant,
     bodyKg: bodyKg ?? undefined,
+    ...(avoid ? { avoid } : {}),
   };
 }

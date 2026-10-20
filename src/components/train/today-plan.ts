@@ -5,7 +5,8 @@ import { muscleRecovery } from "@/lib/analytics";
 import { availableEquipment, estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
-import { progressedSets } from "@/lib/progression";
+import { carriedPain, recentHardStreak } from "@/lib/adaptation";
+import { effortFor, progressedSets } from "@/lib/progression";
 import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
@@ -25,7 +26,7 @@ export function recordForExercise(exercise: Exercise, workouts: WorkoutEntry[], 
   return {
     exerciseId: exercise.id,
     unit: exercise.unit,
-    sets: progressedSets(exercise, sets, lastRecordFor(workouts, exercise.id)),
+    sets: progressedSets(exercise, sets, lastRecordFor(workouts, exercise.id), effortFor(workouts, exercise.id)),
     ...(restSeconds ? { restSeconds } : {}),
   };
 }
@@ -58,21 +59,27 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const todayKey = hydrated ? localDateKey(new Date(now)) : "";
   const readiness = readinessEntries.find((entry) => entry.date === todayKey);
   const recovery = useMemo(() => (hourNow ? muscleRecovery(workouts, hourNow) : undefined), [hourNow, workouts]);
-  const suggested = suggestedFocus(recovery, readiness?.recommendation);
+  // Lo aprendido de tus últimas sesiones (molestias que marcaste al terminar y cansancio acumulado). Si hoy
+  // hiciste el chequeo, manda el chequeo.
+  const adaptation = useMemo(() => (hourNow ? { carriedPain: carriedPain(workouts, new Date(hourNow)), hardStreak: recentHardStreak(workouts, new Date(hourNow)) } : { carriedPain: [], hardStreak: 0 }), [hourNow, workouts]);
+  const learnedShort = !readiness && (adaptation.carriedPain.length > 0 || adaptation.hardStreak >= 2);
+  const recommendation = readiness?.recommendation ?? (learnedShort ? "short" : undefined);
+  const suggested = suggestedFocus(recovery, recommendation);
   const focus = focusChoice ?? suggested;
   const minutes = minutesChoice ?? profile?.recommendation.sessionMinutes ?? 30;
 
   // Una sola sesión de hoy para Inicio y Entrenar (aquí se puede ajustar). Se arma con la hora en punto:
   // la semilla es del día y la recuperación cambia de hora en hora, así no se rehace cada minuto.
-  const pain = readiness?.pain;
+  const pain = readiness ? readiness.pain : adaptation.carriedPain.length ? adaptation.carriedPain : undefined;
+  const avoid = settings.swappedOut;
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg }));
-  }, [bodyKg, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, readiness?.recommendation, recovery, variant, workouts, zone]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg, avoid }));
+  }, [avoid, bodyKg, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, recommendation, recovery, variant, workouts, zone]);
   const limitations = useMemo(() => todayLimitations(profile?.limitations, pain), [pain, profile?.limitations]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", workouts.length, todayKey].join("|");
+  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", JSON.stringify(avoid ?? {}), workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const baseRecords = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
   const restSeconds = plan?.restSeconds ?? settings.defaultRest;
@@ -112,6 +119,7 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     variant,
     readiness,
     recovery,
+    adaptation,
     records,
     warmup,
     fullRecords,
@@ -156,7 +164,10 @@ export function useActiveProgram(now: number) {
     [program, week, day, workouts],
   );
   const todayKey = now ? localDateKey(new Date(now)) : "";
-  const pain = readinessEntries.find((entry) => entry.date === todayKey)?.pain;
+  const checkin = readinessEntries.find((entry) => entry.date === todayKey);
+  const hour = Math.floor(now / HOUR) * HOUR;
+  const carried = useMemo(() => (hour ? carriedPain(workouts, new Date(hour)) : []), [hour, workouts]);
+  const pain = checkin ? checkin.pain : carried;
   const warmup = useMemo(
     () => (program && records.length ? warmupFor({ records, limitations: todayLimitations(profile?.limitations, pain), equipment: availableEquipment(preference), minutes: program.minutes }) : []),
     [pain, preference, profile?.limitations, program, records],

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CircleAlert, Trophy } from "lucide-react";
 import { Sheet, Switch } from "@/components/ui";
+import { painOptions, painSafety, type PainArea } from "@/lib/readiness";
 import { clockLabel, durationSeconds, exerciseById, recordsVolume, sessionSets } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -36,10 +37,12 @@ export function FinishSheet({ open, onClose, draft, workouts, unit, onSave }: {
   draft: TrainingDraft;
   workouts: WorkoutEntry[];
   unit: WeightUnit;
-  onSave: (effort: Effort, feltPain: boolean) => void;
+  onSave: (effort: Effort, feltPain: boolean, painAreas: PainArea[]) => void;
 }) {
   const [effort, setEffort] = useState<Effort>(3);
   const [pain, setPain] = useState(false);
+  // Dónde molestó: la próxima sesión cuida esas zonas aunque no hagas el chequeo.
+  const [areas, setAreas] = useState<PainArea[]>([]);
   const now = useNow(open ? 1000 : 60_000);
   const minute = useNow();
   const { done, total } = sessionSets(draft.records);
@@ -77,13 +80,23 @@ export function FinishSheet({ open, onClose, draft, workouts, unit, onSave }: {
       <div className="toggle-row ses-pain">
         <span>
           <strong>Sentí molestias</strong>
-          <small>Queda en tu historial. Si sigue mañana, márcalo en «Cómo estás hoy» y tu sesión evitará esa zona.</small>
+          <small>{pain ? "¿Dónde? Tu próxima sesión cuidará esa zona." : "Queda en tu historial y tu próxima sesión lo tiene en cuenta."}</small>
         </span>
         <Switch checked={pain} onChange={setPain} label="Sentí molestias" />
       </div>
+      {pain && (
+        <div className="ses-pain-areas">
+          <div className="chips" role="group" aria-label="Dónde molestó">
+            {painOptions.map((option) => (
+              <button key={option.value} type="button" className="chip" aria-pressed={areas.includes(option.value)} onClick={() => setAreas((current) => (current.includes(option.value) ? current.filter((area) => area !== option.value) : [...current, option.value]))}>{option.label}</button>
+            ))}
+          </div>
+          <p className="ses-pain-safety">{painSafety}</p>
+        </div>
+      )}
 
       <div className="stack-s">
-        <button type="button" className="btn btn-primary btn-large btn-block" disabled={done === 0} onClick={() => onSave(effort, pain)}>
+        <button type="button" className="btn btn-primary btn-large btn-block" disabled={done === 0} onClick={() => onSave(effort, pain, pain ? areas : [])}>
           Guardar entrenamiento
         </button>
         <button type="button" className="btn btn-ghost btn-block" onClick={onClose}>Seguir entrenando</button>
