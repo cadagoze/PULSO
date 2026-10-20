@@ -7,10 +7,19 @@ import { newId } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import type { FoodEntry, FoodItem, MealSlot, SavedMeal } from "@/types";
 
-/** Lo que se agregó de una vez: para el aviso («+24 g de proteína», «Meta cumplida»). */
+/** Lo que se agregó de una vez: para el aviso («+24 g de proteína», «Meta cumplida», «3 alimentos»). */
 export interface Added {
   kcal: number;
   protein: number;
+  count: number;
+}
+
+/** Un alimento elegido en el buscador con su cantidad; `isNew` si se creó o escaneó (queda en «Mis alimentos»). */
+export interface PickedFood {
+  food: FoodItem;
+  portions: number;
+  grams?: number;
+  isNew?: boolean;
 }
 
 /**
@@ -37,8 +46,13 @@ export function useFoodDiary(now: number) {
     setLog((current) => [...current, ...entries]);
     setFresh(entries[0].id);
     const added = entryTotals(entries);
-    return { kcal: added.kcal, protein: added.protein };
+    return { kcal: added.kcal, protein: added.protein, count: entries.length };
   }
+
+  const entriesFor = (meal: MealSlot, items: PickedFood[]) =>
+    items.map(({ food, portions, grams }) => entryFromFood(food, { id: newId("comida"), date: localDateKey(), meal, portions, grams }));
+  const savedEntries = (meal: MealSlot, saved: SavedMeal) => entriesFromSavedMeal(saved, { date: localDateKey(), meal, newId: () => newId("comida") });
+  const yesterdayFor = (meal: MealSlot) => yesterdayEntries.filter((entry) => entry.meal === meal).map((entry) => ({ ...entry, id: newId("comida"), date: localDateKey() }));
 
   return {
     log,
@@ -50,19 +64,23 @@ export function useFoodDiary(now: number) {
     totals,
     /** Un alimento en una comida de hoy (porciones o gramos). */
     addFood(food: FoodItem, meal: MealSlot, amount: { portions: number; grams?: number }) {
-      return add([entryFromFood(food, { id: newId("comida"), date: localDateKey(), meal, ...amount })]);
+      return add(entriesFor(meal, [{ food, ...amount }]));
     },
-    /** Alimento nuevo (creado o escaneado): queda en «Mis alimentos» (salvo las calorías rápidas) y se registra. */
-    createFood(food: FoodItem, meal: MealSlot, amount: { portions: number; grams?: number }) {
-      if (food.id !== "rapido") setCustomFoods((current) => [food, ...current.filter((item) => item.id !== food.id)]);
-      return add([entryFromFood(food, { id: newId("comida"), date: localDateKey(), meal, ...amount })]);
+    /**
+     * Varios alimentos de una vez (lo elegido en el buscador) y, si se pide, también una comida guardada o lo
+     * de ayer. Los nuevos (creados o escaneados) quedan en «Mis alimentos», salvo las calorías rápidas.
+     */
+    addFoods(meal: MealSlot, items: PickedFood[], { saved, yesterday = false }: { saved?: SavedMeal; yesterday?: boolean } = {}) {
+      const created = items.filter((item) => item.isNew && item.food.id !== "rapido").map((item) => item.food);
+      if (created.length) setCustomFoods((current) => [...created, ...current.filter((food) => !created.some((item) => item.id === food.id))]);
+      return add([...entriesFor(meal, items), ...(saved ? savedEntries(meal, saved) : []), ...(yesterday ? yesterdayFor(meal) : [])]);
     },
     addSavedMeal(meal: MealSlot, saved: SavedMeal) {
-      return add(entriesFromSavedMeal(saved, { date: localDateKey(), meal, newId: () => newId("comida") }));
+      return add(savedEntries(meal, saved));
     },
     /** Repite en hoy lo que comiste ayer en esa comida. */
     repeatYesterday(meal: MealSlot) {
-      return add(yesterdayEntries.filter((entry) => entry.meal === meal).map((entry) => ({ ...entry, id: newId("comida"), date: localDateKey() })));
+      return add(yesterdayFor(meal));
     },
     updateEntry(id: string, { portions, grams }: { portions: number; grams?: number }) {
       setLog((current) => current.map((entry) => {

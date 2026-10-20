@@ -80,6 +80,29 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-picker-actions .btn { padding: 0 12px; }
 /* Mientras se escribe, los resultados necesitan el espacio sobre el teclado. */
 .keyboard-open .nut-picker-actions { display: none; }
+/* Comida a la que se agrega (por defecto, la de la hora): se cambia aquí mismo. */
+.nut-meals { flex-shrink: 0; scroll-snap-type: none; margin: -6px -22px 0; padding: 2px 22px; }
+/* Fila del catálogo: tocarla abre la cantidad; «+» la suma a lo elegido sin salir de la lista. */
+.nut-food-row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-s); transition: background-color var(--motion-base) var(--ease-standard); }
+.nut-food-row .nut-food { flex: 1; min-width: 0; }
+.nut-food-row.is-picked { background: var(--accent-soft); }
+.nut-food-row.is-picked .nut-food small { color: var(--accent-text); font-weight: 600; }
+.nut-pick { display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin-right: 2px; border-radius: 50%; background: var(--surface-2); color: var(--ink); transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast), color var(--motion-fast); }
+.nut-pick:active { transform: scale(.9); }
+.nut-pick[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+@media (hover: hover) { .nut-pick:hover:not([aria-pressed="true"]) { background: var(--line-strong); } }
+/* Lo elegido: cuántos y cuánto suman, fichas para revisar cantidades y un solo botón para agregar todo. */
+.nut-tray { position: sticky; bottom: calc(-24px - var(--safe-b)); z-index: 1; display: flex; flex-direction: column; gap: 10px; margin: 0 -22px calc(-24px - var(--safe-b)); padding: 12px 22px calc(18px + var(--safe-b)); background: var(--surface); box-shadow: 0 -1px 0 var(--line), 0 -14px 28px rgb(0 0 0 / 14%); animation: nut-tray-in var(--motion-base) var(--ease-standard); }
+@keyframes nut-tray-in { from { opacity: 0; transform: translateY(12px); } }
+.nut-tray-sum { font-size: 13.5px; color: var(--ink-2); }
+.nut-tray-sum b { font-weight: 600; color: var(--ink); }
+.nut-tray-items { gap: 6px; margin: 0 -22px; padding: 0 22px; }
+.nut-tray-chip { gap: 6px; min-height: 36px; padding: 0 12px; font-size: 13px; }
+.nut-tray-chip .num { font-size: 12px; color: var(--ink-2); }
+/* Mientras se escribe, sólo queda el botón sobre el teclado. */
+.keyboard-open .nut-tray-sum, .keyboard-open .nut-tray-items { display: none; }
+.nut-detail-actions { display: flex; flex-direction: column; gap: 10px; }
+.nut-unpick { align-self: center; min-height: 44px; color: var(--danger); }
 .nut-detail-head { display: flex; flex-direction: column; gap: 6px; }
 .nut-portions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .nut-detail-values { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); }

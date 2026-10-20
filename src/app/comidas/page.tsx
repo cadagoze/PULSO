@@ -13,14 +13,14 @@ import { CalorieAdjust } from "@/components/nutrition/calorie-adjust";
 import { CalorieSummary } from "@/components/nutrition/calorie-summary";
 import { DayGapCard } from "@/components/nutrition/day-gap-card";
 import { EntryEditor } from "@/components/nutrition/entry-editor";
-import { FoodPicker } from "@/components/nutrition/food-picker";
+import { FoodPicker, mealNames } from "@/components/nutrition/food-picker";
 import { MealDiary, measureLabel } from "@/components/nutrition/meal-diary";
 import { NutritionPlan } from "@/components/nutrition/nutrition-plan";
 import { NutritionSetup } from "@/components/nutrition/nutrition-setup";
 import { SaveMealForm } from "@/components/nutrition/save-meal-form";
 import { TodaySummary } from "@/components/nutrition/today-summary";
 import { TrainingEnergy } from "@/components/nutrition/training-energy";
-import { useFoodDiary, type Added } from "@/components/nutrition/use-food-diary";
+import { useFoodDiary, type Added, type PickedFood } from "@/components/nutrition/use-food-diary";
 import { WaterTracker } from "@/components/nutrition/water-tracker";
 import { WeeklyReviewCard } from "@/components/nutrition/weekly-review";
 import { Toast, useToast } from "@/components/ui/toast";
@@ -28,13 +28,13 @@ import { useSheet } from "@/components/ui/use-sheet";
 import { foods } from "@/data/foods";
 import { habits } from "@/data/mock-data";
 import { dayGap, type FoodIdea } from "@/lib/day-gap";
-import { activityLevels, formatKcal, mealSlotAt, mealSlots, nutritionTargets, recentFoods, savedMealsFor, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
+import { activityLevels, formatKcal, mealSlots, nutritionTargets, recentFoods, savedMealsFor, suggestedMealSlot, suggestedNutritionProfile, usualGrams, usualPortions } from "@/lib/nutrition";
 import { useHabits, useMeals, useNutritionProfile, useProfile, useSettings, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { useDayMeals, useLatestWeight, useWeeklyReview } from "@/lib/use-nutrition";
 import { checkInPatch } from "@/lib/weekly-review";
 import { formatLongDate, formatShortDate, localDateKey } from "@/lib/utils";
-import type { FoodEntry, FoodItem, MealSlot, NutritionProfile, SavedMeal } from "@/types";
+import type { FoodEntry, MealSlot, NutritionProfile, SavedMeal } from "@/types";
 
 const DAY_DONE = "Día completo: todo al día";
 const slotLabel = (slot: MealSlot) => mealSlots.find((item) => item.value === slot)?.label ?? "Comida";
@@ -68,6 +68,8 @@ export default function NutritionPage() {
   const planSheet = useSheet();
   // Última comida o hábito marcado por saciedad en esta visita: sólo esa fila anima su check.
   const [fresh, setFresh] = useState<string | null>(null);
+  // Comida elegida dentro del buscador (si se cambió la que lo abrió).
+  const [mealChoice, setMealChoice] = useState<MealSlot | null>(null);
 
   const today = localDateKey(new Date(now));
   const { targets, safe, counting } = day;
@@ -88,22 +90,22 @@ export default function NutritionPage() {
   }
 
   function openPicker(meal: MealSlot) {
+    setMealChoice(null);
     picker.show(meal);
     hideToast();
   }
 
-  function pickFood(food: FoodItem, portions: number, grams?: number) {
-    const meal = picker.data;
-    if (!meal) return;
+  /**
+   * Lo elegido en el buscador, de una vez, y si se pidió también una comida guardada o lo de ayer.
+   * El aviso nombra la comida y cuántos alimentos se sumaron.
+   */
+  function addPicked(meal: MealSlot, items: PickedFood[], extra: { saved?: SavedMeal; yesterday?: boolean } = {}) {
     picker.close();
-    announce(diary.addFood(food, meal, { portions, grams }), slotLabel(meal), 260);
-  }
-
-  function createFood(food: FoodItem, portions: number, grams?: number) {
-    const meal = picker.data;
-    if (!meal) return;
-    picker.close();
-    announce(diary.createFood(food, meal, { portions, grams }), slotLabel(meal), 260);
+    const added = diary.addFoods(meal, items, extra);
+    const label = !items.length && extra.saved ? extra.saved.name
+      : !items.length && extra.yesterday ? `${slotLabel(meal)} repetido`
+        : added && added.count > 1 ? `${mealNames[meal]} · ${added.count} alimentos` : mealNames[meal];
+    announce(added, label, 260);
   }
 
   function addSaved(meal: MealSlot, saved: SavedMeal) {
@@ -227,10 +229,13 @@ export default function NutritionPage() {
     showToast(apply && review.change !== 0 ? `Objetivo actualizado · ${formatKcal(review.suggestedKcal)} kcal al día` : `Revisión guardada · seguimos con ${formatKcal(review.currentKcal)} kcal`);
   }
 
-  /** «Añadir comida»: el registro de esa comida o la de esta hora; por saciedad, la próxima sin registrar. */
+  /**
+   * «Añadir comida»: el registro de esa comida o la que corresponde ahora (el desayuno, hasta el mediodía
+   * si aún no lo anotas); en el buscador se puede cambiar. Por saciedad, la próxima sin registrar.
+   */
   function startAdding(slot?: MealSlot) {
     if (!safe) {
-      openPicker(slot ?? mealSlotAt(new Date()));
+      openPicker(slot ?? suggestedMealSlot(new Date(), diary.todayEntries.map((entry) => entry.meal)));
       return;
     }
     const next = (slot ? meals.find((meal) => meal.id === slot) : undefined) ?? meals.find((meal) => !isLogged(meal)) ?? meals[0];
@@ -266,7 +271,7 @@ export default function NutritionPage() {
     : counting
       ? "Lo que comes hoy: calorías, proteína y hábitos para entrenar bien."
       : "Lo que comes hoy: comidas, proteína y agua. Las calorías, sólo si quieres contarlas.";
-  const pickerMeal = picker.data;
+  const pickerMeal = mealChoice ?? picker.data;
   const yesterdayInPicker = pickerMeal ? diary.yesterdayEntries.filter((entry) => entry.meal === pickerMeal) : [];
   const canRepeat = Boolean(pickerMeal) && yesterdayInPicker.length > 0 && !diary.todayEntries.some((entry) => entry.meal === pickerMeal);
 
@@ -363,21 +368,21 @@ export default function NutritionPage() {
         )}
       </Sheet>
 
-      <Sheet open={picker.open} onClose={picker.close} eyebrow="Registrar alimento" title={pickerMeal ? slotLabel(pickerMeal) : undefined} className="nut-picker-sheet">
+      <Sheet open={picker.open} onClose={picker.close} eyebrow="Registrar" title="Agregar alimentos" className="nut-picker-sheet">
         {pickerMeal && (
           <FoodPicker
             key={picker.key}
             measure={measure}
-            mealLabel={slotLabel(pickerMeal)}
-            repeat={canRepeat ? { detail: measureLabel(measure, yesterdayInPicker), onRepeat: () => { picker.close(); repeat(pickerMeal, 260); } } : null}
+            meal={pickerMeal}
+            onMealChange={setMealChoice}
+            repeat={canRepeat ? { detail: measureLabel(measure, yesterdayInPicker), onRepeat: (picked) => addPicked(pickerMeal, picked, { yesterday: true }) } : null}
             customFoods={diary.customFoods}
             recent={recentFoods(diary.log)}
             savedMeals={savedMealsFor(diary.savedMeals, pickerMeal)}
             usualPortions={usualPortions(diary.log)}
             usualGrams={usualGrams(diary.log)}
-            onPick={pickFood}
-            onCreate={createFood}
-            onPickSaved={(saved) => addSaved(pickerMeal, saved)}
+            onAdd={(picked) => addPicked(pickerMeal, picked)}
+            onAddSaved={(saved, picked) => addPicked(pickerMeal, picked, { saved })}
             onDeleteSaved={diary.deleteSavedMeal}
           />
         )}

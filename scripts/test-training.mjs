@@ -1201,6 +1201,32 @@ test('sesión: el calentamiento que te saltas no queda pendiente', () => {
   assert.deepEqual({ ...training.sessionSets(all) }, { done: 5, total: 5 });
 });
 
+test('comidas: buscador con sinónimos, comida sugerida y catálogo amplio', () => {
+  const { foods: catalog, mealSuggestions, foodCategoryLabels } = load('src/data/foods.ts');
+  const names = (list) => Array.from(list, (food) => food.name);
+  assert.ok(catalog.length >= 400, `catálogo amplio (${catalog.length})`);
+  const ids = new Set(catalog.map((food) => food.id));
+  for (const [meal, list] of Object.entries(mealSuggestions)) for (const id of list) assert.ok(ids.has(id), `${meal}: ${id} existe`);
+  for (const food of catalog) assert.ok(foodCategoryLabels[food.category], `${food.id}: categoría conocida`);
+  // Sin tildes, con sinónimos y primero lo que empieza igual.
+  assert.equal(nutrition.searchFoods(catalog, 'aguacate')[0].id, 'palta');
+  assert.ok(names(nutrition.searchFoods(catalog, 'frijoles negros')).includes('Porotos negros cocidos'));
+  assert.ok(names(nutrition.searchFoods(catalog, 'fresas')).includes('Frutillas'));
+  assert.equal(nutrition.searchFoods(catalog, 'platano')[0].id, 'platano');
+  const pan = names(nutrition.searchFoods(catalog, 'pan'));
+  assert.ok(pan.indexOf('Pan integral') < pan.indexOf('Empanada de pino'), 'primero lo que empieza por «pan»');
+  assert.ok(nutrition.searchFoods(catalog, 'salsa', 'salsas').every((food) => food.category === 'salsas'));
+  assert.equal(nutrition.searchFoods(catalog, 'zzz').length, 0);
+  // Comida sugerida: a las 11:30 sin desayuno anotado sigue siendo desayuno; con desayuno, almuerzo.
+  const at = (h, m = 0) => new Date(2026, 9, 20, h, m);
+  assert.equal(nutrition.suggestedMealSlot(at(8), []), 'desayuno');
+  assert.equal(nutrition.suggestedMealSlot(at(11, 30), []), 'desayuno');
+  assert.equal(nutrition.suggestedMealSlot(at(11, 30), ['desayuno']), 'almuerzo');
+  assert.equal(nutrition.suggestedMealSlot(at(13), []), 'almuerzo');
+  assert.equal(nutrition.suggestedMealSlot(at(17), []), 'once');
+  assert.equal(nutrition.suggestedMealSlot(at(21), []), 'cena');
+});
+
 test('conteo de cifras: lee y escribe números en formato chileno', () => {
   const count = load('src/lib/count.ts');
   const parsed = (text) => { const value = count.parseCount(text); return value && { ...value }; };

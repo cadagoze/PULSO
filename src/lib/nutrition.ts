@@ -1,5 +1,5 @@
-import type { ActivityLevel, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, SavedMeal, SavedMealItem, Sex } from "@/types";
-import { fromDisplayWeight } from "@/lib/utils";
+import type { ActivityLevel, FoodCategory, FoodEntry, FoodItem, MealSlot, NutritionGoal, NutritionProfile, SavedMeal, SavedMealItem, Sex } from "@/types";
+import { fromDisplayWeight, normalizeText } from "@/lib/utils";
 
 /** Nivel de actividad diaria (incluye el entrenamiento) y su factor sobre el metabolismo basal. */
 export const activityLevels: Array<{ value: ActivityLevel; label: string; detail: string; factor: number }> = [
@@ -156,6 +156,47 @@ export function mealSlotAt(date: Date): MealSlot {
   if (hour < 16) return "almuerzo";
   if (hour < 19.5) return "once";
   return "cena";
+}
+
+/**
+ * Comida para «Añadir comida»: la de la hora; si aún no anotas el desayuno, hasta el mediodía sigue
+ * siendo desayuno (en el buscador se puede cambiar).
+ */
+export function suggestedMealSlot(date: Date, logged: readonly MealSlot[]): MealSlot {
+  const slot = mealSlotAt(date);
+  const hour = date.getHours() + date.getMinutes() / 60;
+  return slot === "almuerzo" && hour < 12 && !logged.includes("desayuno") ? "desayuno" : slot;
+}
+
+/** Nombres de otros países (o en plural) que también encuentran el alimento: «aguacate» → palta. */
+const FOOD_SYNONYMS: Record<string, string[]> = {
+  aguacate: ["palta"], frijol: ["poroto"], caraota: ["poroto"], judia: ["poroto"], ejote: ["poroto verde"], vainita: ["poroto verde"],
+  fresa: ["frutilla"], melocoton: ["durazno"], albaricoque: ["damasco"], chabacano: ["damasco"], toronja: ["pomelo"], ananas: ["pina"],
+  banana: ["platano"], banano: ["platano"], cambur: ["platano"], calabacin: ["zapallo italiano"], calabaza: ["zapallo"], auyama: ["zapallo"],
+  remolacha: ["betarraga"], elote: ["choclo"], mazorca: ["choclo"], jitomate: ["tomate"], patata: ["papa"], boniato: ["camote"], batata: ["camote"],
+  mandioca: ["yuca"], guisante: ["arveja"], chicharo: ["arveja"], cacahuate: ["mani"], cacahuete: ["mani"], soja: ["soya"],
+  zumo: ["jugo"], refresco: ["bebida"], gaseosa: ["bebida gaseosa"], panceta: ["tocino"], bacon: ["tocino"], salchicha: ["vienesa"],
+  crepe: ["panqueque"], crepa: ["panqueque"], tarta: ["torta", "pie", "kuchen"], pastel: ["torta", "pastel"], requeson: ["ricota", "quesillo"],
+  nata: ["crema"], frutos: ["frutos secos", "nueces", "almendras"], legumbre: ["poroto", "lenteja", "garbanzo", "arveja"],
+};
+
+/**
+ * Buscador del catálogo: sin tildes, con sinónimos y por palabras (todas deben aparecer). Primero lo que
+ * empieza igual que lo buscado, luego lo que tiene una palabra que empieza así y al final el resto.
+ */
+export function searchFoods(catalog: FoodItem[], query: string, category: FoodCategory | null = null, limit = 200): FoodItem[] {
+  const words = normalizeText(query).split(/\s+/).filter(Boolean);
+  const options = words.map((word) => [word, ...Object.entries(FOOD_SYNONYMS).filter(([key]) => word.startsWith(key)).flatMap(([, alternatives]) => alternatives)]);
+  const full = words.join(" ");
+  const found: Array<{ food: FoodItem; score: number; index: number }> = [];
+  catalog.forEach((food, index) => {
+    if (category && food.category !== category) return;
+    const name = normalizeText(food.name);
+    if (!options.every((alternatives) => alternatives.some((option) => name.includes(option)))) return;
+    const score = !full || name.startsWith(full) ? 0 : name.split(/[\s,()]+/).some((part) => options[0].some((option) => part.startsWith(option))) ? 1 : 2;
+    found.push({ food, score, index });
+  });
+  return found.sort((a, b) => a.score - b.score || a.index - b.index).slice(0, limit).map((item) => item.food);
 }
 
 export interface Totals { kcal: number; protein: number; carbs: number; fat: number }

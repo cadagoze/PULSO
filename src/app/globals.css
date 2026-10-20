@@ -241,7 +241,7 @@ img, svg { display: block; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); color: var(--ink); font-size: 14px; font-weight: 500; white-space: nowrap; transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-base), color var(--motion-base), box-shadow var(--motion-base); }
 .chip:active { transform: scale(.96); }
-.chip[aria-pressed="true"], .chip.active { background: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--bg); }
+.chip[aria-pressed="true"], .chip[aria-checked="true"], .chip.active { background: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--bg); }
 .chip .chip-check { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); animation: pop var(--motion-base) var(--ease-spring); }
 
 /* En oscuro, pista e indicador translúcidos: se leen igual sobre el fondo, una tarjeta o una hoja. */

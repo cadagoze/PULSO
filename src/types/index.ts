@@ -341,7 +341,7 @@ export interface NutritionCheckIn {
   applied: boolean;
 }
 
-export type FoodCategory = "panes" | "proteinas" | "lacteos" | "frutas" | "verduras" | "legumbres" | "grasas" | "bebidas" | "snacks" | "platos" | "propios";
+export type FoodCategory = "panes" | "proteinas" | "lacteos" | "frutas" | "verduras" | "legumbres" | "grasas" | "salsas" | "bebidas" | "snacks" | "platos" | "propios";
 
 /** Alimento con sus valores por porción casera. */
 export interface FoodItem {
