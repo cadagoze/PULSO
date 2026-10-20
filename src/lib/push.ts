@@ -6,7 +6,7 @@ import { waterGoal } from "@/lib/nutrition";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-config";
 import { defaultPushPrefs, type PushPrefs, type PushState } from "@/lib/reminders";
 import { cleanDays } from "@/lib/training-days";
-import { useBreaks, useFoodLog, useNutritionProfile, useSettings, useWater, useWorkouts } from "@/lib/store";
+import { useBreaks, useFoodLog, useNutritionProfile, useSettings, useWater, useWeights, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { usePersistentState } from "@/lib/use-persistent-state";
@@ -104,6 +104,39 @@ export async function disablePush(endpoint: string | null) {
   }
 }
 
+/** Fin del descanso con la app en segundo plano: el servidor avisa a la hora exacta (`keepalive`: la app ya se está yendo). */
+function restRequest(body: Record<string, unknown>) {
+  void fetch("/api/push/rest", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => undefined);
+}
+
+/** El aviso pendiente queda anotado: así se cancela aunque el teléfono haya cerrado la app en segundo plano. */
+const REST_PENDING_KEY = "pulso:rest-push";
+
+export function scheduleRestPush(endpoint: string, at: number, next: string | null) {
+  restRequest({ endpoint, at, next });
+  try {
+    localStorage.setItem(REST_PENDING_KEY, JSON.stringify({ endpoint, at }));
+  } catch {
+    // Sin almacenamiento: se cancela igual al volver, mientras la app siga abierta.
+  }
+}
+
+function takePendingRest(): { endpoint?: unknown; at?: unknown } | null {
+  try {
+    const raw = localStorage.getItem(REST_PENDING_KEY);
+    localStorage.removeItem(REST_PENDING_KEY);
+    return raw ? (JSON.parse(raw) as { endpoint?: unknown; at?: unknown }) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Al volver (o al abrir de nuevo la app) cancela el aviso pendiente; si ya pasó su hora, sólo lo olvida. */
+export function cancelRestPush() {
+  const pending = takePendingRest();
+  if (pending && typeof pending.endpoint === "string" && typeof pending.at === "number" && pending.at > Date.now()) restRequest({ endpoint: pending.endpoint, cancel: true });
+}
+
 export async function sendTestPush(endpoint: string) {
   try {
     return (await post("test", { endpoint })).ok;
@@ -120,6 +153,7 @@ export function usePushState(): PushState | null {
   const [water] = useWater();
   const [nutrition] = useNutritionProfile();
   const [breaks] = useBreaks();
+  const [weights] = useWeights();
   const weight = useLatestWeight();
   // Resolución de un minuto: el día cambia a medianoche aunque no se toque nada.
   const minute = Math.floor(useNow() / 60_000);
@@ -144,8 +178,9 @@ export function usePushState(): PushState | null {
       waterGoal: waterGoal(weight).glasses,
       trainingDays: cleanDays(settings.trainingDays),
       breaksToday: breaks.filter((entry) => entry.date === today).length,
+      weighedToday: weights.some((entry) => entry.date === today),
     };
-  }, [breaks, foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.trainingDays, settings.weeklyGoal, water, weight, workouts]);
+  }, [breaks, foodLog, minute, nutrition?.mode, settings.pausedWeeks, settings.trainingDays, settings.weeklyGoal, water, weight, weights, workouts]);
 }
 
 /**
@@ -155,9 +190,13 @@ export function usePushState(): PushState | null {
  */
 export function PushStateSync() {
   const [push] = usePushSettings();
+  const [nutrition] = useNutritionProfile();
   const state = usePushState();
   const last = useRef<string | null>(null);
-  const payload = push.enabled && push.endpoint && state ? JSON.stringify({ endpoint: push.endpoint, prefs: push.prefs, state, tz: timeZone() }) : null;
+  // Con un trastorno alimentario marcado, nunca avisos para pesarse (aunque se hubieran activado antes).
+  const safe = nutrition?.special === "eating-disorder";
+  const prefs = useMemo(() => (safe ? { ...push.prefs, weight: false } : push.prefs), [push.prefs, safe]);
+  const payload = push.enabled && push.endpoint && state ? JSON.stringify({ endpoint: push.endpoint, prefs, state, tz: timeZone() }) : null;
 
   useEffect(() => {
     if (!payload || payload === last.current) return;
@@ -167,7 +206,7 @@ export function PushStateSync() {
         if (response.status === 404) {
           const sw = await navigator.serviceWorker.getRegistration();
           const subscription = await sw?.pushManager.getSubscription();
-          if (subscription) await post("subscribe", { subscription: subscription.toJSON(), tz: timeZone(), prefs: push.prefs, state });
+          if (subscription) await post("subscribe", { subscription: subscription.toJSON(), tz: timeZone(), prefs, state });
         }
         if (response.ok || response.status === 404) last.current = payload;
       } catch {
@@ -175,7 +214,7 @@ export function PushStateSync() {
       }
     }, 2000);
     return () => window.clearTimeout(timer);
-  }, [payload, push.prefs, state]);
+  }, [payload, prefs, state]);
 
   return null;
 }

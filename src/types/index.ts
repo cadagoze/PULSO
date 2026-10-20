@@ -245,7 +245,7 @@ export interface Settings {
   vibration: boolean;
   keepAwake: boolean;
   autoRest: boolean;
-  /** Avisos hablados («quedan 10 segundos», fases de intervalos). Sin valor: activos (si hay sonido). */
+  /** Avisos hablados («quedan 10 segundos», fases de intervalos). Sin valor: apagados (en iPhone la voz pausa la música). */
   voice?: boolean;
   barWeight: number;
   plates: number[];

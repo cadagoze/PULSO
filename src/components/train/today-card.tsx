@@ -13,6 +13,7 @@ import { useStartMobility, useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useSettings } from "@/lib/store";
 import { completedSets, durationSeconds, exerciseById, totalSets } from "@/lib/training";
 import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
+import { RestStatus } from "@/components/session/rest-away";
 import { useProgramActions } from "@/components/train/program-actions";
 import { locationLabels, targetLabel, topLoad } from "@/components/train/shared";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
@@ -256,7 +257,7 @@ function DraftBody({ draft, now }: { draft: TrainingDraft; now: number }) {
   return (
     <>
       <Head live meta="En curso" context="Entrenamiento a medias" number={<>{done}<span className="train-soft">/{total}</span></>} label="series" />
-      <Title details={[count(draft.records.length, "ejercicio", "ejercicios"), elapsed, draft.runningSince === null ? "En pausa" : "Reloj en marcha"]}>
+      <Title details={[count(draft.records.length, "ejercicio", "ejercicios"), elapsed, draft.runningSince === null ? "En pausa" : <RestStatus key="rest" restUntil={draft.restUntil} fallback="Reloj en marcha" />]}>
         {draft.name}
       </Title>
       <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />

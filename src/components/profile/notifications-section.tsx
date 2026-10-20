@@ -7,14 +7,18 @@ import { Button, Switch } from "@/components/ui";
 import { InstallSheet } from "@/components/install/install-sheet";
 import { useInstallState } from "@/lib/install";
 import { disablePush, sendTestPush, useActivatePush, usePushSettings, usePushSupport, type PushSupport } from "@/lib/push";
-import type { PushPrefs } from "@/lib/reminders";
+import { WEIGHT_TIME, type PushPrefs } from "@/lib/reminders";
 import { useNutritionProfile } from "@/lib/store";
 import { SettingRow, SettingsGroup } from "./settings-group";
 
-const times = Array.from({ length: 33 }, (_, index) => {
-  const minutes = 6 * 60 + index * 30;
+/** Horas cada media hora desde `from` («06:00», «06:30»…). */
+const halfHours = (from: number, count: number) => Array.from({ length: count }, (_, index) => {
+  const minutes = from * 60 + index * 30;
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${minutes % 60 === 0 ? "00" : "30"}`;
 });
+const times = halfHours(6, 33);
+/** Al levantarse: de 05:00 a 10:00. */
+const morningTimes = halfHours(5, 11);
 
 const supportHelp: Record<Exclude<PushSupport, "ready">, string> = {
   "needs-install": "En iPhone, los avisos llegan sólo con PULSO instalada en tu pantalla de inicio. Instálala y actívalos desde ahí.",
@@ -23,8 +27,9 @@ const supportHelp: Record<Exclude<PushSupport, "ready">, string> = {
 };
 
 /**
- * Avisos: activar en este teléfono y elegir cuáles (hora de entrenar, racha, comidas, pausas activas y agua). Cada uno
- * sólo llega cuando sirve: si ya entrenaste, registraste o tomaste agua, no se envía.
+ * Avisos: activar en este teléfono y elegir cuáles (hora de entrenar, fin del descanso, peso al levantarte, racha,
+ * comidas, pausas activas y agua). Cada uno sólo llega cuando sirve: si ya entrenaste, te pesaste, registraste o
+ * tomaste agua, no se envía. Con un trastorno alimentario marcado no se ofrece el de peso.
  */
 export function NotificationsSection({ order, onToast }: { order?: number; onToast: (message: string) => void }) {
   const [push, setPush] = usePushSettings();
@@ -35,6 +40,7 @@ export function NotificationsSection({ order, onToast }: { order?: number; onToa
   const [busy, setBusy] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const counting = nutrition?.mode === "count";
+  const safe = nutrition?.special === "eating-disorder";
   const active = push.enabled && support === "ready";
 
   async function toggle(on: boolean) {
@@ -89,6 +95,34 @@ export function NotificationsSection({ order, onToast }: { order?: number; onToa
               </label>
             ) : undefined}
           />
+          <SettingRow
+            title="Fin del descanso"
+            helper="Si sales de PULSO durante un descanso (por ejemplo, a cambiar la música), te avisamos cuando termine."
+            control={<Switch checked={push.prefs.rest !== false} onChange={(on) => setPref("rest", on)} label="Aviso al terminar el descanso" />}
+          />
+          {!safe && (
+            <SettingRow
+              title="Pesarte al levantarte"
+              helper="Después de ir al baño y antes de comer o beber: así tus registros se pueden comparar. Si ya te pesaste, no llega."
+              control={<Switch checked={push.prefs.weight ?? false} onChange={(on) => setPref("weight", on)} label="Aviso para pesarte al levantarte" />}
+              below={push.prefs.weight ? (
+                <div className="push-times">
+                  <label className="push-time">
+                    <span>A las</span>
+                    <select value={push.prefs.weightTime ?? WEIGHT_TIME} onChange={(event) => setPref("weightTime", event.target.value)} aria-label="Hora del aviso para pesarte">
+                      {morningTimes.map((time) => <option key={time} value={time}>{time}</option>)}
+                    </select>
+                  </label>
+                  <label className="push-time">
+                    <select value={push.prefs.weightDays ?? "daily"} onChange={(event) => setPref("weightDays", event.target.value === "monday" ? "monday" : "daily")} aria-label="Frecuencia del aviso para pesarte">
+                      <option value="daily">Cada día</option>
+                      <option value="monday">Sólo los lunes</option>
+                    </select>
+                  </label>
+                </div>
+              ) : undefined}
+            />
+          )}
           <SettingRow
             title="Racha en riesgo"
             helper="Domingo a las 18:00, si te falta una sesión para cumplir la semana."

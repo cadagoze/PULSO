@@ -12,7 +12,7 @@ import { ButtonLink, SegmentedControl, Stepper } from "@/components/ui";
 import { WorkoutTimer } from "@/components/ui/workout-timer";
 import { fitnessTests, PULSE_SECONDS, REST_SECONDS, SQUAT_SECONDS, STEP_BPM, STEP_SECONDS, type FitnessTestDef, type FitnessTestId } from "@/data/fitness-test";
 import { exercises } from "@/data/mock-data";
-import { beep, primeAudio, speak, startMetronome, useWakeLock, vibrate } from "@/lib/feedback";
+import { beep, primeAudio, speak, startMetronome, useWakeLock, vibrate, voiceOn } from "@/lib/feedback";
 import { testStatus, valueLabel, type FitnessSex, type FitnessTestEntry, type PushupVariant } from "@/lib/fitness-test";
 import { ageFrom } from "@/lib/nutrition";
 import { useFitnessTests, useNutritionProfile, useProfile, useSettings } from "@/lib/store";
@@ -88,7 +88,7 @@ export function FitnessTestFlow() {
   const sex: FitnessSex = profile?.sex ?? nutrition?.sex ?? "unspecified";
   const status = testStatus(tests, today || "2000-01-01");
   const sound = settings.sound;
-  const voice = settings.sound && settings.voice !== false;
+  const voice = voiceOn(settings);
   const current = draft && draft.day === today ? draft : null;
   const yearsSinceLast = status.last && now ? Math.floor((now - new Date(status.last.completedAt).getTime()) / (365.25 * 86_400_000)) : 0;
   const defaultAge = nutrition && now ? ageFrom(nutrition.birthYear, new Date(now)) : status.last ? status.last.age + yearsSinceLast : 30;

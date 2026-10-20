@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import Link from "@/components/ui/app-link";
 import { ChartNoAxesColumn, Check, Pause, Play, SlidersHorizontal, Square, StretchHorizontal } from "lucide-react";
 import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
+import { RestStatus } from "@/components/session/rest-away";
 import { useProgramActions } from "@/components/train/program-actions";
 import { useActiveProgram, useTodayPlan } from "@/components/train/today-plan";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
@@ -55,7 +56,7 @@ export function TodayHero({ now }: { now: number }) {
         title={draft.name}
       >
         <div className="home-hero-progress">
-          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, ready ? "Sin guardar" : draft.runningSince === null ? "En pausa" : "Reloj en marcha"]} />
+          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, ready ? "Sin guardar" : draft.runningSince === null ? "En pausa" : <RestStatus key="rest" restUntil={draft.restUntil} fallback="Reloj en marcha" />]} />
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
         </div>
         {ready

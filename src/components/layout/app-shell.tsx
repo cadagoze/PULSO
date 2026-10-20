@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { CloudBoot } from "@/components/cloud/cloud-boot";
 import { captureInstallPrompt } from "@/lib/install";
 import { PushStateSync } from "@/lib/push";
+import { RestAway } from "@/components/session/rest-away";
 import { usePersonalization } from "@/lib/use-personalize";
 import { ConfirmHost } from "@/components/ui/confirm-host";
 
@@ -45,6 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <OfflineSupport />
       <CloudBoot />
       <PushStateSync />
+      <RestAway />
       <ConfirmHost />
     </div>
   );

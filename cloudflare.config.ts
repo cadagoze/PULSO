@@ -1,4 +1,4 @@
-import { bindings, defineConfig, defineWorker, triggers } from "cf/config";
+import { bindings, defineConfig, defineWorker, exports, triggers } from "cf/config";
 import { createWorkersCacheConfig } from "@vinext/cloudflare/cache/config";
 
 const cache = await createWorkersCacheConfig();
@@ -20,6 +20,12 @@ export default defineConfig({
       // Avisos: suscripciones de los teléfonos y la clave privada VAPID (secreto).
       PUSH_DB: bindings.d1(),
       VAPID_PRIVATE_KEY: bindings.secret(),
+      // Fin del descanso a la hora exacta, con la app en segundo plano (src/server/rest-alarm.ts).
+      REST_ALARM: bindings.durableObject({ worker: "pulso", exportName: "RestAlarm" }),
+    },
+    exports: {
+      ...cache.exports,
+      RestAlarm: exports.durableObject({ storage: "sqlite" }),
     },
     triggers: [triggers.scheduled({ schedule: "*/15 * * * *" })],
   }),

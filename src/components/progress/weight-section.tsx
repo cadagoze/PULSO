@@ -25,7 +25,7 @@ export function WeightSection() {
     <section className="section" aria-labelledby="prog-weight-title">
       <div className="section-head">
         <h2 id="prog-weight-title">Peso</h2>
-        <WeightLogButton variant="primary" />
+        <WeightLogButton variant="primary" openFromLink />
       </div>
 
       {last && first ? (
@@ -55,7 +55,7 @@ export function WeightSection() {
         </div>
       ) : (
         <EmptyState icon={<Scale size={20} />} title="Sin registros de peso">
-          Pésate cuando quieras, idealmente en condiciones parecidas. Con varios registros verás tu tendencia.
+          Pésate cuando quieras, idealmente al levantarte y después de ir al baño. Con varios registros verás tu tendencia.
         </EmptyState>
       )}
     </section>

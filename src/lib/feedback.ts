@@ -1,12 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
+import type { Settings } from "@/types";
 
 let audioContext: AudioContext | null = null;
+
+/**
+ * Los pitidos suenan sobre tu música, sin cortarla (Audio Session API de Safari 16.4+; los demás
+ * navegadores ya mezclan). Con el iPhone en silencio no suenan, como cualquier sonido de ambiente.
+ */
+function mixWithMusic() {
+  try {
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session && session.type !== "ambient") session.type = "ambient";
+  } catch {
+    // Sin control de la sesión de audio: el navegador decide.
+  }
+}
+
+/** La voz es opcional (apagada salvo que la actives): en iPhone pausa la música mientras habla. */
+export function voiceOn(settings: Pick<Settings, "sound" | "voice">) {
+  return settings.sound && settings.voice === true;
+}
 
 function context() {
   if (typeof window === "undefined") return null;
   try {
+    if (!audioContext) mixWithMusic();
     audioContext ??= new AudioContext();
     if (audioContext.state === "suspended") void audioContext.resume();
     return audioContext;

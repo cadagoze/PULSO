@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Pause, Play, RotateCcw, SkipForward, Square, Volume2,
 import { intervalPresets } from "@/data/programs";
 import { MetaLine, Stepper } from "@/components/ui";
 import { WorkoutTimer } from "@/components/ui/workout-timer";
-import { beep, primeAudio, speak, useWakeLock, vibrate } from "@/lib/feedback";
+import { beep, primeAudio, speak, useWakeLock, vibrate, voiceOn } from "@/lib/feedback";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { clockLabel, newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
@@ -409,7 +409,7 @@ export function IntervalTimer() {
 
   function start(config: IntervalConfig) {
     primeAudio();
-    if (settings.sound && settings.voice !== false) speak("Prepárate");
+    if (voiceOn(settings)) speak("Prepárate");
     setRunState(createRun(config));
   }
 
@@ -421,7 +421,7 @@ export function IntervalTimer() {
           run={run}
           setRun={setRun}
           sound={settings.sound}
-          voice={settings.sound && settings.voice !== false}
+          voice={voiceOn(settings)}
           vibration={settings.vibration}
           keepAwake={settings.keepAwake}
           onRepeat={() => start(run.config)}

@@ -4,9 +4,11 @@ import { handlePushRequest, runReminders, type PushEnv } from "@/server/push";
 
 /**
  * Entrada del Worker: la app (vinext) y, aparte, el puente del inicio de sesión de Firebase (/__/*),
- * la API de avisos (/api/push/*) y la tarea programada que los envía cada 15 minutos.
+ * la API de avisos (/api/push/*), la tarea programada que los envía cada 15 minutos y la alarma
+ * exacta del fin del descanso (Durable Object).
  */
 export * from "vinext/server/fetch-handler";
+export { RestAlarm } from "@/server/rest-alarm";
 
 interface WorkerContext { waitUntil(promise: Promise<unknown>): void }
 interface ScheduledEvent { scheduledTime: number }

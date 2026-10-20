@@ -6,9 +6,8 @@ import { beep, speak, vibrate } from "@/lib/feedback";
 import { clockLabel } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { REST_AFTERGLOW_MS } from "./rest-away";
 import { useCountdownCues } from "./use-countdown-cues";
-
-const AFTERGLOW_MS = 4000;
 
 /**
  * Descanso sobre la imagen del ejercicio: anillo que se vacía, cuenta regresiva y pulso en los
@@ -45,7 +44,7 @@ export function RestOverlay({ restUntil, restTotal, sound, voice = false, vibrat
     },
   });
 
-  const visible = restUntil !== null && now !== 0 && remainingMs > -AFTERGLOW_MS;
+  const visible = restUntil !== null && now !== 0 && remainingMs > -REST_AFTERGLOW_MS;
   const finished = remainingMs <= 0;
   const seconds = Math.ceil(Math.max(0, remainingMs) / 1000);
   const total = Math.max(restTotal, seconds, 1);

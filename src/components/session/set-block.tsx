@@ -6,13 +6,13 @@ import { Check, Minus, Pause, Play, Plus, RotateCcw, Square, Trophy, X } from "l
 import { MetaLine, NumberMetric, StatusBadge } from "@/components/ui";
 import { vibrate } from "@/lib/feedback";
 import type { ExerciseBests } from "@/lib/progression";
-import { isWorkingSet } from "@/lib/training";
+import { isWorkingSet, setHeading } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn, formatNumber, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, SetRecord } from "@/types";
 import { prefersReducedMotion } from "./session-screen";
 import { NumberField, plain } from "./set-row";
-import { isRecordSet, kindBadges, limits, loadStep, performanceLabel, previousSet, setBadge, setHeading, valueStep, volumeLabel } from "./session-utils";
+import { isRecordSet, kindBadges, limits, loadStep, performanceLabel, previousSet, setBadge, valueStep, volumeLabel } from "./session-utils";
 import type { WeightUnit } from "./session-utils";
 
 export type SetMode = "set" | "review" | "hold" | "exercise-done" | "all-done";

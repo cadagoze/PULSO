@@ -1090,6 +1090,58 @@ test('avisos: pausas activas a las 11:00 y 16:00 de lunes a viernes', () => {
   assert.equal(due({}, at('2026-10-07', 11), {}, { ...prefs, breaks: false }).send, null);
 });
 
+test('avisos: pesarse al levantarse (opcional, a su hora y sólo si aún no se pesa)', () => {
+  const tz = 'America/Santiago';
+  const at = (date, hh, mm = 5) => { const [y, m, d] = date.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d, hh + 3, mm)); };
+  const prefs = { ...reminders.defaultPushPrefs, weight: true };
+  // 2026-10-07 es miércoles; 2026-10-05, lunes.
+  const state = { date: '2026-10-07', weekStart: '2026-10-05', trainedToday: false, weekSessions: 0, weekGoal: 3, streak: 0, counting: false, loggedToday: false, loggedEvening: false, water: 0, waterGoal: 8, weighedToday: false };
+  const due = (overrides = {}, when = at('2026-10-07', 7), sent = {}, p = prefs) => reminders.dueReminders({ prefs: p, state: { ...state, ...overrides }, sent, timeZone: tz, now: when });
+  assert.equal(reminders.defaultPushPrefs.weight, false, 'apagado por defecto');
+  assert.equal(reminders.defaultPushPrefs.rest, true, 'el fin del descanso viene activo');
+  const morning = due();
+  assert.equal(morning.send.kind, 'weight');
+  assert.match(morning.send.body, /baño/);
+  assert.equal(morning.send.url, '/progreso?tab=cuerpo&registrar=peso');
+  assert.equal(due({ weighedToday: true }).send, null, 'ya se pesó hoy');
+  assert.equal(due({ weighedToday: true }, at('2026-10-08', 7)).send.kind, 'weight', 'lo de ayer no cuenta');
+  assert.equal(due({}, at('2026-10-07', 6, 30)).send, null, 'antes de la hora, nada');
+  assert.equal(due({}, at('2026-10-07', 7), { weight: '2026-10-07' }).send, null, 'una vez al día');
+  assert.equal(due({}, at('2026-10-07', 6), {}, { ...prefs, weightTime: '06:00' }).send.kind, 'weight', 'a la hora elegida');
+  assert.equal(due({}, at('2026-10-07', 7), {}, { ...prefs, weight: false }).send, null);
+  // Sólo los lunes.
+  const monday = { ...prefs, weightDays: 'monday' };
+  assert.equal(due({}, at('2026-10-07', 7), {}, monday).send, null, 'miércoles: no');
+  assert.equal(due({ date: '2026-10-05' }, at('2026-10-05', 7), {}, monday).send.kind, 'weight', 'lunes: sí');
+  // Si coincide con el de entrenar, gana entrenar y el de peso llega en la pasada siguiente (no se descarta).
+  const both = { ...prefs, trainingTime: '07:00' };
+  const first = due({}, at('2026-10-07', 7), {}, both);
+  assert.equal(first.send.kind, 'training');
+  assert.deepEqual(Array.from(first.skip), [], 'el de peso no se marca como enviado');
+  assert.equal(due({}, at('2026-10-07', 7, 20), { training: '2026-10-07' }, both).send.kind, 'weight');
+});
+
+test('avisos: fin del descanso fuera de la app', () => {
+  const notice = reminders.restNotice('Press de banca · Serie 3 de 4');
+  assert.equal(notice.title, 'Descanso terminado');
+  assert.equal(notice.body, 'Siguiente: Press de banca · Serie 3 de 4.');
+  assert.equal(notice.url, '/entrenar/sesion');
+  assert.equal(notice.tag, 'rest', 'cada descanso reemplaza el aviso anterior');
+  assert.match(reminders.restNotice(null).body, /siguiente serie/);
+  assert.ok(reminders.REST_PUSH_MAX_MS >= 10 * 60_000, 'cubre descansos largos');
+  // Lo que sigue: la primera serie pendiente, en orden.
+  const bench = training.exerciseById(1);
+  const pending = (done) => ({ value: 10, load: 20, done, kind: 'normal' });
+  const records = [
+    { exerciseId: 1, unit: 'reps', sets: [{ ...pending(true), kind: 'warmup' }, pending(true), pending(false), pending(false)] },
+    { exerciseId: 2, unit: 'reps', sets: [pending(false)] },
+  ];
+  assert.equal(training.nextUpLabel(records), `${bench.name} · Serie 2 de 3`);
+  assert.equal(training.nextUpLabel([{ ...records[0], sets: [{ ...pending(false), kind: 'warmup' }, pending(false)] }]), `${bench.name} · Calentamiento 1 de 1`);
+  assert.equal(training.nextUpLabel([{ ...records[0], sets: [pending(true)] }, records[1]]), `${training.exerciseById(2).name} · Serie 1 de 1`);
+  assert.equal(training.nextUpLabel([{ ...records[0], sets: [pending(true)] }]), null, 'todo hecho');
+});
+
 test('conteo de cifras: lee y escribe números en formato chileno', () => {
   const count = load('src/lib/count.ts');
   const parsed = (text) => { const value = count.parseCount(text); return value && { ...value }; };

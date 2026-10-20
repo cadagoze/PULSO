@@ -47,6 +47,25 @@ export function workoutVolume(workout: WorkoutEntry) {
   return workout.volume ?? (workout.records ? recordsVolume(workout.records) : 0);
 }
 
+/** «Serie 2 de 4» (series de trabajo) o «Calentamiento 1 de 2». */
+export function setHeading(sets: SetRecord[], index: number) {
+  const warmup = sets[index]?.kind === "warmup";
+  const sameKind = (set: SetRecord) => (set.kind === "warmup") === warmup;
+  const position = sets.slice(0, index + 1).filter(sameKind).length;
+  return `${warmup ? "Calentamiento" : "Serie"} ${position} de ${sets.filter(sameKind).length}`;
+}
+
+/** Lo que sigue tras el descanso (la primera serie pendiente, en orden): «Press de banca · Serie 3 de 4». */
+export function nextUpLabel(records: ExerciseRecord[]) {
+  for (const record of records) {
+    const index = record.sets.findIndex((set) => !set.done);
+    if (index < 0) continue;
+    const name = exerciseById(record.exerciseId)?.name;
+    return name ? `${name} · ${setHeading(record.sets, index)}` : setHeading(record.sets, index);
+  }
+  return null;
+}
+
 export function durationSeconds(draft: TrainingDraft, now: number) {
   return draft.elapsedSeconds + (draft.runningSince === null ? 0 : Math.max(0, Math.floor((now - draft.runningSince) / 1000)));
 }

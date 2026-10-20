@@ -1,6 +1,6 @@
 import { buildPushPayload } from "@block65/webcrypto-web-push";
 import { VAPID_PUBLIC_KEY, VAPID_SUBJECT } from "@/lib/push-config";
-import { defaultPushPrefs, dueReminders, localClock, parseTime, validTimeZone, type PushPrefs, type PushState } from "@/lib/reminders";
+import { defaultPushPrefs, dueReminders, localClock, parseTime, REST_PUSH_MAX_MS, restNotice, validTimeZone, WEIGHT_TIME, type PushPrefs, type PushState } from "@/lib/reminders";
 
 /**
  * Avisos en el Worker: guarda las suscripciones de los teléfonos en D1 y cada 15 minutos envía los
@@ -15,7 +15,12 @@ interface D1Statement {
   first<T>(): Promise<T | null>;
 }
 interface D1Like { prepare(sql: string): D1Statement }
-export interface PushEnv { PUSH_DB: D1Like; VAPID_PRIVATE_KEY: string }
+/** El Durable Object que avisa el fin del descanso (src/server/rest-alarm.ts), uno por suscripción. */
+interface AlarmNamespace {
+  idFromName(name: string): { toString(): string };
+  get(id: { toString(): string }): { fetch(url: string, init?: RequestInit): Promise<Response> };
+}
+export interface PushEnv { PUSH_DB: D1Like; VAPID_PRIVATE_KEY: string; REST_ALARM: AlarmNamespace }
 
 interface Row { id: string; endpoint: string; p256dh: string; auth: string; tz: string; prefs: string; state: string | null; sent: string }
 interface Notice { title: string; body: string; url: string; tag: string }
@@ -55,8 +60,22 @@ function validEndpoint(value: unknown): value is string {
 export function sanitizePrefs(value: unknown): PushPrefs {
   const input = isRecord(value) ? value : {};
   const flag = (key: keyof PushPrefs) => (typeof input[key] === "boolean" ? (input[key] as boolean) : (defaultPushPrefs[key] as boolean));
-  const time = typeof input.trainingTime === "string" && parseTime(input.trainingTime) !== null ? input.trainingTime : defaultPushPrefs.trainingTime;
-  return { training: flag("training"), trainingTime: time, streak: flag("streak"), meals: flag("meals"), water: flag("water"), breaks: flag("breaks") };
+  const time = (key: "trainingTime" | "weightTime", fallback: string) => {
+    const raw = input[key];
+    return typeof raw === "string" && parseTime(raw) !== null ? raw : fallback;
+  };
+  return {
+    training: flag("training"),
+    trainingTime: time("trainingTime", defaultPushPrefs.trainingTime),
+    streak: flag("streak"),
+    meals: flag("meals"),
+    water: flag("water"),
+    breaks: flag("breaks"),
+    rest: flag("rest"),
+    weight: flag("weight"),
+    weightTime: time("weightTime", WEIGHT_TIME),
+    weightDays: input.weightDays === "monday" ? "monday" : "daily",
+  };
 }
 
 export function sanitizeState(value: unknown): PushState | null {
@@ -79,13 +98,15 @@ export function sanitizeState(value: unknown): PushState | null {
     water: count("water", 30),
     waterGoal: Math.max(1, count("waterGoal", 30)),
     breaksToday: count("breaksToday", 20),
+    weighedToday: value.weighedToday === true,
     trainingDays: Array.isArray(value.trainingDays) ? [...new Set(value.trainingDays.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6))].sort((a, b) => a - b) : [],
   };
 }
 
-async function send(env: PushEnv, row: Pick<Row, "endpoint" | "p256dh" | "auth">, notice: Notice) {
+/** `ttl`: segundos que el servicio de avisos lo guarda si el teléfono no está disponible; después ya no sirve. */
+async function send(env: PushEnv, row: Pick<Row, "endpoint" | "p256dh" | "auth">, notice: Notice, { ttl = 3600, urgency = "normal" }: { ttl?: number; urgency?: "normal" | "high" } = {}) {
   const payload = await buildPushPayload(
-    { data: JSON.stringify(notice), options: { ttl: 3600, urgency: "normal", topic: notice.tag } },
+    { data: JSON.stringify(notice), options: { ttl, urgency, topic: notice.tag } },
     { endpoint: row.endpoint, expirationTime: null, keys: { p256dh: row.p256dh, auth: row.auth } },
     { subject: VAPID_SUBJECT, publicKey: VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY },
   );
@@ -93,7 +114,20 @@ async function send(env: PushEnv, row: Pick<Row, "endpoint" | "p256dh" | "auth">
   return response.status;
 }
 
-/** /api/push/subscribe, /state, /unsubscribe y /test (sólo POST desde la propia app). */
+/** Texto breve y de una línea para el aviso (lo que viene tras el descanso). */
+function shortText(value: unknown, max: number) {
+  if (typeof value !== "string") return "";
+  return Array.from(value).filter((char) => char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127).join("").trim().slice(0, max);
+}
+
+/** Fin del descanso: lo llama la alarma del Durable Object a la hora exacta. */
+export async function sendRestNotice(env: PushEnv, id: string, next: string) {
+  const row = await env.PUSH_DB.prepare("SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE id = ?").bind(id).first<Pick<Row, "endpoint" | "p256dh" | "auth">>();
+  // Si no llega en dos minutos, ya no sirve.
+  if (row) await send(env, row, restNotice(next || null), { ttl: 120, urgency: "high" });
+}
+
+/** /api/push/subscribe, /state, /unsubscribe, /test y /rest (sólo POST desde la propia app). */
 export async function handlePushRequest(request: Request, env: PushEnv): Promise<Response> {
   const url = new URL(request.url);
   if (request.method !== "POST") return json({ error: "method" }, 405);
@@ -132,6 +166,22 @@ export async function handlePushRequest(request: Request, env: PushEnv): Promise
 
   if (url.pathname === "/api/push/unsubscribe") {
     await db.prepare("DELETE FROM push_subscriptions WHERE id = ?").bind(id).run();
+    return json({ ok: true });
+  }
+
+  // Fin del descanso con la app en segundo plano: se programa al salir y se cancela al volver.
+  if (url.pathname === "/api/push/rest") {
+    const known = await db.prepare("SELECT 1 AS found FROM push_subscriptions WHERE id = ?").bind(id).first<{ found: number }>();
+    if (!known) return json({ error: "missing" }, 404);
+    const alarm = env.REST_ALARM.get(env.REST_ALARM.idFromName(id));
+    if (body.cancel === true) {
+      await alarm.fetch("https://rest-alarm/cancel", { method: "POST" });
+      return json({ ok: true });
+    }
+    const at = Number(body.at);
+    const ahead = at - Date.now();
+    if (!Number.isFinite(at) || ahead < 1000 || ahead > REST_PUSH_MAX_MS) return json({ error: "at" }, 400);
+    await alarm.fetch("https://rest-alarm/schedule", { method: "POST", body: JSON.stringify({ id, at, next: shortText(body.next, 80) }) });
     return json({ ok: true });
   }
 

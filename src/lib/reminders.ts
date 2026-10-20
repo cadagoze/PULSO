@@ -12,9 +12,18 @@ export interface PushPrefs {
   water: boolean;
   /** Pausas activas a las 11:00 y 16:00, de lunes a viernes. */
   breaks?: boolean;
+  /** Aviso al terminar el descanso si sales de PULSO durante la sesión. Sin valor: activo. */
+  rest?: boolean;
+  /** Pesarse al levantarse (nunca para quien marcó un trastorno alimentario). */
+  weight?: boolean;
+  /** Hora local del aviso de peso («07:00»). */
+  weightTime?: string;
+  /** Cada día o sólo los lunes. */
+  weightDays?: "daily" | "monday";
 }
 
-export const defaultPushPrefs: PushPrefs = { training: true, trainingTime: "19:00", streak: true, meals: false, water: false, breaks: false };
+export const WEIGHT_TIME = "07:00";
+export const defaultPushPrefs: PushPrefs = { training: true, trainingTime: "19:00", streak: true, meals: false, water: false, breaks: false, rest: true, weight: false, weightTime: WEIGHT_TIME, weightDays: "daily" };
 
 /** Lo mínimo para saber si un aviso sirve: nunca nombres, comidas, pesos ni medidas. */
 export interface PushState {
@@ -38,9 +47,11 @@ export interface PushState {
   trainingDays?: number[];
   /** Pausas activas hechas hoy. */
   breaksToday?: number;
+  /** Ya registró su peso hoy (sólo eso, nunca el valor). */
+  weighedToday?: boolean;
 }
 
-export type ReminderKind = "training" | "streak" | "meals" | "break-1" | "break-2" | "water-1" | "water-2" | "water-3";
+export type ReminderKind = "training" | "streak" | "weight" | "meals" | "break-1" | "break-2" | "water-1" | "water-2" | "water-3";
 export interface Reminder { kind: ReminderKind; title: string; body: string; url: string }
 
 export const STREAK_TIME = 18 * 60;
@@ -58,7 +69,11 @@ export const BREAK_TIMES: Array<{ kind: ReminderKind; at: number; before: number
 /** Si el envío se atrasa, aún vale dentro de esta ventana (minutos); después, ya no. */
 const WINDOW = 90;
 /** Primero lo más específico: si tocan dos a la vez, sólo se envía uno. */
-const PRIORITY: ReminderKind[] = ["streak", "training", "meals", "break-1", "break-2", "water-1", "water-2", "water-3"];
+const PRIORITY: ReminderKind[] = ["streak", "training", "weight", "meals", "break-1", "break-2", "water-1", "water-2", "water-3"];
+/** Si coincide con otro, no se descarta: llega en la pasada siguiente (15 minutos después). */
+const DEFERRED: ReminderKind[] = ["weight"];
+/** Lo más lejos que puede quedar el fin de un descanso que se avisa fuera de la app (ms). */
+export const REST_PUSH_MAX_MS = 15 * 60_000;
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** «19:30» → 1170 minutos; null si no es una hora válida entre 05:00 y 23:00. */
@@ -92,7 +107,8 @@ export function validTimeZone(timeZone: string) {
 /**
  * Avisos que tocan ahora y aún no se enviaron hoy (`sent`: tipo → día de envío). Si el estado es de
  * otro día, el día empieza de cero (nada entrenado ni registrado). Devuelve a lo más uno, el de mayor
- * prioridad, y `skip` con los demás que tocaban (se marcan como enviados para no repetirlos).
+ * prioridad, y `skip` con los demás que tocaban (se marcan como enviados para no repetirlos; el de peso, en
+ * cambio, espera a la pasada siguiente).
  */
 export function dueReminders({ prefs, state, sent, timeZone, now }: {
   prefs: PushPrefs;
@@ -133,6 +149,16 @@ export function dueReminders({ prefs, state, sent, timeZone, now }: {
       url: "/entrenar",
     });
   }
+  const weightAt = parseTime(prefs.weightTime ?? WEIGHT_TIME);
+  const weightDay = prefs.weightDays !== "monday" || clock.weekday === 0;
+  if (prefs.weight && weightDay && weightAt !== null && inWindow(weightAt) && pending("weight") && !(today && state?.weighedToday)) {
+    due.push({
+      kind: "weight",
+      title: "Pésate al levantarte",
+      body: "Después de ir al baño y antes de comer o beber: así tus registros se pueden comparar.",
+      url: "/progreso?tab=cuerpo&registrar=peso",
+    });
+  }
   if (prefs.meals && state?.counting && inWindow(MEALS_TIME) && pending("meals") && !(today && state.loggedEvening)) {
     due.push({
       kind: "meals",
@@ -158,5 +184,15 @@ export function dueReminders({ prefs, state, sent, timeZone, now }: {
   }
 
   due.sort((a, b) => PRIORITY.indexOf(a.kind) - PRIORITY.indexOf(b.kind));
-  return { send: due[0] ?? null, skip: due.slice(1).map((item) => item.kind) };
+  return { send: due[0] ?? null, skip: due.slice(1).map((item) => item.kind).filter((kind) => !DEFERRED.includes(kind)) };
+}
+
+/** Fin del descanso: lo programa el teléfono al salir de PULSO con un descanso en curso. */
+export function restNotice(next: string | null) {
+  return {
+    title: "Descanso terminado",
+    body: next ? `Siguiente: ${next}.` : "Vuelve a PULSO para tu siguiente serie.",
+    url: "/entrenar/sesion",
+    tag: "rest",
+  };
 }

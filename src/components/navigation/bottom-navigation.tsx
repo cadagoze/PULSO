@@ -6,6 +6,7 @@ import { ChartNoAxesColumn, Dumbbell, House, Pause, Play, Salad, Square, UserRou
 import { useState, type CSSProperties } from "react";
 import { clockLabel, completedSets, durationSeconds, totalSets } from "@/lib/training";
 import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
+import { RestStatus } from "@/components/session/rest-away";
 import { Isotype } from "@/components/brand/logo";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -82,7 +83,7 @@ function ResumeBar() {
           <span className="pulse-dot" aria-hidden="true" />
           <span className="grow">
             <strong>{draft.name}</strong>
-            <small>{ready ? "Todo listo · toca para guardar" : <><span className="num">{clockLabel(elapsed)}</span> · {completedSets(draft.records)}/{totalSets(draft.records)} series{paused ? " · En pausa" : ""}</>}</small>
+            <small>{ready ? "Todo listo · toca para guardar" : <><RestStatus restUntil={draft.restUntil} fallback={<span className="num">{clockLabel(elapsed)}</span>} /> · {completedSets(draft.records)}/{totalSets(draft.records)} series{paused ? " · En pausa" : ""}</>}</small>
           </span>
         </Link>
         <button type="button" className="resume-btn resume-go" onClick={togglePause} aria-label={paused ? "Reanudar el reloj" : "Pausar el reloj"}>

@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
-import { beep, primeAudio, speak, useWakeLock, vibrate } from "@/lib/feedback";
+import { beep, primeAudio, speak, useWakeLock, vibrate, voiceOn } from "@/lib/feedback";
 import { exerciseBests, progressedSets } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
 import { markProgramSession } from "@/lib/programs";
 import { useDraft, useProgram, useSettings, useWorkouts } from "@/lib/store";
-import { completedSets, exerciseById, lastRecordFor, recordsVolume, totalSets } from "@/lib/training";
+import { completedSets, exerciseById, lastRecordFor, recordsVolume, setHeading, totalSets } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft } from "@/types";
 import { ExerciseMenu } from "./exercise-menu";
@@ -28,7 +28,7 @@ import { prefersReducedMotion, SessionScreen } from "./session-screen";
 import { SessionSheet } from "./session-sheet";
 import { SetBlock } from "./set-block";
 import type { SetMode } from "./set-block";
-import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, normalizeGroups, setBadge, setHeading, sourceLabel, supersetLetters, toggleSuperset, validateSet, volumeLabel } from "./session-utils";
+import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, normalizeGroups, setBadge, sourceLabel, supersetLetters, toggleSuperset, validateSet, volumeLabel } from "./session-utils";
 import type { Effort } from "./session-utils";
 import { useHydrated } from "./use-hydrated";
 import { useCountdownCues } from "./use-countdown-cues";
@@ -42,8 +42,6 @@ type MenuState = { index: number | null; open: boolean; session: boolean; view?:
 
 /** Tiempo (ms) que la serie recién completada queda en lima con su check antes de pasar a la siguiente. */
 const HOLD_MS = 650;
-/** Lo que queda visible el aviso de «descanso terminado» antes de cerrar el descanso. */
-const REST_AFTERGLOW_MS = 4000;
 
 /**
  * Pantalla de registro, siempre en modo inmersivo oscuro: estado vacío o sesión activa. Al guardar se
@@ -138,16 +136,6 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   }, []);
 
   useWakeLock(settings.keepAwake && draft.runningSince !== null);
-
-  // Terminado el descanso (y su aviso), se cierra: el anillo deja de consultar el reloj.
-  const restUntil = draft.restUntil;
-  useEffect(() => {
-    if (restUntil === null) return;
-    const timer = window.setTimeout(() => {
-      setDraft((current) => (current && current.restUntil === restUntil ? { ...current, restUntil: null } : current));
-    }, Math.max(0, restUntil + REST_AFTERGLOW_MS - Date.now()));
-    return () => window.clearTimeout(timer);
-  }, [restUntil, setDraft]);
 
   // Tras el check, la serie hecha queda un instante en lima y luego da paso a la siguiente (o al siguiente ejercicio).
   useEffect(() => {
@@ -446,7 +434,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             restUntil={draft.restUntil}
             restTotal={draft.restTotal ?? draft.restSeconds}
             sound={settings.sound}
-            voice={settings.sound && settings.voice !== false}
+            voice={voiceOn(settings)}
             vibration={settings.vibration}
             size={ringSize}
             upcoming={upcoming}
@@ -534,7 +522,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         )}
       </div>
 
-      {countdown && <CountdownWatcher countdown={countdown} sound={settings.sound} voice={settings.sound && settings.voice !== false} vibration={settings.vibration} />}
+      {countdown && <CountdownWatcher countdown={countdown} sound={settings.sound} voice={voiceOn(settings)} vibration={settings.vibration} />}
 
       <SessionSheet
         open={sessionOpen}

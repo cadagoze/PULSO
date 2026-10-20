@@ -75,14 +75,6 @@ export const kindBadges: Partial<Record<SetKind, { label: string; tone: "warn" |
   drop: { label: "Drop", tone: "purple" },
 };
 
-/** «Serie 2 de 4» (series de trabajo) o «Calentamiento 1 de 2». */
-export function setHeading(sets: SetRecord[], index: number) {
-  const warmup = sets[index]?.kind === "warmup";
-  const sameKind = (set: SetRecord) => (set.kind === "warmup") === warmup;
-  const position = sets.slice(0, index + 1).filter(sameKind).length;
-  return `${warmup ? "Calentamiento" : "Serie"} ${position} de ${sets.filter(sameKind).length}`;
-}
-
 /** Rendimiento de una serie en el orden de la pantalla: «12 × 37,5 kg», «12 rep» o «30 s». */
 export function performanceLabel(set: Pick<SetRecord, "value" | "load">, unit: "reps" | "seconds", weightUnit: WeightUnit) {
   const load = set.load > 0 ? `${formatNumber(toDisplayWeight(set.load, weightUnit))} ${weightUnit}` : "";

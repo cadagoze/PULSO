@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { SegmentedControl, Switch } from "@/components/ui";
 import { PlaceBar } from "@/components/train/place-picker";
+import { voiceOn } from "@/lib/feedback";
 import { availableEquipment } from "@/lib/generator";
 import { usePreference } from "@/lib/store";
 import type { Settings } from "@/types";
@@ -64,13 +65,13 @@ export function TrainingSection({ settings, update, paused, onTogglePause, order
       />
       <SettingRow
         title="Sonidos"
-        helper="Aviso breve al terminar el descanso y en intervalos."
+        helper="Pitidos al terminar el descanso y en intervalos. Suenan sobre tu música, sin cortarla."
         control={<Switch checked={settings.sound} onChange={(sound) => update({ sound })} label="Sonidos" />}
       />
       <SettingRow
         title="Voz"
-        helper={settings.sound ? "Te dice «quedan 10 segundos» en ejercicios por tiempo, descansos e intervalos." : "Necesita los sonidos activados."}
-        control={<Switch checked={settings.sound && settings.voice !== false} onChange={(voice) => update(voice ? { voice, sound: true } : { voice })} label="Avisos con voz" />}
+        helper={settings.sound ? "Te dice «quedan 10 segundos» en descansos, ejercicios por tiempo e intervalos. En iPhone pausa tu música mientras habla." : "Necesita los sonidos activados."}
+        control={<Switch checked={voiceOn(settings)} onChange={(voice) => update(voice ? { voice, sound: true } : { voice })} label="Avisos con voz" />}
       />
       <SettingRow
         title="Vibración"

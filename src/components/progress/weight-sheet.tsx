@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button, Sheet } from "@/components/ui";
 import { Toast, useToast } from "@/components/ui/toast";
@@ -8,8 +8,11 @@ import { weightLabel } from "@/components/progress/format";
 import { useSettings, useWeights } from "@/lib/store";
 import { formatShortDate, fromDisplayWeight, localDateKey, toDisplayWeight } from "@/lib/utils";
 
-/** Botón «Registrar peso» con su hoja: valida el valor (30–300 kg) y la fecha, y reemplaza el registro del mismo día. */
-export function WeightLogButton({ variant = "secondary", size = "s", block = false, label = "Registrar peso", className }: { variant?: "primary" | "secondary" | "dark"; size?: "s" | "m"; block?: boolean; label?: string; className?: string }) {
+/**
+ * Botón «Registrar peso» con su hoja: valida el valor (30–300 kg) y la fecha, y reemplaza el registro del mismo día.
+ * Con `openFromLink`, la hoja se abre sola si la dirección trae «?registrar=peso» (el aviso de la mañana).
+ */
+export function WeightLogButton({ variant = "secondary", size = "s", block = false, label = "Registrar peso", className, openFromLink = false }: { variant?: "primary" | "secondary" | "dark"; size?: "s" | "m"; block?: boolean; label?: string; className?: string; openFromLink?: boolean }) {
   const [entries, setEntries] = useWeights();
   const [settings] = useSettings();
   const unit = settings.unit;
@@ -30,6 +33,20 @@ export function WeightLogButton({ variant = "secondary", size = "s", block = fal
     setError("");
     setOpen(true);
   }
+
+  const openLinked = useEffectEvent(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("registrar") !== "peso") return;
+    url.searchParams.delete("registrar");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    openSheet();
+  });
+
+  useEffect(() => {
+    if (!openFromLink) return;
+    const frame = window.requestAnimationFrame(openLinked);
+    return () => window.cancelAnimationFrame(frame);
+  }, [openFromLink]);
 
   function save() {
     const parsed = Number(value.trim().replace(",", "."));
@@ -72,7 +89,7 @@ export function WeightLogButton({ variant = "secondary", size = "s", block = fal
           <input type="date" value={date} max={today} onChange={(event) => setDate(event.target.value)} />
         </label>
         {error && <p className="form-error" id="prog-weight-error" role="alert">{error}</p>}
-        <p className="subtle prog-sheet-help">Si ya registraste ese día, el valor se reemplaza.</p>
+        <p className="subtle prog-sheet-help">Mejor al levantarte, después de ir al baño y antes de comer. Si ya registraste ese día, el valor se reemplaza.</p>
         <Button block onClick={save}>Guardar registro</Button>
       </Sheet>
       <Toast toast={toast} />

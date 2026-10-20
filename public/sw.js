@@ -166,6 +166,7 @@ self.addEventListener("fetch", (event) => {
 
 // ─── Avisos ──────────────────────────────────────────────────────────────
 // El servidor envía { title, body, url, tag }; al tocar el aviso se abre (o enfoca) PULSO en esa pantalla.
+// El fin del descanso reemplaza al anterior, pero vuelve a sonar.
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -177,6 +178,7 @@ self.addEventListener("push", (event) => {
     body: data.body || "",
     icon: "/icon/192",
     tag: data.tag || "pulso",
+    renotify: data.tag === "rest",
     lang: "es",
     data: { url: data.url || "/" },
   }));

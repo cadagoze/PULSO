@@ -13,7 +13,7 @@ import { ButtonLink } from "@/components/ui";
 import { WorkoutTimer } from "@/components/ui/workout-timer";
 import { breakMoveById, breakRoutineById, type BreakRoutine } from "@/data/active-breaks";
 import { addBreak, breakSegments, breaksOn, routineMinutes, type BreakSegment } from "@/lib/active-breaks";
-import { beep, primeAudio, speak, useWakeLock, vibrate } from "@/lib/feedback";
+import { beep, primeAudio, speak, useWakeLock, vibrate, voiceOn } from "@/lib/feedback";
 import { useBreaks, useSettings } from "@/lib/store";
 import { clockLabel, newId } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
@@ -32,7 +32,7 @@ export function BreakPlayer({ routineId }: { routineId: string }) {
   const [run, setRunState] = useState<Run | null>(null);
   const setRun = useMemo(() => (update: (current: Run) => Run) => setRunState((current) => (current ? update(current) : current)), []);
   if (!routine) return null;
-  const voice = settings.sound && settings.voice !== false;
+  const voice = voiceOn(settings);
 
   function start() {
     primeAudio();
