@@ -11,6 +11,7 @@ import { MuscleMap } from "@/components/ui/muscle-map";
 import { useSettings } from "@/lib/store";
 import { exerciseById } from "@/lib/training";
 import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
+import { warmupMinutes, warmupTarget } from "@/lib/warmup";
 import { restText, targetLabel, topLoad } from "@/components/train/shared";
 import { LoadSheet } from "@/components/train/today-sheets";
 import { recordForExercise } from "@/components/train/today-plan";
@@ -91,8 +92,8 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
         {today.warmup.length > 0 && (
           <div className={cn("train-warmup", today.includeWarmup && "on")}>
             <div className="train-warmup-text">
-              <strong>Calentamiento</strong>
-              <small><span className="num">{today.warmup.length} × 30 s</span> · {today.warmup.map((exercise) => exercise.name).join(" · ")}</small>
+              <strong>Calentamiento · <span className="num">{warmupMinutes(today.warmup)}</span> min</strong>
+              <small>{today.warmup.map((item) => `${item.exercise.name} ${warmupTarget(item)}`).join(" · ")}</small>
             </div>
             <Switch checked={today.includeWarmup} onChange={today.setIncludeWarmup} label="Incluir calentamiento" />
           </div>

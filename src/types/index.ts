@@ -247,6 +247,8 @@ export interface Settings {
   autoRest: boolean;
   /** Avisos hablados («quedan 10 segundos», fases de intervalos). Sin valor: apagados (en iPhone la voz pausa la música). */
   voice?: boolean;
+  /** Calentamiento enfocado en la sesión al empezar (pulso, movilidad y activación). Sin valor: incluido. */
+  warmup?: boolean;
   barWeight: number;
   plates: number[];
   /** Color de acento elegido; sin valor, automático según cómo te identificas. */

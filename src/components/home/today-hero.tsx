@@ -17,7 +17,7 @@ import { programSessionName } from "@/lib/programs";
 import { painNote } from "@/lib/readiness";
 import { useStartMobility, useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useWorkouts } from "@/lib/store";
-import { completedSets, totalSets } from "@/lib/training";
+import { sessionSets } from "@/lib/training";
 import { usePersonalization } from "@/lib/use-personalize";
 import { useRestDay } from "@/lib/use-rest-day";
 import { localDateKey, localDaySeed } from "@/lib/utils";
@@ -31,7 +31,7 @@ export function TodayHero({ now }: { now: number }) {
   const [workouts] = useWorkouts();
   const [preference] = usePreference();
   const today = useTodayPlan(now);
-  const active = useActiveProgram();
+  const active = useActiveProgram(now);
   const { startSession } = useProgramActions();
   const start = useStartWorkout();
   const startMobility = useStartMobility();
@@ -44,8 +44,7 @@ export function TodayHero({ now }: { now: number }) {
   const doneToday = workouts.filter((workout) => workout.date === localDateKey(new Date(now)));
 
   if (draft) {
-    const done = completedSets(draft.records);
-    const total = totalSets(draft.records);
+    const { done, total } = sessionSets(draft.records);
     // Todas las series hechas pero sin guardar: no cuenta en tu semana hasta guardarlo.
     const ready = total > 0 && done === total;
     return (

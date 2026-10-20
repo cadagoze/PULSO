@@ -11,10 +11,11 @@ import { programSessionName } from "@/lib/programs";
 import { painNote } from "@/lib/readiness";
 import { useStartMobility, useStartWorkout } from "@/lib/session";
 import { useDraft, usePreference, useSettings } from "@/lib/store";
-import { completedSets, durationSeconds, exerciseById, totalSets } from "@/lib/training";
+import { durationSeconds, exerciseById, sessionSets } from "@/lib/training";
 import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
 import { RestStatus } from "@/components/session/rest-away";
 import { useProgramActions } from "@/components/train/program-actions";
+import { WarmupPreview } from "@/components/train/warmup-preview";
 import { locationLabels, targetLabel, topLoad } from "@/components/train/shared";
 import type { ActiveProgram, TodayPlan, TodaySource } from "@/components/train/today-plan";
 import type { Exercise, ExerciseRecord, TrainingDraft } from "@/types";
@@ -173,6 +174,7 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
       <Title details={[count(total, "ejercicio", "ejercicios"), place, levelLabels[today.level]]} note={note}>
         {zoneById(today.zone)?.label ?? focusLabels[today.focus]}
       </Title>
+      <WarmupPreview items={today.warmup} included={today.includeWarmup} onToggle={today.setIncludeWarmup} />
       <SessionList records={today.records} onMore={onShowList} />
       {restDay ? <RestActions onTrain={begin} disabled={!total} /> : (
         <div className="train-hero-actions">
@@ -192,7 +194,7 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
 function ProgramBody({ active, place, today, notify, onAdjust }: { active: ActiveProgram; place: string; today: TodayPlan; notify: (message: string) => void; onAdjust: () => void }) {
   const restDay = useRestDay();
   const { startSession, restart } = useProgramActions();
-  const { program, next, day, records, done, total, weekDone } = active;
+  const { program, next, day, records, warmup, done, total, weekDone } = active;
   const href = `/entrenar/programas/${program.id}`;
   const programPlace = program.location === "any" ? place : locationLabels[program.location];
   const recommendation = today.readiness?.recommendation;
@@ -229,6 +231,7 @@ function ProgramBody({ active, place, today, notify, onAdjust }: { active: Activ
       <Title details={[count(records.length, "ejercicio", "ejercicios"), programPlace]} note={note}>
         {day ? `${day.name} · ${day.focus}` : programSessionName(program, next.week, next.day)}
       </Title>
+      <WarmupPreview items={warmup} included={today.includeWarmup} onToggle={today.setIncludeWarmup} />
       <SessionList records={records} />
       {restDay || recommendation === "recovery" ? <RestActions onTrain={() => void startSession(program, next.week, next.day, { easier })} disabled={!records.length} /> : (
         <div className="train-hero-actions">
@@ -250,8 +253,7 @@ function ProgramBody({ active, place, today, notify, onAdjust }: { active: Activ
 }
 
 function DraftBody({ draft, now }: { draft: TrainingDraft; now: number }) {
-  const done = completedSets(draft.records);
-  const total = totalSets(draft.records);
+  const { done, total } = sessionSets(draft.records);
   const minutes = Math.floor(durationSeconds(draft, now) / 60);
   const elapsed = minutes < 60 ? <><b className="num">{minutes}</b> min</> : <><b className="num">{Math.floor(minutes / 60)}</b> h <b className="num">{minutes % 60}</b> min</>;
   return (

@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
-import { estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, trainingGoal } from "@/lib/generator";
+import { availableEquipment, estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { progressedSets } from "@/lib/progression";
 import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
+import { warmupFor, warmupRecords } from "@/lib/warmup";
 import type { Exercise, ExerciseLevel, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
 import { useLatestWeight } from "@/lib/use-nutrition";
 import { zoneById, type BodyZone } from "@/data/body-zones";
@@ -30,8 +31,8 @@ export function recordForExercise(exercise: Exercise, workouts: WorkoutEntry[], 
 
 /**
  * Sesión generada para hoy. Usa las mismas entradas y la misma semilla que la portada de Inicio,
- * así «Personalizar» lleva a la misma sesión. Duración, enfoque, variante, calentamiento y ediciones
- * son locales a la pantalla (no se guardan).
+ * así «Personalizar» lleva a la misma sesión. Duración, enfoque, variante y ediciones son locales a la
+ * pantalla (no se guardan); incluir el calentamiento es un ajuste (vale para Inicio, Entrenar y programas).
  */
 export function useTodayPlan(now: number, initialZone?: string | null) {
   const [profile] = useProfile();
@@ -40,14 +41,13 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const [workouts] = useWorkouts();
   const [readinessEntries] = useReadiness();
   const [preference] = usePreference();
-  const [settings] = useSettings();
+  const [settings, updateSettings] = useSettings();
 
   const [minutesChoice, setMinutesChoice] = useState<number | null>(null);
   const [focusChoice, setFocusChoice] = useState<WorkoutFocus | null>(null);
   // Zona del cuerpo elegida (glúteos, brazos…): manda sobre el enfoque mientras esté puesta.
   const [zone, setZone] = useState<BodyZone | null>(() => zoneById(initialZone)?.id ?? null);
   const [variant, setVariant] = useState(0);
-  const [includeWarmup, setIncludeWarmup] = useState(true);
   const [edits, setEdits] = useState<{ key: string; records: ExerciseRecord[] } | null>(null);
 
   const hydrated = now !== 0;
@@ -66,21 +66,24 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     if (!hydrated) return null;
     return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: readiness?.recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg }));
   }, [bodyKg, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, readiness?.recommendation, recovery, variant, workouts, zone]);
+  const limitations = useMemo(() => todayLimitations(profile?.limitations, pain), [pain, profile?.limitations]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
   const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
-  const records = edited ? edits.records : plan?.records ?? [];
+  const records = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
 
   function editRecords(update: (current: ExerciseRecord[]) => ExerciseRecord[]) {
     setEdits({ key: planKey, records: update(records) });
   }
 
-  const warmup = plan?.warmup ?? [];
-  const warmupRecords: ExerciseRecord[] = includeWarmup
-    ? warmup.map((exercise) => ({ exerciseId: exercise.id, unit: "seconds", sets: [{ value: 30, load: 0, done: false, kind: "warmup" }], restSeconds: 15 }))
-    : [];
-  const fullRecords = [...warmupRecords, ...records];
+  // Calentamiento para lo que de verdad vas a hacer (también con tus cambios); la sesión de movilidad no lo lleva.
+  const warmup = useMemo(() => {
+    if (!plan || plan.focus === "mobility") return [];
+    return warmupFor({ records, limitations, equipment: availableEquipment(preference), minutes });
+  }, [limitations, minutes, plan, preference, records]);
+  const includeWarmup = settings.warmup !== false;
+  const fullRecords = [...(includeWarmup ? warmupRecords(warmup) : []), ...records];
   const restSeconds = plan?.restSeconds ?? settings.defaultRest;
   const estimated = estimateMinutes(fullRecords, restSeconds);
   const name = plan ? plan.name : "Entrenamiento de hoy";
@@ -113,7 +116,7 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     goal: trainingGoal(profile?.goals, nutrition?.goal),
     includeWarmup,
     workouts,
-    setIncludeWarmup,
+    setIncludeWarmup: (on: boolean) => updateSettings({ warmup: on }),
     setMinutes: setMinutesChoice,
     setFocus: (value: WorkoutFocus | null) => { setZone(null); setFocusChoice(value); },
     setZone,
@@ -125,10 +128,13 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
 
 export type TodayPlan = ReturnType<typeof useTodayPlan>;
 
-/** Programa activo: próxima sesión (como en Inicio), avance total y de la semana en curso. */
-export function useActiveProgram() {
+/** Programa activo: próxima sesión (como en Inicio, con su calentamiento), avance total y de la semana en curso. */
+export function useActiveProgram(now: number) {
   const [progress] = useProgram();
   const [workouts] = useWorkouts();
+  const [profile] = useProfile();
+  const [preference] = usePreference();
+  const [readinessEntries] = useReadiness();
   const program = progress ? programById(progress.programId) : undefined;
   const next = program && progress ? nextProgramSession(program, progress) : null;
   const week = next?.week;
@@ -136,6 +142,12 @@ export function useActiveProgram() {
   const records = useMemo(
     () => (program && week && day ? programSessionRecords(program, week, day, workouts) : []),
     [program, week, day, workouts],
+  );
+  const todayKey = now ? localDateKey(new Date(now)) : "";
+  const pain = readinessEntries.find((entry) => entry.date === todayKey)?.pain;
+  const warmup = useMemo(
+    () => (program && records.length ? warmupFor({ records, limitations: todayLimitations(profile?.limitations, pain), equipment: availableEquipment(preference), minutes: program.minutes }) : []),
+    [pain, preference, profile?.limitations, program, records],
   );
   if (!program || !progress) return null;
   const completed = progress.completed;
@@ -145,6 +157,7 @@ export function useActiveProgram() {
     next,
     day: next ? program.days[next.day - 1] : undefined,
     records,
+    warmup,
     done: completed.length,
     total: programTotalSessions(program),
     weekDone,

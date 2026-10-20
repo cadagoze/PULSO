@@ -1,7 +1,7 @@
 import { warmupSets } from "@/lib/progression";
-import { durationSeconds, exerciseById, isWorkingSet } from "@/lib/training";
+import { durationSeconds, exerciseById, hasPending, isWorkingSet, mainStarted } from "@/lib/training";
 import type { Exercise, ExerciseRecord, SetRecord, TrainingDraft } from "@/types";
-import { hasPending, normalizeGroups } from "./session-utils";
+import { normalizeGroups } from "./session-utils";
 
 /**
  * Cambios del entrenamiento en curso como funciones puras (sin React): la pantalla de la sesión sólo
@@ -36,7 +36,8 @@ export function markSet(records: ExerciseRecord[], recordIndex: number, setIndex
  */
 export function restAfterSet(draft: TrainingDraft, recordIndex: number, records: ExerciseRecord[], autoRest: boolean) {
   const record = draft.records[recordIndex];
-  if (!record || !autoRest || draft.runningSince === null || !records.some(hasPending)) return 0;
+  const started = mainStarted(records);
+  if (!record || !autoRest || draft.runningSince === null || !records.some((item) => hasPending(item, started))) return 0;
   const partner = draft.records[recordIndex + 1];
   const nextInSuperset = Boolean(record.group) && partner?.group === record.group && partner.sets.some((set) => !set.done);
   if (nextInSuperset) return 0;

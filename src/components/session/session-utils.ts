@@ -1,7 +1,7 @@
 import { formatVolume } from "@/lib/analytics";
 import { bestRepsAt, detectRecords, estimateOneRepMax, recordEligible } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
-import { completedSets, durationSeconds, isWorkingSet, newId, recordsVolume } from "@/lib/training";
+import { completedSets, durationSeconds, hasPending, isWorkingSet, mainStarted, newId, recordsVolume } from "@/lib/training";
 import { formatNumber, localDateKey, toDisplayWeight } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, SetKind, SetRecord, TrainingDraft, WorkoutEntry, WorkoutSource } from "@/types";
 
@@ -92,13 +92,10 @@ export function valueStep(unit: "reps" | "seconds") {
   return unit === "seconds" ? 5 : 1;
 }
 
-export function hasPending(record: ExerciseRecord | undefined) {
-  return Boolean(record?.sets.some((set) => !set.done));
-}
-
 /** Ejercicio donde retomar: el primero con series pendientes (o el último si ya está todo hecho). */
 export function firstPendingRecord(records: ExerciseRecord[]) {
-  const index = records.findIndex(hasPending);
+  const started = mainStarted(records);
+  const index = records.findIndex((record) => hasPending(record, started));
   return index === -1 ? Math.max(0, records.length - 1) : index;
 }
 
@@ -119,18 +116,20 @@ function groupMembers(records: ExerciseRecord[], index: number) {
  * y después en el siguiente pendiente.
  */
 export function nextExerciseAfter(records: ExerciseRecord[], index: number) {
+  const started = mainStarted(records);
+  const pending = (position: number) => hasPending(records[position], started);
   const members = groupMembers(records, index);
   if (members.length > 1) {
     const at = members.indexOf(index);
     for (let step = 1; step <= members.length; step += 1) {
       const candidate = members[(at + step) % members.length];
-      if (hasPending(records[candidate])) return candidate;
+      if (pending(candidate)) return candidate;
     }
-  } else if (hasPending(records[index])) {
+  } else if (pending(index)) {
     return index;
   }
-  for (let position = index + 1; position < records.length; position += 1) if (hasPending(records[position])) return position;
-  for (let position = 0; position < index; position += 1) if (hasPending(records[position])) return position;
+  for (let position = index + 1; position < records.length; position += 1) if (pending(position)) return position;
+  for (let position = 0; position < index; position += 1) if (pending(position)) return position;
   return index;
 }
 

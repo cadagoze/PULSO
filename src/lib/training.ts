@@ -37,6 +37,50 @@ export function totalSets(records: ExerciseRecord[]) {
   return records.reduce((sum, record) => sum + record.sets.length, 0);
 }
 
+/** Ejercicio sólo de calentamiento (el bloque con que empieza la sesión). */
+function warmupOnly(record: ExerciseRecord) {
+  return record.sets.length > 0 && record.sets.every((set) => set.kind === "warmup");
+}
+
+/** Cuántos ejercicios de calentamiento abren la sesión. */
+export function warmupCount(records: ExerciseRecord[]) {
+  const index = records.findIndex((record) => !warmupOnly(record));
+  return index === -1 ? records.length : index;
+}
+
+/** «Calentamiento 2 de 4» para los ejercicios del bloque inicial; si no, «Serie 2 de 4». */
+export function recordHeading(records: ExerciseRecord[], recordIndex: number, setIndex: number) {
+  const warmups = warmupCount(records);
+  return recordIndex < warmups ? `Calentamiento ${recordIndex + 1} de ${warmups}` : setHeading(records[recordIndex]?.sets ?? [], setIndex);
+}
+
+/** Ya hiciste alguna serie de lo principal (no de calentamiento). */
+export function mainStarted(records: ExerciseRecord[]) {
+  return records.some((record) => record.sets.some((set) => set.done && isWorkingSet(set)));
+}
+
+/**
+ * Si al ejercicio le quedan series por hacer. El calentamiento es opcional: con lo principal ya empezado
+ * (`started`), el que te saltaste no queda pendiente.
+ */
+export function hasPending(record: ExerciseRecord | undefined, started = false) {
+  if (!record || (started && warmupOnly(record))) return false;
+  return record.sets.some((set) => !set.done);
+}
+
+/** Series hechas y totales de la sesión; el calentamiento que te saltaste ya no cuenta como pendiente. */
+export function sessionSets(records: ExerciseRecord[]) {
+  const started = mainStarted(records);
+  let done = 0;
+  let total = 0;
+  for (const record of records) {
+    const finished = record.sets.filter((set) => set.done).length;
+    done += finished;
+    total += started && warmupOnly(record) ? finished : record.sets.length;
+  }
+  return { done, total };
+}
+
 /** Tonelaje: repeticiones × carga de las series de trabajo realizadas. */
 export function recordsVolume(records: ExerciseRecord[]) {
   return records.reduce((sum, record) => record.unit !== "reps" ? sum : sum + record.sets.filter((set) => set.done && isWorkingSet(set)).reduce((acc, set) => acc + set.value * set.load, 0), 0);
@@ -57,11 +101,13 @@ export function setHeading(sets: SetRecord[], index: number) {
 
 /** Lo que sigue tras el descanso (la primera serie pendiente, en orden): «Press de banca · Serie 3 de 4». */
 export function nextUpLabel(records: ExerciseRecord[]) {
-  for (const record of records) {
+  const started = mainStarted(records);
+  for (const [position, record] of records.entries()) {
+    if (!hasPending(record, started)) continue;
     const index = record.sets.findIndex((set) => !set.done);
-    if (index < 0) continue;
+    const heading = recordHeading(records, position, index);
     const name = exerciseById(record.exerciseId)?.name;
-    return name ? `${name} · ${setHeading(record.sets, index)}` : setHeading(record.sets, index);
+    return name ? `${name} · ${heading}` : heading;
   }
   return null;
 }

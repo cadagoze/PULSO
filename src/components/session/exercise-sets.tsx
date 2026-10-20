@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ListOrdered, Minus, Plus, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flame, ListOrdered, Minus, Plus, TrendingUp } from "lucide-react";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
 import { suggestNext } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
@@ -36,6 +36,8 @@ export function ExerciseSets({ recordIndex, record, exercise, last, bests, loadU
 }) {
   const suggestion = suggestNext(exercise, last, loadUnit, (kg) => toDisplayWeight(kg, loadUnit));
   const done = record.sets.filter((set) => set.done).length;
+  // En el calentamiento no hay progresión que seguir: sólo el ritmo.
+  const warmup = record.sets.length > 0 && record.sets.every((set) => set.kind === "warmup");
 
   return (
     <section className="ses-sets" aria-labelledby="ses-sets-title">
@@ -44,10 +46,17 @@ export function ExerciseSets({ recordIndex, record, exercise, last, bests, loadU
         <span className="meta"><span className="num">{done}/{record.sets.length}</span> hechas</span>
       </div>
 
-      <p className={cn("ses-hint", `hint-${suggestion.kind}`)}>
-        <TrendingUp size={15} aria-hidden="true" />
-        <span>{suggestion.message}</span>
-      </p>
+      {warmup ? (
+        <p className="ses-hint hint-start">
+          <Flame size={15} aria-hidden="true" />
+          <span>Calentamiento: a ritmo suave, sin llegar a cansarte.</span>
+        </p>
+      ) : (
+        <p className={cn("ses-hint", `hint-${suggestion.kind}`)}>
+          <TrendingUp size={15} aria-hidden="true" />
+          <span>{suggestion.message}</span>
+        </p>
+      )}
 
       <ol className="ses-rows" aria-label={`Series de ${exercise.name}`}>
         {record.sets.map((set, setIndex) => {

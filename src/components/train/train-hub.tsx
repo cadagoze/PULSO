@@ -39,7 +39,7 @@ export function TrainHub() {
   }, [initialPanel, router]);
   const [settings] = useSettings();
   const today = useTodayPlan(now, params.get("zona"));
-  const active = useActiveProgram();
+  const active = useActiveProgram(now);
   const toast = useToast();
 
   // Con ?zona=… (desde la biblioteca) se muestra directo la rutina a tu medida de esa zona.

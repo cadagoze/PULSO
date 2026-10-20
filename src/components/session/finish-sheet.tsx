@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CircleAlert, Trophy } from "lucide-react";
 import { Sheet, Switch } from "@/components/ui";
-import { clockLabel, completedSets, durationSeconds, exerciseById, recordsVolume, totalSets } from "@/lib/training";
+import { clockLabel, durationSeconds, exerciseById, recordsVolume, sessionSets } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import type { TrainingDraft, WorkoutEntry } from "@/types";
@@ -42,8 +42,7 @@ export function FinishSheet({ open, onClose, draft, workouts, unit, onSave }: {
   const [pain, setPain] = useState(false);
   const now = useNow(open ? 1000 : 60_000);
   const minute = useNow();
-  const done = completedSets(draft.records);
-  const total = totalSets(draft.records);
+  const { done, total } = sessionSets(draft.records);
   const pending = total - done;
   const complete = done > 0 && pending === 0;
   // Récords que quedarán con este entrenamiento: la misma regla que el historial.

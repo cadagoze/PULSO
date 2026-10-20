@@ -1142,6 +1142,65 @@ test('avisos: fin del descanso fuera de la app', () => {
   assert.equal(training.nextUpLabel([{ ...records[0], sets: [pending(true)] }]), null, 'todo hecho');
 });
 
+test('calentamiento: enfocado en la sesión del día', () => {
+  const warmupLib = load('src/lib/warmup.ts');
+  const rec = (id) => ({ exerciseId: id, unit: training.exerciseById(id).unit, sets: [{ value: 10, load: 0, done: false, kind: 'normal' }] });
+  const steps = (items) => Array.from(items, (item) => `${item.phase}:${item.exercise.id}`);
+  // Torso (flexión declinada, remo con mancuerna, press de hombros, remo invertido): hombros y espalda alta, activa el empuje.
+  const torso = warmupLib.warmupFor({ records: [32, 14, 46, 6].map(rec), minutes: 30 });
+  assert.deepEqual(steps(torso), ['pulse:72', 'mobility:82', 'mobility:80', 'activation:2']);
+  assert.equal(warmupLib.warmupFocus(torso), 'hombros y espalda alta');
+  assert.equal(torso[0].value, 60);
+  assert.equal(torso[2].value, 40, 'a un lado y al otro');
+  assert.equal(warmupLib.warmupTarget(torso[3]), '10 rep');
+  assert.equal(warmupLib.warmupMinutes(torso), 4);
+  // Pierna (sentadilla goblet, peso muerto rumano, zancada): caderas y columna, activa la sentadilla.
+  const legs = warmupLib.warmupFor({ records: [10, 11, 40].map(rec), minutes: 45 });
+  assert.deepEqual(steps(legs), ['pulse:72', 'mobility:78', 'mobility:79', 'activation:30']);
+  assert.equal(warmupLib.warmupFocus(legs), 'caderas y columna');
+  // Rodillas a cuidar: marcha en vez de saltos y sin sentadilla profunda.
+  const knees = warmupLib.warmupFor({ records: [10, 20].map(rec), limitations: ['knees'], minutes: 45 });
+  assert.deepEqual(steps(knees), ['pulse:5', 'mobility:78', 'mobility:79', 'activation:30']);
+  // No repite ejercicios de la sesión: con flexiones inclinadas, activa con remo en W.
+  assert.equal(warmupLib.warmupFor({ records: [2, 14].map(rec) }).at(-1).exercise.id, 107);
+  // Sesión corta: una sola de movilidad y 45 s de pulso.
+  const short = warmupLib.warmupFor({ records: [31, 6].map(rec), minutes: 15 });
+  assert.equal(short.filter((item) => item.phase === 'mobility').length, 1);
+  assert.equal(short[0].value, 45);
+  // Equipamiento: aperturas con banda sólo si hay bandas.
+  const pull = [107, 14].map(rec);
+  assert.equal(warmupLib.warmupFor({ records: pull, equipment: new Set(['bands']) }).at(-1).exercise.id, 54);
+  assert.ok(!warmupLib.warmupFor({ records: pull, equipment: new Set() }).some((item) => item.exercise.id === 54));
+  // En la sesión: una serie de calentamiento cada uno y 15 s para cambiar de ejercicio.
+  const records = Array.from(warmupLib.warmupRecords(torso));
+  assert.equal(records.length, 4);
+  assert.ok(records.every((record) => record.sets.length === 1 && record.sets[0].kind === 'warmup' && record.restSeconds === 15));
+  assert.equal(records[0].sets[0].value, 60);
+  assert.equal(warmupLib.warmupFor({ records: [] }).length, 0, 'sin ejercicios, sin calentamiento');
+});
+
+test('sesión: el calentamiento que te saltas no queda pendiente', () => {
+  const sets = (n, done, kind = 'normal') => Array.from({ length: n }, (_, i) => ({ value: 10, load: 0, done: i < done, kind }));
+  const records = [
+    { exerciseId: 72, unit: 'seconds', sets: sets(1, 0, 'warmup') },
+    { exerciseId: 82, unit: 'seconds', sets: sets(1, 0, 'warmup') },
+    { exerciseId: 32, unit: 'reps', sets: sets(3, 0) },
+  ];
+  assert.deepEqual({ ...training.sessionSets(records) }, { done: 0, total: 5 });
+  assert.equal(training.warmupCount(records), 2);
+  assert.equal(training.recordHeading(records, 1, 0), 'Calentamiento 2 de 2');
+  assert.equal(training.recordHeading(records, 2, 1), 'Serie 2 de 3');
+  assert.match(training.nextUpLabel(records), /Calentamiento 1 de 2$/, 'sin empezar lo principal, el calentamiento va primero');
+  // Directo a lo principal: el calentamiento deja de contar y la sesión queda lista para guardar.
+  const skipped = records.map((record, index) => (index === 2 ? { ...record, sets: sets(3, 3) } : record));
+  assert.deepEqual({ ...training.sessionSets(skipped) }, { done: 3, total: 3 });
+  assert.equal(training.hasPending(skipped[0], training.mainStarted(skipped)), false);
+  assert.equal(training.nextUpLabel(skipped), null);
+  // Con el calentamiento hecho, cuenta como siempre.
+  const all = records.map((record) => ({ ...record, sets: record.sets.map((set) => ({ ...set, done: true })) }));
+  assert.deepEqual({ ...training.sessionSets(all) }, { done: 5, total: 5 });
+});
+
 test('conteo de cifras: lee y escribe números en formato chileno', () => {
   const count = load('src/lib/count.ts');
   const parsed = (text) => { const value = count.parseCount(text); return value && { ...value }; };

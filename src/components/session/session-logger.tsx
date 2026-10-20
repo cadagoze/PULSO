@@ -8,7 +8,7 @@ import { exerciseBests, progressedSets } from "@/lib/progression";
 import type { ExerciseBests } from "@/lib/progression";
 import { markProgramSession } from "@/lib/programs";
 import { useDraft, useProgram, useSettings, useWorkouts } from "@/lib/store";
-import { completedSets, exerciseById, lastRecordFor, recordsVolume, setHeading, totalSets } from "@/lib/training";
+import { completedSets, exerciseById, lastRecordFor, recordHeading, recordsVolume, sessionSets, setHeading, warmupCount } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft } from "@/types";
 import { ExerciseMenu } from "./exercise-menu";
@@ -28,7 +28,7 @@ import { prefersReducedMotion, SessionScreen } from "./session-screen";
 import { SessionSheet } from "./session-sheet";
 import { SetBlock } from "./set-block";
 import type { SetMode } from "./set-block";
-import { buildWorkoutEntry, firstPendingRecord, hasPending, nextExerciseAfter, normalizeGroups, setBadge, sourceLabel, supersetLetters, toggleSuperset, validateSet, volumeLabel } from "./session-utils";
+import { buildWorkoutEntry, firstPendingRecord, nextExerciseAfter, normalizeGroups, setBadge, sourceLabel, supersetLetters, toggleSuperset, validateSet, volumeLabel } from "./session-utils";
 import type { Effort } from "./session-utils";
 import { useHydrated } from "./use-hydrated";
 import { useCountdownCues } from "./use-countdown-cues";
@@ -202,7 +202,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setFocus(null);
     setJustDone({ recordIndex, setIndex, next: nextExerciseAfter(records, recordIndex) });
     // Última serie de la sesión: tras ver el check, se abre la hoja para guardar (así cuenta en tu semana).
-    if (!records.some(hasPending)) window.setTimeout(() => setFinishOpen(true), 900);
+    const progress = sessionSets(records);
+    if (progress.done === progress.total) window.setTimeout(() => setFinishOpen(true), 900);
   }, [patch]);
 
   const onAddSet = useCallback((recordIndex: number) => {
@@ -364,8 +365,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   }
 
   // ─── Datos derivados ─────────────────────────────────────────────────
-  const done = completedSets(draft.records);
-  const total = totalSets(draft.records);
+  const { done, total } = sessionSets(draft.records);
   const volume = volumeLabel(recordsVolume(draft.records), unit);
   const letters = useMemo(() => supersetLetters(draft.records), [draft.records]);
   const exerciseIds = draft.records.map((record) => record.exerciseId).join(",");
@@ -395,12 +395,13 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const previousItem = neighbour(index - 1);
   const nextItem = neighbour(index + 1);
 
-  // Lo que viene tras el descanso, para el anillo: la serie siguiente o el siguiente ejercicio.
+  // Lo que viene tras el descanso, para el anillo: la serie siguiente o el siguiente ejercicio (en el
+  // calentamiento, cada paso es un ejercicio distinto: va su nombre).
   const upcomingIndex = justDone ? justDone.next : index;
   const upcomingRecord = draft.records[upcomingIndex];
   const upcomingSet = upcomingRecord ? upcomingRecord.sets.findIndex((set) => !set.done) : -1;
   const upcoming = !upcomingRecord || upcomingSet < 0 ? undefined
-    : upcomingIndex !== index ? exerciseById(upcomingRecord.exerciseId)?.name : setHeading(upcomingRecord.sets, upcomingSet);
+    : upcomingIndex !== index || upcomingIndex < warmupCount(draft.records) ? exerciseById(upcomingRecord.exerciseId)?.name : setHeading(upcomingRecord.sets, upcomingSet);
 
   const menuRecord = menu.index !== null ? draft.records[menu.index] : undefined;
   const menuExercise = menuRecord ? exerciseById(menuRecord.exerciseId) : undefined;
@@ -463,6 +464,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
         {record && exercise && (
           <SetBlock
             mode={setMode}
+            heading={index < warmupCount(draft.records) && setIndex >= 0 ? recordHeading(draft.records, index, setIndex) : undefined}
             recordIndex={index}
             record={record}
             exercise={exercise}

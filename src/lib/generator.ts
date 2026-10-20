@@ -56,8 +56,6 @@ export interface GeneratedWorkout {
   focus: WorkoutFocus;
   zone?: BodyZone;
   records: ExerciseRecord[];
-  warmup: Exercise[];
-  cooldown: Exercise[];
   restSeconds: number;
   estimatedMinutes: number;
   notes: string[];
@@ -274,19 +272,11 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     else break;
   }
 
-  const mobility = exercises.filter((exercise) => exercise.category === "mobility" && !(exercise.stresses ?? []).some((area) => limitations.includes(area)));
-  const worked = new Set(records.flatMap((record) => exercises.find((item) => item.id === record.exerciseId)?.primary ?? []));
-  const byRelevance = [...mobility].sort((a, b) => b.primary.filter((m) => worked.has(m)).length - a.primary.filter((m) => worked.has(m)).length || (hash(a.id + seed) % 5) - (hash(b.id + seed) % 5));
-  const warmup = focus === "mobility" ? [] : byRelevance.slice(0, 3);
-  const cooldown = focus === "mobility" ? [] : byRelevance.slice(3, 5);
-
   return {
     name: `${zone ? zone.label : focusLabels[focus]} · ${input.minutes} min`,
     focus,
     ...(zone ? { zone: zone.id } : {}),
     records,
-    warmup,
-    cooldown,
     restSeconds,
     estimatedMinutes: estimateMinutes(records, restSeconds),
     notes,
@@ -328,6 +318,11 @@ export function profileLimitations(limitations: string[] | undefined): BodyArea[
   return (limitations ?? []).filter((item): item is BodyArea => item === "knees" || item === "back" || item === "shoulders");
 }
 
+/** Zonas a cuidar hoy: las de tu evaluación más las molestias anotadas en el chequeo de hoy. */
+export function todayLimitations(limitations: string[] | undefined, pain?: ReadinessEntry["pain"]): BodyArea[] {
+  return [...new Set([...profileLimitations(limitations), ...painLimitations(pain)])];
+}
+
 /** Lo que el generador necesita de la evaluación inicial. */
 type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: string[]; recommendation?: { sessionMinutes: number } } | null | undefined;
 
@@ -360,7 +355,7 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
     ...(zoneInfo ? { zone: zoneInfo.id } : {}),
     goal: trainingGoal(profile?.goals, nutritionGoal),
     level: levelFromActivities(profile?.activities),
-    limitations: [...new Set([...profileLimitations(profile?.limitations), ...painLimitations(pain)])],
+    limitations: todayLimitations(profile?.limitations, pain),
     readiness,
     recovery,
     workouts,

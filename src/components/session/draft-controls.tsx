@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, Play, Trash2 } from "lucide-react";
 import { Button, ButtonLink, Sheet } from "@/components/ui";
 import { useDraft } from "@/lib/store";
-import { completedSets, durationSeconds, totalSets } from "@/lib/training";
+import { durationSeconds, sessionSets } from "@/lib/training";
 
 // Pedido de «Terminar y guardar» desde fuera de la sesión: la sesión lo lee al montarse.
 let finishRequested = false;
@@ -42,8 +42,7 @@ export function useDraftControls() {
 export function DraftEndSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { draft, discard } = useDraftControls();
   const [confirming, setConfirming] = useState(false);
-  const done = draft ? completedSets(draft.records) : 0;
-  const total = draft ? totalSets(draft.records) : 0;
+  const { done, total } = draft ? sessionSets(draft.records) : { done: 0, total: 0 };
 
   function close() {
     setConfirming(false);

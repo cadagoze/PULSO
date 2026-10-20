@@ -134,6 +134,8 @@ function CountdownPrompt({ until, setLabel, onConfirm, onDismiss }: { until: num
 
 export interface SetBlockProps {
   mode: SetMode;
+  /** «Calentamiento 2 de 4» en los ejercicios del calentamiento; si no, «Serie 2 de 4». */
+  heading?: string;
   recordIndex: number;
   record: ExerciseRecord;
   exercise: Exercise;
@@ -198,7 +200,7 @@ export function SetBlock(props: SetBlockProps) {
   const previous = previousSet(record, setIndex, last);
   const maxValue = record.unit === "reps" ? limits.reps : limits.seconds;
   const maxLoad = toDisplayWeight(limits.load, loadUnit);
-  const heading = setHeading(record.sets, setIndex);
+  const heading = props.heading ?? setHeading(record.sets, setIndex);
   const label = `${exercise.name}, serie ${setBadge(record.sets, setIndex) === "C" ? "de calentamiento" : setBadge(record.sets, setIndex)}`;
   const showLoad = !bodyweight || set.load > 0 || loadOpen;
   const running = countdown && countdown.setIndex === setIndex && record.unit === "seconds" ? countdown : null;
