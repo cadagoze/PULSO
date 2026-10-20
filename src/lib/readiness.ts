@@ -31,7 +31,7 @@ export const painOptions: Array<{ value: PainArea; label: string }> = [
 /** Qué cambia en la sesión de hoy según el chequeo (un solo texto para Inicio, Entrenar y Bienestar). */
 export const readinessAdvice: Record<Recommendation, string> = {
   planned: "Sesión completa.",
-  short: "Versión corta: un ejercicio y una serie menos.",
+  short: "Sesión más liviana: menos volumen, los mismos ejercicios clave.",
   recovery: "Movilidad suave o una caminata. Recuperarse también es entrenar.",
 };
 
@@ -57,7 +57,7 @@ export function quickReadiness({ date, feel, pain = [], sleepHours, loadRatio, n
 }
 
 /** Cómo llegaste, también en chequeos anteriores al rápido (se deduce de la recomendación). */
-export function readinessFeel(entry: ReadinessEntry): Feel {
+export function readinessFeel(entry: Pick<ReadinessEntry, "feel" | "recommendation">): Feel {
   if (entry.feel) return entry.feel;
   return entry.recommendation === "planned" ? "good" : entry.recommendation === "short" ? "tired" : "exhausted";
 }

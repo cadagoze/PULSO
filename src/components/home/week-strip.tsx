@@ -1,79 +1,49 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
-import { ArrowRight, Check, ChevronRight, Flame } from "lucide-react";
-import { NumberMetric } from "@/components/ui";
-import { CountUp } from "@/components/ui/count-up";
+import { Check, ChevronRight } from "lucide-react";
 import { challengeIcons } from "@/components/progress/challenges-tab";
 import { weekStreak } from "@/lib/analytics";
 import { useChallengeBoard } from "@/lib/use-challenges";
-import { useRoutines, useSettings, useWorkouts } from "@/lib/store";
-import { cleanDays, nextTrainingDay } from "@/lib/training-days";
-import { cn, localDateKey, startOfCurrentWeek } from "@/lib/utils";
+import { useSettings, useWorkouts } from "@/lib/store";
+import { cleanDays, nextTrainingDay, weekdayIndex } from "@/lib/training-days";
+import { cn, localDateKey } from "@/lib/utils";
 
-const labels = ["L", "M", "M", "J", "V", "S", "D"];
-const fullLabels = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
-
-function streakLine(streak: number, met: boolean, remaining: number, paused: boolean, next: string | null) {
-  if (paused) return "Semana en pausa: tu racha te espera.";
-  if (met) return "Meta semanal cumplida.";
-  const missing = remaining === 1 ? "Te falta 1 sesión" : `Te faltan ${remaining} sesiones`;
-  const line = streak === 0 ? `${missing} para empezar tu racha.` : `${missing} para sumar otra semana.`;
-  return next ? `${line} Próximo entreno: ${next}.` : line;
-}
-
-/** La semana como bloque editorial: sesiones hechas en grande, los siete días, la racha y el reto en curso (si hay). */
+/**
+ * «Esta semana», simple: sesiones hechas frente a la meta (● ● ○) y cuándo toca la próxima; con la meta
+ * cumplida, sólo eso (y la racha, si suma). El reto de 30 días aparece sólo si tienes uno en curso.
+ */
 export function WeekStrip({ now }: { now: number }) {
   const [workouts] = useWorkouts();
   const [settings] = useSettings();
-  const [routines] = useRoutines();
-  // Tus días fijos de entreno; si no hay, los días de tu primera rutina.
-  const fixedDays = cleanDays(settings.trainingDays);
-  const planned = new Set(fixedDays.length ? fixedDays : routines[0]?.days ?? []);
   const date = new Date(now);
   const today = localDateKey(date);
-  const start = startOfCurrentWeek(date);
-  const doneDates = new Set(workouts.map((workout) => workout.date));
   const goal = Math.max(1, settings.weeklyGoal);
   const { streak, currentCount, currentMet, currentPaused } = weekStreak(workouts, goal, settings.pausedWeeks, date);
+  const fixedDays = cleanDays(settings.trainingDays);
+  const trainedToday = workouts.some((workout) => workout.date === today);
+  const todayPlanned = !fixedDays.length || fixedDays.includes(weekdayIndex(date));
+  const next = !trainedToday && todayPlanned ? "hoy" : nextTrainingDay(fixedDays, date)?.label ?? null;
   const remaining = Math.max(0, goal - currentCount);
-  const trainedToday = doneDates.has(today);
-  const todayPlanned = fixedDays.includes((date.getDay() + 6) % 7);
-  const upcoming = nextTrainingDay(fixedDays, date);
-  const nextLabel = !fixedDays.length ? null : todayPlanned && !trainedToday ? "hoy" : upcoming?.label ?? null;
-
-  const days = labels.map((short, index) => {
-    const day = new Date(start);
-    day.setDate(start.getDate() + index);
-    const key = localDateKey(day);
-    return { key, short, number: day.getDate(), done: doneDates.has(key), today: key === today, planned: planned.has(index), future: key > today, full: fullLabels[index] };
-  });
+  const missing = remaining === 1 ? "falta 1" : `faltan ${remaining}`;
 
   return (
-    <section className="home-week" aria-labelledby="home-week-title">
-      <div className="home-week-head">
-        <p className="meta">Esta semana · meta {goal}</p>
-        <Link href="/progreso" className="home-week-link">Progreso<ArrowRight size={14} /></Link>
+    <section className={cn("home-week", currentMet && "is-met")} aria-labelledby="home-week-title">
+      <div className="home-section-head">
+        <h2 id="home-week-title" className="meta">Esta semana</h2>
+        <Link href="/progreso" className="home-section-link">Progreso<ChevronRight size={15} aria-hidden="true" /></Link>
       </div>
-      <h2 id="home-week-title" className="sr-only">Tu semana: {currentCount} de {goal} sesiones</h2>
-      <div className="home-week-body">
-        <NumberMetric size="xl" value={<><CountUp value={currentCount} /><span className="nmetric-soft">/{goal}</span></>} label={currentMet ? "Meta de la semana cumplida" : "sesiones esta semana"} />
-        <ol className="home-days">
-          {days.map((day) => (
-            <li
-              key={day.key}
-              className={cn("home-day", day.done && "done", day.today && "today", day.planned && !day.done && "planned", day.future && "future")}
-              aria-label={`${day.full} ${day.number}${day.done ? ", entrenado" : day.planned ? ", planificado" : ""}${day.today ? ", hoy" : ""}`}
-            >
-              <span className="home-day-label" aria-hidden="true">{day.short}</span>
-              <span className="home-day-dot num" aria-hidden="true">{day.done ? <Check size={14} strokeWidth={3} /> : day.number}</span>
-            </li>
-          ))}
+      <div className="home-week-row">
+        <p className="home-week-count"><b className="num">{currentCount}</b><span className="num"> / {goal}</span> {goal === 1 ? "sesión" : "sesiones"}</p>
+        <ol className="home-week-dots" aria-hidden="true">
+          {Array.from({ length: Math.max(goal, currentCount) }, (_, index) => <li key={index} className={cn(index < currentCount && "done")} />)}
         </ol>
       </div>
-      <p className={cn("home-streak", streak > 0 && "active")}>
-        <Flame size={16} aria-hidden="true" />
-        <span><b>{streak > 0 ? `Racha de ${streak} ${streak === 1 ? "semana" : "semanas"}` : "Sin racha aún"}</b> · {streakLine(streak, currentMet, remaining, currentPaused, nextLabel)}</span>
+      <p className="home-week-next">
+        {currentPaused ? "Semana en pausa: tu racha te espera."
+          : currentMet ? <><Check size={15} strokeWidth={2.6} aria-hidden="true" /><span><b>Meta semanal cumplida</b>{streak > 1 ? ` · ${streak} semanas seguidas` : ""}</span></>
+            : next ? <span>Próxima: <b>{next}</b> · te {missing}</span>
+              : <span>Te {missing} esta semana.</span>}
       </p>
       <ChallengeLine />
     </section>

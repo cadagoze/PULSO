@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { trainingLoad } from "@/lib/analytics";
 import { feelOptions, painOptions, painSafety, quickReadiness, readinessAdvice, readinessFeel, type Feel, type PainArea } from "@/lib/readiness";
 import { useReadiness, useWellness, useWorkouts } from "@/lib/store";
@@ -10,9 +10,13 @@ import { cn } from "@/lib/utils";
 
 /**
  * «Cómo estás hoy»: un toque (Bien, Cansado, Muy cansado) ajusta la sesión de hoy. Si hay molestia,
- * se marca la zona y la sesión evita ejercicios que la exijan. Se puede cambiar cuando quieras.
+ * se marca la zona y la sesión evita ejercicios que la exijan. Se puede cambiar cuando quieras. Es el
+ * único chequeo de PULSO: en Inicio va dentro de «Tu cuerpo» (`embedded`, como pregunta) y en
+ * Bienestar, como sección.
  */
-export function BodyCheck({ today, title = "Cómo estás hoy" }: { today: string; title?: string }) {
+export function BodyCheck({ today, title = "Cómo estás hoy", embedded = false }: { today: string; title?: string; embedded?: boolean }) {
+  const titleId = useId();
+  const painId = useId();
   const [entries, setEntries] = useReadiness();
   const [workouts] = useWorkouts();
   const [wellness] = useWellness();
@@ -39,11 +43,12 @@ export function BodyCheck({ today, title = "Cómo estás hoy" }: { today: string
     if (feel && pain.length) save(feel, []);
   }
 
+  const Wrapper = embedded ? "div" : "section";
   return (
-    <section className="home-body" aria-labelledby="home-body-title">
-      <h2 id="home-body-title" className="meta">{title}</h2>
+    <Wrapper className={embedded ? "body-check-embedded" : "home-body"} aria-labelledby={titleId}>
+      {embedded ? <p id={titleId} className="body-question">{title}</p> : <h2 id={titleId} className="meta">{title}</h2>}
       <div className="body-check">
-        <div className="body-feel" role="group" aria-labelledby="home-body-title">
+        <div className="body-feel" role="group" aria-labelledby={titleId}>
           {feelOptions(audience).map((option) => (
             <button key={option.value} type="button" className={cn("body-feel-option", `is-${option.value}`)} aria-pressed={feel === option.value} onClick={() => save(option.value, pain)}>
               {option.label}
@@ -54,8 +59,8 @@ export function BodyCheck({ today, title = "Cómo estás hoy" }: { today: string
           <>
             <p className="body-advice" aria-live="polite">{readinessAdvice[saved.recommendation]}</p>
             <div className="body-pain">
-              <span id="home-pain-title">¿Alguna molestia?</span>
-              <div className="body-pain-toggle" role="group" aria-labelledby="home-pain-title">
+              <span id={painId}>¿Alguna molestia?</span>
+              <div className="body-pain-toggle" role="group" aria-labelledby={painId}>
                 <button type="button" aria-pressed={!showPain} onClick={noPain}>No</button>
                 <button type="button" aria-pressed={showPain} onClick={() => setAskPain(true)}>Sí</button>
               </div>
@@ -75,6 +80,6 @@ export function BodyCheck({ today, title = "Cómo estás hoy" }: { today: string
           <p className="body-hint">Un toque y ajustamos tu sesión de hoy.</p>
         )}
       </div>
-    </section>
+    </Wrapper>
   );
 }

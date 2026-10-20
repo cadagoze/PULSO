@@ -1,6 +1,6 @@
 import { exercises } from "@/data/mock-data";
 import { progressedSets } from "@/lib/progression";
-import { lastRecordFor } from "@/lib/training";
+import { isWorkingSet, lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingLocation, TrainingPreference, WorkoutEntry } from "@/types";
 import { capabilitiesOf, fullGym } from "@/data/equipment";
@@ -117,6 +117,16 @@ function restFor(exercise: Exercise, goal: WorkoutGoal, focus: WorkoutFocus) {
   return compound ? 90 : 60;
 }
 
+/** Una serie de trabajo menos en los ejercicios que tienen tres o más. */
+function oneSetLess(records: ExerciseRecord[]): ExerciseRecord[] {
+  return records.map((record) => {
+    const working = record.sets.filter(isWorkingSet);
+    if (working.length < 3) return record;
+    const last = record.sets.lastIndexOf(working[working.length - 1]);
+    return { ...record, sets: record.sets.filter((_, index) => index !== last) };
+  });
+}
+
 export function estimateMinutes(records: ExerciseRecord[], restSeconds: number) {
   const seconds = records.reduce((sum, record) => {
     const rest = record.restSeconds ?? restSeconds;
@@ -126,6 +136,13 @@ export function estimateMinutes(records: ExerciseRecord[], restSeconds: number) 
 }
 
 export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
+  // Con energía moderada, la misma sesión de un día normal con menos volumen: un ejercicio y una serie
+  // menos (nunca más ejercicios que esa, aunque con menos series cupieran más en el tiempo).
+  if (input.readiness === "short") {
+    const full = generateWorkout({ ...input, readiness: undefined });
+    const records = oneSetLess(full.records.length > 3 ? full.records.slice(0, -1) : full.records);
+    return { ...full, records, estimatedMinutes: estimateMinutes(records, full.restSeconds), notes: ["Energía moderada: menos volumen, los mismos ejercicios clave, para sumar sin acumular fatiga.", ...full.notes] };
+  }
   const goal = input.goal ?? "strength";
   const level = input.level ?? 1;
   const limitations = input.limitations ?? [];
@@ -141,10 +158,6 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   if (input.readiness === "recovery" && focus !== "mobility") {
     notes.push("Tu chequeo pide recuperar: sesión más liviana, con menos series y variantes accesibles.");
     count = Math.max(3, count - 2);
-    setDelta = -1;
-  } else if (input.readiness === "short") {
-    notes.push("Energía moderada: una serie menos por ejercicio para sumar sin acumular fatiga.");
-    count = Math.max(3, count - 1);
     setDelta = -1;
   }
   if (limitations.length) notes.push("Se evitan ejercicios que exigen las zonas que indicaste cuidar.");

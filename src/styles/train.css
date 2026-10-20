@@ -361,12 +361,6 @@
 
 /* ─── Días de entreno ──────────────────────────────────────────────────── */
 .days-toggles button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-.days-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); text-align: left; }
-.days-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.days-row strong { font-size: 16px; font-weight: 600; letter-spacing: .02em; }
-.days-row-action { flex: none; font-size: 13.5px; font-weight: 600; color: var(--accent-text); }
-.days-sheet { display: flex; flex-direction: column; gap: 18px; }
-.days-note { font-size: 13px; line-height: 1.45; }
 
 /* ─── Rutina por zona ──────────────────────────────────────────────────── */
 /* Casa | Gimnasio al inicio de Entrenar, con el equipamiento del lugar debajo. */

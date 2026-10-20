@@ -1,54 +1,58 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useNow } from "@/lib/use-now";
 import { WellnessAssessment } from "@/components/onboarding/wellness-assessment";
-import { BodyCheck } from "@/components/home/body-check";
+import { BodyStatus } from "@/components/home/body-status";
 import { DayFood } from "@/components/home/day-food";
 import { HomeHeader } from "@/components/home/home-header";
+import { ProgressNote } from "@/components/home/progress-note";
 import { TodayHero } from "@/components/home/today-hero";
+import { useHomeCoach } from "@/components/home/use-home-coach";
 import { WeekStrip } from "@/components/home/week-strip";
 import { InstallCard } from "@/components/install/install-card";
-import { todayLine, type DayState } from "@/lib/motivation";
-import { useDraft, useProfile, useReadiness, useSettings, useWorkouts } from "@/lib/store";
-import { completedSets, totalSets } from "@/lib/training";
-import { useRestDay } from "@/lib/use-rest-day";
+import { todayLine } from "@/lib/motivation";
+import { useDraft, useProfile, useWorkouts } from "@/lib/store";
 import { localDateKey } from "@/lib/utils";
 
 /**
- * Inicio responde «¿qué hago hoy?» en pocos segundos: la sesión de hoy con un solo botón, cuánto llevas
- * en la semana, cómo llega tu cuerpo y tu día (comidas, proteína y agua). Nada más compite con «Empezar».
+ * Inicio, el coach del día: tus datos → una lectura → una recomendación → un botón. Primero qué hacer
+ * hoy (con su porqué y, si hace falta, la versión corta); después cómo responde tu cuerpo, la semana, un
+ * dato de progreso y la alimentación en breve. Lo secundario sólo aparece cuando aplica.
  */
 export default function Home() {
   const now = useNow();
   const [profile, setProfile] = useProfile();
-  const [readiness] = useReadiness();
-  const [draft] = useDraft();
-  const [workouts] = useWorkouts();
-  const [settings] = useSettings();
-  const restDay = useRestDay();
 
   // Hasta hidratar no sabemos si hay perfil guardado: evitamos mostrar la evaluación por error.
   if (now === 0) return <HomeSkeleton />;
   if (!profile) return <WellnessAssessment onComplete={setProfile} />;
+  return <CoachHome now={now} />;
+}
 
-  const today = localDateKey(new Date(now));
-  const trainedToday = workouts.some((workout) => workout.date === today);
-  const recommendation = readiness.find((entry) => entry.date === today)?.recommendation;
-  const draftReady = draft ? totalSets(draft.records) > 0 && completedSets(draft.records) === totalSets(draft.records) : false;
-  const state: DayState = draft
-    ? draftReady ? "ready" : "running"
-    : trainedToday ? "done" : restDay ? "rest" : recommendation === "recovery" ? "recovery" : recommendation === "short" ? "short" : "train";
+function CoachHome({ now }: { now: number }) {
+  const home = useHomeCoach(now);
+  const [draft] = useDraft();
+  const [workouts] = useWorkouts();
+  const date = new Date(now);
 
   return (
     <div className="page home">
-      <HomeHeader now={now} line={todayLine({ state, workouts, weeklyGoal: settings.weeklyGoal, pausedWeeks: settings.pausedWeeks, now: new Date(now) })} />
+      <HomeHeader now={now} line={todayLine({ recommendation: home.coach.recommendation, workouts, week: home.week, now: date })} />
       <div className="home-hero-slot">
-        <TodayHero now={now} />
+        <TodayHero now={now} home={home} />
+        {home.tip && (
+          <p className="home-tip">
+            <Lightbulb size={16} aria-hidden="true" />
+            <span>{home.tip}</span>
+          </p>
+        )}
       </div>
       <div className="home-side">
+        {/* El chequeo sirve antes de entrenar: con la sesión en curso o ya hecha, queda sólo la recuperación. */}
+        <BodyStatus now={now} today={localDateKey(date)} check={!draft && !home.trainedToday} />
         <WeekStrip now={now} />
-        {/* El chequeo sirve antes de entrenar: con la sesión en curso o ya hecha, sobra. */}
-        {!draft && !trainedToday && <BodyCheck today={today} />}
+        <ProgressNote now={now} />
         <DayFood now={now} />
         <InstallCard />
       </div>

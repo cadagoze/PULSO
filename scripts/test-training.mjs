@@ -545,18 +545,18 @@ test('portada: foto según la sesión y frase según el progreso', () => {
 
   const wednesday = new Date(2026, 9, 7, 9);
   const day = (date) => ({ id: date, date, completedAt: `${date}T10:00:00.000Z`, durationMinutes: 30, exerciseCount: 4, sets: 12, mode: 'full' });
-  const line = (dates, state = 'train', goal = 3) => motivation.todayLine({ state, workouts: dates.map(day), weeklyGoal: goal, now: wednesday });
-  assert.equal(line([]), 'Tu primera sesión está lista.');
-  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07']), 'Meta de la semana cumplida. Entrena fuerte, recupérate bien.');
-  assert.equal(line(['2026-09-28']), 'Volver es lo que cuenta. Hoy, a tu ritmo.', 'tras días sin entrenar, sin culpa');
-  assert.equal(line(['2026-10-05', '2026-10-06']), 'Te falta 1 sesión para tu meta de la semana.');
-  assert.equal(line(['2026-10-05']), 'Hoy toca entrenar.');
+  const line = (dates, recommendation = 'train-normal', done = 1, goal = 3) => motivation.todayLine({ recommendation, workouts: dates.map(day), week: { done, goal }, now: wednesday });
+  assert.equal(line([], 'train-normal', 0), 'Tu primera sesión está lista.');
+  assert.equal(line(['2026-10-05', '2026-10-06', '2026-10-07'], 'train-normal', 3), 'Vas muy bien esta semana.');
+  assert.equal(line(['2026-09-28'], 'train-normal', 0), 'Constancia antes que perfección.', 'tras días sin entrenar, sin culpa');
+  assert.equal(line(['2026-10-05']), 'Hoy toca avanzar.');
   // El cuerpo manda: con cansancio o recuperación, la frase acompaña en vez de empujar.
-  assert.equal(line(['2026-10-05'], 'recovery'), 'Hoy, movimiento suave. Escuchar al cuerpo también es disciplina.');
-  assert.equal(line(['2026-10-05'], 'short'), 'Hoy, una versión más corta. Constancia antes que perfección.');
-  assert.equal(line(['2026-10-05'], 'done'), 'Hoy ya entrenaste. Ahora toca recuperar: come bien, hidrátate y duerme.');
-  for (const state of ['ready', 'running', 'done', 'rest', 'recovery', 'short', 'train']) {
-    assert.doesNotMatch(line(['2026-10-05'], state), /excusa|nadie lo hará|no la cortes|termínalo/i, `tono: ${state}`);
+  assert.equal(line(['2026-10-05'], 'recovery'), 'Recuperar también es avanzar.');
+  assert.equal(line(['2026-10-05'], 'train-reduced'), 'Entrena según cómo responde tu cuerpo.');
+  assert.equal(line(['2026-10-05'], 'done'), 'Buen trabajo hoy.');
+  assert.equal(line(['2026-10-05'], 'resume-session'), 'Tu entrenamiento te espera.');
+  for (const recommendation of ['resume-session', 'done', 'train-normal', 'train-reduced', 'short-session', 'recovery', 'mobility']) {
+    assert.doesNotMatch(line(['2026-10-05'], recommendation), /excusa|nadie lo hará|no la cortes|termínalo/i, `tono: ${recommendation}`);
   }
 });
 
@@ -1225,6 +1225,124 @@ test('comidas: buscador con sinónimos, comida sugerida y catálogo amplio', () 
   assert.equal(nutrition.suggestedMealSlot(at(13), []), 'almuerzo');
   assert.equal(nutrition.suggestedMealSlot(at(17), []), 'once');
   assert.equal(nutrition.suggestedMealSlot(at(21), []), 'cena');
+});
+
+test('coach de Inicio: recomendación, porqué y acción según el día', () => {
+  const coachLib = load('src/lib/daily-coach.ts');
+  const fresh = Object.fromEntries(analytics.allMuscles.map((muscle) => [muscle, 100]));
+  const on = (date, records) => ({ id: date, date, completedAt: `${date}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: records.length, sets: records.reduce((sum, r) => sum + r.sets.length, 0), mode: 'full', records });
+  const legs = [{ exerciseId: 10, unit: 'reps', sets: [set(10, 20), set(10, 20), set(10, 20)] }, { exerciseId: 11, unit: 'reps', sets: [set(10, 20), set(10, 20), set(10, 20)] }];
+  const base = { now: new Date(2026, 9, 20, 9), draft: null, trainedToday: false, restDay: false, readiness: null, recovery: fresh, focus: 'full', focusByRecovery: true, workouts: [], week: { done: 0, goal: 3 }, short: false, minutes: 38 };
+  const coach = (patch = {}) => coachLib.dailyCoach({ ...base, ...patch });
+  let result = coach();
+  assert.equal(result.recommendation, 'train-normal');
+  assert.equal(result.title, 'Hoy puedes entrenar normal.');
+  assert.equal(result.status, 'Recuperación buena');
+  assert.match(result.reason, /primera sesión/);
+  assert.equal(result.primaryAction, 'Empezar entrenamiento');
+  assert.equal(result.duration, 38);
+  // Sesión en curso: siempre primero continuarla.
+  result = coach({ draft: { minutes: 18, done: 9, total: 16, ready: false, paused: false }, readiness: { recommendation: 'recovery', feel: 'exhausted' } });
+  assert.equal(result.recommendation, 'resume-session');
+  assert.equal(result.reason, '18 min · 9/16 series');
+  assert.equal(result.primaryAction, 'Continuar');
+  assert.equal(coach({ draft: { minutes: 40, done: 16, total: 16, ready: true, paused: false } }).primaryAction, 'Guardar entrenamiento');
+  assert.equal(coach({ trainedToday: true }).recommendation, 'done');
+  // El cuerpo manda: muy cansado → recuperar; día de descanso → movilidad.
+  result = coach({ readiness: { recommendation: 'recovery', feel: 'exhausted' } });
+  assert.equal(result.recommendation, 'recovery');
+  assert.equal(result.status, 'Energía muy baja');
+  assert.equal(result.primaryAction, 'Movilidad 10 min');
+  assert.equal(coach({ restDay: true }).recommendation, 'mobility');
+  // Cansado o con molestia: menos volumen y el porqué.
+  result = coach({ readiness: { recommendation: 'short', feel: 'tired' } });
+  assert.equal(result.recommendation, 'train-reduced');
+  assert.match(result.reason, /energía está baja/);
+  result = coach({ readiness: { recommendation: 'short', feel: 'good', pain: ['knees'] } });
+  assert.equal(result.status, 'Cuidando rodillas');
+  assert.match(result.reason, /rodillas/);
+  assert.equal(coach({ short: true }).recommendation, 'short-session');
+  // Recuperación: piernas entrenadas ayer → hoy torso, con el porqué.
+  const tiredLegs = { ...fresh, quads: 55, hamstrings: 60, glutes: 58, calves: 80 };
+  result = coach({ recovery: tiredLegs, focus: 'upper', workouts: [on('2026-10-19', legs)], week: { done: 1, goal: 3 } });
+  assert.equal(result.reason, 'Entrenaste piernas ayer: hoy priorizamos torso.');
+  assert.equal(result.status, 'Recuperación parcial');
+  assert.equal(coach({ recovery: tiredLegs, focus: 'upper', workouts: [on('2026-10-17', legs)], week: { done: 1, goal: 3 } }).reason, 'Piernas todavía se recuperan: hoy priorizamos torso.');
+  assert.doesNotMatch(coach({ recovery: tiredLegs, focus: 'upper', focusByRecovery: false, workouts: [on('2026-10-19', legs)], week: { done: 1, goal: 3 } }).reason, /priorizamos/, 'si eligió el enfoque, no se explica por recuperación');
+  // Semana y días sin entrenar.
+  assert.equal(coach({ workouts: [on('2026-10-17', legs)], week: { done: 1, goal: 3 } }).reason, 'Llevas 3 días sin entrenar y tu recuperación es buena.');
+  assert.equal(coach({ workouts: [on('2026-10-19', legs)], week: { done: 2, goal: 3 } }).reason, 'Con esta sesión cumples tu meta de la semana.');
+  assert.equal(coach({ workouts: [on('2026-10-19', legs)], week: { done: 3, goal: 3 } }).title, 'Semana completada: lo de hoy suma extra.');
+  for (const patch of [{}, { trainedToday: true }, { restDay: true }, { short: true }, { readiness: { recommendation: 'short', feel: 'tired' } }, { readiness: { recommendation: 'recovery', feel: 'exhausted' } }]) {
+    const { title, reason } = coach(patch);
+    assert.doesNotMatch(`${title} ${reason}`, /excusa|sin falta|no te rindas|cansado|cansada/i, 'tono sin presión y sin género');
+  }
+});
+
+test('cansado: la misma sesión con menos volumen, nunca más ejercicios', () => {
+  for (const [focus, goal] of [['upper', 'strength'], ['lower', 'muscle'], ['full', 'weight']]) {
+    const input = { preference: { location: 'home', equipment: ['dumbbells', 'bench'] }, minutes: 30, focus, goal, level: 2, seed: 4 };
+    const normal = generator.generateWorkout(input);
+    const tired = generator.generateWorkout({ ...input, readiness: 'short' });
+    const sets = (plan) => plan.records.reduce((sum, record) => sum + record.sets.length, 0);
+    assert.ok(tired.records.length <= normal.records.length, `${focus}: no suma ejercicios`);
+    assert.ok(sets(tired) < sets(normal), `${focus}: menos series`);
+    assert.deepEqual(tired.records.map((record) => record.exerciseId), normal.records.slice(0, tired.records.length).map((record) => record.exerciseId), `${focus}: los mismos ejercicios, en el mismo orden`);
+    assert.match(tired.notes[0], /Energía moderada/);
+  }
+});
+
+test('coach de Inicio: consejo del día ligado a la sesión', () => {
+  const coachLib = load('src/lib/daily-coach.ts');
+  const press = { exerciseId: 12, unit: 'reps', sets: [set(8, 20)] };
+  const top = (rir) => ({ id: 'w', date: '2026-10-18', completedAt: '2026-10-18T18:00:00.000Z', durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: 12, unit: 'reps', sets: [set(12, 20, { rir }), set(12, 20, { rir }), set(12, 20, { rir })] }] });
+  assert.match(coachLib.dailyTip({ recommendation: 'train-normal', records: [press], workouts: [top(2)] }), /^Hoy en press de pecho con mancuernas: sube a 22 kg y vuelve a 8 repeticiones\.$/);
+  assert.match(coachLib.dailyTip({ recommendation: 'train-normal', records: [press], workouts: [] }), /2 o 3 repeticiones en reserva/, 'sin historial: carga con margen');
+  assert.match(coachLib.dailyTip({ recommendation: 'train-normal', records: [{ exerciseId: 31, unit: 'reps', sets: [set(10, 0)] }], workouts: [] }), /^Hoy en flexión de brazos: /, 'peso corporal: su clave técnica');
+  assert.match(coachLib.dailyTip({ recommendation: 'train-reduced', records: [press], workouts: [] }), /reserva/);
+  assert.equal(coachLib.dailyTip({ recommendation: 'resume-session', records: [press], workouts: [] }), null);
+});
+
+test('versión corta: lo de mayor impacto, con equilibrio y en 20 minutos', () => {
+  const short = load('src/lib/short-session.ts');
+  const generatorLib = load('src/lib/generator.ts');
+  const pending = (n, value = 10, load = 10) => Array.from({ length: n }, () => ({ value, load, done: false, kind: 'normal' }));
+  const session = [
+    { exerciseId: 10, unit: 'reps', sets: pending(4), restSeconds: 150 },
+    { exerciseId: 47, unit: 'reps', sets: pending(3, 12, 4), restSeconds: 60 },
+    { exerciseId: 12, unit: 'reps', sets: pending(4), restSeconds: 150 },
+    { exerciseId: 34, unit: 'seconds', sets: pending(3, 30, 0), restSeconds: 60 },
+    { exerciseId: 14, unit: 'reps', sets: pending(4), restSeconds: 150 },
+    { exerciseId: 40, unit: 'reps', sets: pending(3, 10, 0), restSeconds: 90 },
+  ];
+  assert.ok(generatorLib.estimateMinutes(session, 90) > 35, 'la sesión completa es larga');
+  const result = Array.from(short.shortVersion(session, 90));
+  const ids = result.map((record) => record.exerciseId);
+  assert.ok(ids.length <= 4 && ids.length >= 3, `entre 3 y 4 ejercicios (${ids})`);
+  for (const id of [10, 12, 14]) assert.ok(ids.includes(id), `mantiene pierna, empuje y tirón (${id})`);
+  assert.ok(!ids.includes(47) && !ids.includes(34), 'sin aislamiento ni núcleo mientras haya compuestos');
+  assert.deepEqual(ids, [...ids].sort((a, b) => session.findIndex((r) => r.exerciseId === a) - session.findIndex((r) => r.exerciseId === b)), 'en el orden original');
+  assert.ok(generatorLib.estimateMinutes(result, 90) <= 17, 'cabe con su calentamiento en 20 min');
+  assert.ok(result.every((record) => record.sets.length >= 2 && record.restSeconds <= 90));
+  assert.equal(session[0].sets.length, 4, 'no modifica la sesión original');
+  assert.equal(Array.from(short.shortVersion([session[0]], 90)).length, 1);
+});
+
+test('progreso relevante: un solo dato, el más valioso', () => {
+  const highlightLib = load('src/lib/highlight.ts');
+  const now = new Date(2026, 9, 20, 9);
+  const on = (date, records, extra = {}) => ({ id: date, date, completedAt: `${date}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: records.length, sets: 3, mode: 'full', records, ...extra });
+  const press = (load) => [{ exerciseId: 12, unit: 'reps', sets: [set(8, load), set(8, load)] }];
+  const pick = (workouts, goal = 3) => highlightLib.progressHighlight(workouts, { now, goal });
+  assert.equal(pick([]), null);
+  const record = pick([on('2026-10-18', press(26), { prs: [{ exerciseId: 12, kind: 'load', value: 26, previous: 24 }] })]);
+  assert.deepEqual({ ...record }, { kind: 'record', value: 'Nuevo récord', label: 'Press de pecho con mancuernas · 26 kg × 8' });
+  const stronger = pick([on('2026-09-28', press(20)), on('2026-10-12', press(24))]);
+  assert.deepEqual({ ...stronger }, { kind: 'strength', value: '+4 kg', label: 'en press de pecho con mancuernas · últimas 4 semanas' });
+  const weeks = ['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-13', '2026-10-14', '2026-10-15'].map((date) => on(date, press(20)));
+  assert.equal(pick(weeks).kind, 'streak');
+  assert.equal(pick(weeks).value, '3 semanas');
+  assert.equal(pick([on('2026-10-19', press(20))]), null, 'nada destaca: no se inventa');
 });
 
 test('conteo de cifras: lee y escribe números en formato chileno', () => {

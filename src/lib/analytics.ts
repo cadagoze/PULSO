@@ -50,8 +50,10 @@ export function weekRange(now = new Date(), offsetWeeks = 0) {
 export function muscleRecovery(workouts: WorkoutEntry[], now = Date.now()) {
   const fatigue = emptyMuscleMap();
   for (const workout of workouts) {
-    const elapsed = now - new Date(workout.completedAt).getTime();
-    if (elapsed < 0 || elapsed > 3 * DAY) continue;
+    const age = now - new Date(workout.completedAt).getTime();
+    // Un entrenamiento recién guardado cuenta aunque el reloj de la pantalla vaya unos segundos atrás.
+    if (age < -HOUR || age > 3 * DAY) continue;
+    const elapsed = Math.max(0, age);
     const { sets, hardRatio } = workoutMuscleSets(workout);
     const intensity = 1 + hardRatio * 0.2;
     for (const muscle of allMuscles) {

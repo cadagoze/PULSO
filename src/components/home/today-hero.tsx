@@ -3,45 +3,41 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import Link from "@/components/ui/app-link";
-import { ChartNoAxesColumn, Check, Pause, Play, SlidersHorizontal, Square, StretchHorizontal } from "lucide-react";
+import { ChartNoAxesColumn, Check, Pause, Play, SlidersHorizontal, Square, StretchHorizontal, Timer } from "lucide-react";
+import type { HomeCoach } from "@/components/home/use-home-coach";
 import { DraftEndSheet, requestFinish, useDraftControls } from "@/components/session/draft-controls";
 import { RestStatus } from "@/components/session/rest-away";
 import { useProgramActions } from "@/components/train/program-actions";
-import { useActiveProgram, useTodayPlan } from "@/components/train/today-plan";
 import { ButtonLink, Button, MetaLine, ProgressBar } from "@/components/ui";
 import { PhotoCard } from "@/components/ui/cards";
 import { zoneById } from "@/data/body-zones";
 import { heroKind, heroPhoto, type HeroPhoto } from "@/data/hero-photos";
+import type { DailyCoachResult } from "@/lib/daily-coach";
 import { focusLabels, goalLabels } from "@/lib/generator";
 import { programSessionName } from "@/lib/programs";
-import { painNote } from "@/lib/readiness";
 import { useStartMobility, useStartWorkout } from "@/lib/session";
+import { SHORT_MINUTES } from "@/lib/short-session";
 import { useDraft, usePreference, useWorkouts } from "@/lib/store";
-import { sessionSets } from "@/lib/training";
+import { durationSeconds, sessionSets } from "@/lib/training";
 import { usePersonalization } from "@/lib/use-personalize";
-import { useRestDay } from "@/lib/use-rest-day";
-import { localDateKey, localDaySeed } from "@/lib/utils";
+import { cn, localDateKey, localDaySeed } from "@/lib/utils";
 
 /**
- * Lo que toca hoy como portada: la misma sesión que Entrenar (calentamiento incluido), con un solo
- * botón para empezar. También cubre el entrenamiento a medias, el día de descanso y el ya hecho.
+ * «Hoy», la acción principal de Inicio: la sesión que toca (la misma de Entrenar, con calentamiento), la
+ * recomendación del coach con su porqué y un solo botón. Un entrenamiento en curso va siempre primero;
+ * también cubre el día ya entrenado, el de recuperar y la versión corta.
  */
-export function TodayHero({ now }: { now: number }) {
+export function TodayHero({ now, home }: { now: number; home: HomeCoach }) {
   const [draft] = useDraft();
   const [workouts] = useWorkouts();
   const [preference] = usePreference();
-  const today = useTodayPlan(now);
-  const active = useActiveProgram(now);
+  const { today, active, coach, records, minutes } = home;
   const { startSession } = useProgramActions();
   const start = useStartWorkout();
   const startMobility = useStartMobility();
-  const restDay = useRestDay();
   const { audience } = usePersonalization();
   const seed = localDaySeed(now);
   const place = preference.location === "gym" ? "Gimnasio" : "Casa";
-  const recommendation = today.readiness?.recommendation;
-  const pain = today.readiness?.pain;
-  const doneToday = workouts.filter((workout) => workout.date === localDateKey(new Date(now)));
 
   if (draft) {
     const { done, total } = sessionSets(draft.records);
@@ -51,27 +47,29 @@ export function TodayHero({ now }: { now: number }) {
       <HeroFrame
         photo={heroPhoto("home", seed, audience)}
         tag={ready ? <><Check size={13} strokeWidth={3} aria-hidden="true" />Listo para guardar</> : <><span className="home-live-dot" aria-hidden="true" />En curso</>}
-        meta={ready ? "Entrenamiento completo" : "Entrenamiento a medias"}
-        title={draft.name}
+        meta={ready ? "Entrenamiento completo" : "Entrenamiento en curso"}
+        title={draft.name.replace(/ · \d+ min$/, "")}
       >
         <div className="home-hero-progress">
-          <MetaLine items={[<><b className="num">{done}</b> de <b className="num">{total}</b> series</>, ready ? "Sin guardar" : draft.runningSince === null ? "En pausa" : <RestStatus key="rest" restUntil={draft.restUntil} fallback="Reloj en marcha" />]} />
+          <MetaLine items={[<><b className="num">{Math.floor(durationSeconds(draft, now) / 60)}</b> min</>, <><b className="num">{done}/{total}</b> series</>, ready ? "Sin guardar" : draft.runningSince === null ? "En pausa" : <RestStatus key="rest" restUntil={draft.restUntil} fallback="Reloj en marcha" />]} />
           <ProgressBar value={total ? (done / total) * 100 : 0} label="Series completadas" />
         </div>
         {ready
           ? <ButtonLink href="/entrenar/sesion?terminar=1" size="l" block onClick={requestFinish}><Check size={18} />Guardar entrenamiento</ButtonLink>
-          : <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar entrenamiento</ButtonLink>}
+          : <ButtonLink href="/entrenar/sesion" size="l" block><Play size={18} fill="currentColor" />Continuar</ButtonLink>}
         <DraftButtons />
       </HeroFrame>
     );
   }
 
   // Ya entrenaste hoy: la portada lo celebra y lleva a tu progreso; entrenar otra vez queda a un toque.
+  const doneToday = workouts.filter((workout) => workout.date === localDateKey(new Date(now)));
   if (doneToday.length) {
     const last = doneToday.reduce((latest, workout) => ((workout.completedAt ?? "") > (latest.completedAt ?? "") ? workout : latest));
     return (
       <HeroFrame photo={heroPhoto("mobility", seed, audience)} tag={<><Check size={13} strokeWidth={3} aria-hidden="true" />Hecho hoy</>} meta="Entrenamiento completado" title={(last.name ?? "Entrenamiento").replace(/ · \d+ min$/, "")}>
         <MetaLine className="home-hero-details" items={[<><b className="num">{Math.round(last.durationMinutes)}</b> min</>, <><b className="num">{last.sets}</b> series</>, last.prs?.length ? <><b className="num">{last.prs.length}</b> {last.prs.length === 1 ? "récord" : "récords"}</> : null, doneToday.length > 1 ? `${doneToday.length} sesiones hoy` : null]} />
+        <CoachLine coach={coach} />
         <div className="home-hero-actions home-hero-rest">
           <ButtonLink href="/progreso" size="l" block><ChartNoAxesColumn size={18} />Ver mi progreso</ButtonLink>
           <Link href="/entrenar" className="home-hero-anyway">o entrena otra vez</Link>
@@ -80,33 +78,8 @@ export function TodayHero({ now }: { now: number }) {
     );
   }
 
-  if (active?.next) {
-    const { program, next, day, records } = active;
-    const recovering = recommendation === "recovery";
-    const programPlace = program.location === "any" ? place : program.location === "gym" ? "Gimnasio" : "Casa";
-    const note = pain?.length
-      ? "Con molestias, versión corta. Si un ejercicio molesta, cámbialo desde su menú."
-      : recommendation === "short" ? "Versión corta por tu chequeo: una serie menos por ejercicio."
-        : recovering ? "Tu cuerpo pide recuperar: hoy, mejor movilidad." : undefined;
-    return (
-      <HeroFrame
-        photo={heroPhoto(restDay || recovering ? "mobility" : heroKind({ programGoal: program.goal, location: program.location === "any" ? preference.location : program.location }), seed, audience)}
-        tag={restDay ? "Día de descanso" : `Semana ${next.week} de ${program.weeks}`}
-        meta={program.name}
-        title={day ? `${day.name} · ${day.focus}` : programSessionName(program, next.week, next.day)}
-        note={note}
-      >
-        <Details count={records.length} minutes={program.minutes} place={programPlace} />
-        <Actions
-          disabled={!records.length}
-          onStart={() => void startSession(program, next.week, next.day, { easier: recommendation === "short" || Boolean(pain?.length) })}
-          rest={restDay || recovering ? () => void startMobility() : undefined}
-        />
-      </HeroFrame>
-    );
-  }
-
-  if (!today.ready) {
+  const program = home.source === "program" && active?.next ? active : null;
+  if (!program && !today.ready) {
     return (
       <HeroFrame photo={heroPhoto("home", seed, audience)} tag="Hoy" meta="Preparando" title="Armando tu sesión…">
         <div className="home-hero-skeleton" aria-hidden="true" />
@@ -114,68 +87,88 @@ export function TodayHero({ now }: { now: number }) {
     );
   }
 
+  const recovering = coach.recommendation === "recovery" || coach.recommendation === "mobility";
+  const sessionTitle = program?.next
+    ? program.day ? `${program.day.name} · ${program.day.focus}` : programSessionName(program.program, program.next.week, program.next.day)
+    : zoneById(today.zone)?.label ?? focusLabels[today.focus];
+  const sessionPlace = program && program.program.location !== "any" ? (program.program.location === "gym" ? "Gimnasio" : "Casa") : place;
+  const begin = () => {
+    if (program?.next) {
+      void startSession(program.program, program.next.week, program.next.day, { easier: coach.recommendation === "train-reduced", short: today.short });
+      return;
+    }
+    const name = today.short ? today.name.replace(/\d+ min$/, `${SHORT_MINUTES} min`) : today.name;
+    void start({ name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } });
+  };
+  const photoKind = recovering ? "mobility"
+    : program ? heroKind({ programGoal: program.program.goal, location: program.program.location === "any" ? preference.location : program.program.location })
+      : heroKind({ focus: today.focus, location: preference.location });
+
   return (
     <HeroFrame
-      photo={heroPhoto(restDay ? "mobility" : heroKind({ focus: today.focus, location: preference.location }), seed, audience)}
-      tag={restDay ? "Día de descanso" : "Hoy"}
-      meta={goalLabels[today.goal]}
-      title={zoneById(today.zone)?.label ?? focusLabels[today.focus]}
-      note={painNote(pain) ?? (recommendation && recommendation !== "planned" ? today.plan?.notes[0] : undefined)}
+      photo={heroPhoto(photoKind, seed, audience)}
+      tag={recovering ? (coach.recommendation === "mobility" ? "Día de descanso" : "Recuperar") : program?.next ? `Semana ${program.next.week} de ${program.program.weeks}` : "Hoy"}
+      meta={recovering ? "Recuperación" : program ? program.program.name : goalLabels[today.goal]}
+      title={recovering ? "Movilidad suave" : sessionTitle}
     >
-      <Details count={today.records.length} minutes={today.estimated} place={place} />
-      <Actions
-        disabled={!today.records.length}
-        onStart={() => void start({ name: today.name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } })}
-        rest={restDay ? () => void startMobility() : undefined}
-      />
+      {/* Al responder el chequeo o elegir la versión corta, la lectura cambia con un fundido breve. */}
+      <div key={`${recovering}-${minutes}-${records.length}`} className="home-hero-swap">
+        {recovering
+          ? <MetaLine className="home-hero-details" items={[<><b className="num">10</b> min</>, "Sin equipamiento", "Suave"]} />
+          : <MetaLine className="home-hero-details" items={[<><b className="num">{minutes}</b> min</>, sessionPlace, <><b className="num">{records.length}</b> {records.length === 1 ? "ejercicio" : "ejercicios"}</>]} />}
+      </div>
+      <CoachLine coach={coach} />
+      {recovering ? (
+        <div className="home-hero-actions home-hero-rest">
+          <Button size="l" block onClick={() => void startMobility()}><StretchHorizontal size={18} />{coach.primaryAction}</Button>
+          <button type="button" className="home-hero-anyway" disabled={!records.length} onClick={begin}>o entrena igual: {sessionTitle}</button>
+        </div>
+      ) : (
+        <div className="home-hero-actions">
+          <Button size="l" block disabled={!records.length} onClick={begin}><Play size={18} fill="currentColor" />{coach.primaryAction}</Button>
+          <ButtonLink href="/entrenar" variant="glass" size="l" className="home-hero-more" aria-label="Ajustar entrenamiento" title="Ajustar entrenamiento">
+            <SlidersHorizontal size={19} />
+          </ButtonLink>
+        </div>
+      )}
+      {home.canShorten && (
+        <button type="button" className="home-short" aria-pressed={today.short} onClick={() => today.setShort(!today.short)}>
+          <Timer size={15} aria-hidden="true" />
+          {today.short
+            ? <span>Volver a la sesión completa · <span className="num">{home.fullMinutes}</span> min</span>
+            : <span>¿Poco tiempo? <b>Versión {SHORT_MINUTES} min</b></span>}
+        </button>
+      )}
     </HeroFrame>
   );
 }
 
-function HeroFrame({ photo, tag, meta, title, note, children }: { photo: HeroPhoto; tag: ReactNode; meta: string; title: string; note?: string; children: ReactNode }) {
+/** Lo que dice el coach: cómo llega el cuerpo y qué conviene («Recuperación buena. Hoy puedes entrenar normal.») y por qué. */
+function CoachLine({ coach }: { coach: DailyCoachResult }) {
+  return (
+    <div className="home-coach" aria-live="polite">
+      <div key={`${coach.recommendation}|${coach.status}|${coach.title}|${coach.reason}`} className="home-hero-swap">
+        <p className="home-coach-title">
+          <span className={cn("home-coach-dot", !coach.positive && "is-care")} aria-hidden="true" />
+          <span><span className="home-coach-status">{coach.status}.</span> {coach.title}</span>
+        </p>
+        <p className="home-coach-reason">{coach.reason}</p>
+      </div>
+    </div>
+  );
+}
+
+function HeroFrame({ photo, tag, meta, title, children }: { photo: HeroPhoto; tag: ReactNode; meta: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby="home-hero-title">
       <PhotoCard photo={photo} priority tag={tag} className="home-hero" sizes="(max-width: 960px) 100vw, 640px">
         <div className="home-hero-head">
           <p className="meta home-hero-meta">{meta}</p>
           <h2 id="home-hero-title" className="home-hero-title">{title}</h2>
-          {note && <p className="home-hero-note">{note}</p>}
         </div>
         {children}
       </PhotoCard>
     </section>
-  );
-}
-
-function Details({ count, minutes, place }: { count: number; minutes: number; place: string }) {
-  return (
-    <MetaLine
-      className="home-hero-details"
-      items={[
-        <><b className="num">{count}</b> {count === 1 ? "ejercicio" : "ejercicios"}</>,
-        <><b className="num">{minutes}</b> min</>,
-        place,
-      ]}
-    />
-  );
-}
-
-function Actions({ disabled, onStart, rest }: { disabled: boolean; onStart: () => void; rest?: () => void }) {
-  if (rest) {
-    return (
-      <div className="home-hero-actions home-hero-rest">
-        <Button size="l" block onClick={rest}><StretchHorizontal size={18} />Movilidad 10 min</Button>
-        <button type="button" className="home-hero-anyway" disabled={disabled} onClick={onStart}>o entrena igual</button>
-      </div>
-    );
-  }
-  return (
-    <div className="home-hero-actions">
-      <Button size="l" block disabled={disabled} onClick={onStart}><Play size={18} fill="currentColor" />Empezar entrenamiento</Button>
-      <ButtonLink href="/entrenar" variant="glass" size="l" className="home-hero-more" aria-label="Ajustar entrenamiento" title="Ajustar entrenamiento">
-        <SlidersHorizontal size={19} />
-      </ButtonLink>
-    </div>
   );
 }
 

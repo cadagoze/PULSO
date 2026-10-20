@@ -10,11 +10,6 @@ legend.nut-label { margin-bottom: 10px; }
 .nut-hint { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
 
 /* ─── Invitación a calcular ────────────────────────────────────────────── */
-.nut-prompt { position: relative; display: flex; flex-direction: column; gap: 22px; padding: 24px 22px 22px; border-radius: var(--radius-xl); overflow: hidden; }
-.nut-prompt > * { position: relative; z-index: 3; }
-.nut-prompt-number { font-size: clamp(76px, 24vw, 120px); color: rgb(242 241 236 / 92%); }
-.nut-prompt-body { display: flex; flex-direction: column; gap: 10px; }
-.nut-prompt-body p:not(.meta) { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); max-width: 42ch; }
 
 /* ─── Resumen del día ──────────────────────────────────────────────────── */
 .nut-summary { display: flex; flex-direction: column; gap: 16px; }

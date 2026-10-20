@@ -5,6 +5,7 @@ import { availableEquipment, todayLimitations } from "@/lib/generator";
 import { easierRecords, programById, programSessionName, programSessionRecords } from "@/lib/programs";
 import { useStartWorkout } from "@/lib/session";
 import { usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
+import { SHORT_MINUTES, shortVersion } from "@/lib/short-session";
 import { localDateKey } from "@/lib/utils";
 import { warmupFor, warmupRecords } from "@/lib/warmup";
 import type { Program } from "@/types";
@@ -45,21 +46,22 @@ export function useProgramActions() {
 
   /**
    * Entrena una sesión. Si el programa no está activo, primero lo activa (con confirmación) para que cuente el avance.
-   * Con `easier` (chequeo «cansado») cada ejercicio lleva una serie menos. Empieza con el calentamiento de esa
-   * sesión (salvo que lo hayas quitado).
+   * Con `easier` (chequeo «cansado») cada ejercicio lleva una serie menos y con `short`, la versión de 20 minutos.
+   * Empieza con el calentamiento de esa sesión (salvo que lo hayas quitado).
    */
-  const startSession = useCallback(async (program: Program, week: number, day: number, { easier = false }: { easier?: boolean } = {}) => {
+  const startSession = useCallback(async (program: Program, week: number, day: number, { easier = false, short = false }: { easier?: boolean; short?: boolean } = {}) => {
     if (progress?.programId !== program.id && !(await begin(program))) return;
     const records = programSessionRecords(program, week, day, workouts);
-    const main = easier ? easierRecords(records) : records;
+    const reduced = easier ? easierRecords(records) : records;
+    const main = short ? shortVersion(reduced, settings.defaultRest, { warmup: settings.warmup !== false }) : reduced;
     const pain = readiness.find((entry) => entry.date === localDateKey())?.pain;
-    const warmup = settings.warmup === false ? [] : warmupFor({ records: main, limitations: todayLimitations(profile?.limitations, pain), equipment: availableEquipment(preference), minutes: program.minutes });
+    const warmup = settings.warmup === false ? [] : warmupFor({ records: main, limitations: todayLimitations(profile?.limitations, pain), equipment: availableEquipment(preference), minutes: short ? SHORT_MINUTES : program.minutes });
     start({
       name: programSessionName(program, week, day),
       records: [...warmupRecords(warmup), ...main],
       source: { type: "program", programId: program.id, week, day },
     });
-  }, [begin, preference, profile?.limitations, progress?.programId, readiness, settings.warmup, start, workouts]);
+  }, [begin, preference, profile?.limitations, progress?.programId, readiness, settings.defaultRest, settings.warmup, start, workouts]);
 
   return { progress, begin, abandon, restart, startSession };
 }

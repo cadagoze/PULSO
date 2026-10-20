@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
 import { availableEquipment, estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
@@ -9,6 +9,7 @@ import { progressedSets } from "@/lib/progression";
 import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
+import { SHORT_MINUTES, shortVersion } from "@/lib/short-session";
 import { warmupFor, warmupRecords } from "@/lib/warmup";
 import type { Exercise, ExerciseLevel, ExerciseRecord, MuscleGroup, WorkoutEntry } from "@/types";
 import { useLatestWeight } from "@/lib/use-nutrition";
@@ -48,6 +49,8 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   // Zona del cuerpo elegida (glúteos, brazos…): manda sobre el enfoque mientras esté puesta.
   const [zone, setZone] = useState<BodyZone | null>(() => zoneById(initialZone)?.id ?? null);
   const [variant, setVariant] = useState(0);
+  // «¿Poco tiempo?»: la misma sesión en su versión de 20 minutos (lo de mayor impacto).
+  const [short, setShort] = useState(false);
   const [edits, setEdits] = useState<{ key: string; records: ExerciseRecord[] } | null>(null);
 
   const hydrated = now !== 0;
@@ -71,21 +74,25 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   // La lista editable se reinicia cuando cambian las entradas del generador.
   const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, readiness?.recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
-  const records = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
+  const baseRecords = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
+  const restSeconds = plan?.restSeconds ?? settings.defaultRest;
+  const includeWarmup = settings.warmup !== false;
+  const records = useMemo(() => (short ? shortVersion(baseRecords, restSeconds, { warmup: includeWarmup }) : baseRecords), [baseRecords, includeWarmup, restSeconds, short]);
 
   function editRecords(update: (current: ExerciseRecord[]) => ExerciseRecord[]) {
-    setEdits({ key: planKey, records: update(records) });
+    setEdits({ key: planKey, records: update(baseRecords) });
   }
 
   // Calentamiento para lo que de verdad vas a hacer (también con tus cambios); la sesión de movilidad no lo lleva.
-  const warmup = useMemo(() => {
+  const warmupOf = useCallback((list: ExerciseRecord[], length: number) => {
     if (!plan || plan.focus === "mobility") return [];
-    return warmupFor({ records, limitations, equipment: availableEquipment(preference), minutes });
-  }, [limitations, minutes, plan, preference, records]);
-  const includeWarmup = settings.warmup !== false;
+    return warmupFor({ records: list, limitations, equipment: availableEquipment(preference), minutes: length });
+  }, [limitations, plan, preference]);
+  const warmup = useMemo(() => warmupOf(records, short ? SHORT_MINUTES : minutes), [minutes, records, short, warmupOf]);
   const fullRecords = [...(includeWarmup ? warmupRecords(warmup) : []), ...records];
-  const restSeconds = plan?.restSeconds ?? settings.defaultRest;
   const estimated = estimateMinutes(fullRecords, restSeconds);
+  // Lo que dura la sesión completa (para ofrecer la versión corta sólo cuando ahorra tiempo de verdad).
+  const fullEstimated = useMemo(() => (short ? estimateMinutes([...(includeWarmup ? warmupRecords(warmupOf(baseRecords, minutes)) : []), ...baseRecords], restSeconds) : estimated), [baseRecords, estimated, includeWarmup, minutes, restSeconds, short, warmupOf]);
   const name = plan ? plan.name : "Entrenamiento de hoy";
 
   const exercises = records.map((record) => exerciseById(record.exerciseId)).filter((item): item is Exercise => Boolean(item));
@@ -104,11 +111,16 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     minutes,
     variant,
     readiness,
+    recovery,
     records,
     warmup,
     fullRecords,
     restSeconds,
     estimated,
+    fullEstimated,
+    fullCount: baseRecords.length,
+    short,
+    setShort,
     edited,
     primary,
     secondary,
