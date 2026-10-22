@@ -1,8 +1,11 @@
 import Image from "next/image";
-import { CircleAlert, Feather, Wind } from "lucide-react";
+import { ChevronDown, CircleAlert, Feather, Timer, Wind } from "lucide-react";
 import { equipmentLabels, muscleLabels } from "@/data/catalog";
+import { normalEffort, rangeOfMotion, stopSigns, tempoCue } from "@/data/technique";
 import { ExerciseVisual, exercisePhoto } from "@/components/exercises/exercise-visual";
 import { MuscleMap } from "@/components/ui/muscle-map";
+import type { ExerciseWhy } from "@/lib/selection";
+import { joinList } from "@/lib/utils";
 import type { Exercise } from "@/types";
 
 export function equipmentText(exercise: Exercise) {
@@ -28,25 +31,28 @@ function TechniqueVisual({ exercise }: { exercise: Exercise }) {
 }
 
 /**
- * Ficha técnica completa de un ejercicio, en tono editorial: pasos numerados, la clave,
- * errores comunes, músculos, respiración y versión más fácil.
+ * Cómo hacer un ejercicio, de lo esencial a lo completo: por qué está en tu sesión (si se sabe), los
+ * tres pasos, el recorrido de inicio a final con su ritmo, qué debes sentir y cuándo detenerte. La clave,
+ * los errores comunes, los músculos, la respiración y la versión más fácil quedan en «Ver técnica completa».
  * `showBenefit={false}` omite «Para qué sirve» cuando la pantalla ya lo muestra.
  */
-export function ExerciseTechnique({ exercise, showVisual = true, showBenefit = true }: { exercise: Exercise; showVisual?: boolean; showBenefit?: boolean }) {
+export function ExerciseTechnique({ exercise, why, showBenefit = true }: { exercise: Exercise; why?: ExerciseWhy | null; showBenefit?: boolean }) {
   const id = `tq-${exercise.id}`;
+  const tempo = tempoCue(exercise);
+  const muscles = joinList(exercise.primary.map((muscle) => muscleLabels[muscle].toLowerCase()));
+  const feel = exercise.category === "cardio" ? null : exercise.category === "mobility" ? `Estiramiento en ${muscles}.` : `Trabajo en ${muscles}.`;
   return (
     <div className="exercise-technique lib-tq">
-      {showVisual && <TechniqueVisual exercise={exercise} />}
-
-      {showBenefit && (
-        <section className="lib-tq-block" aria-labelledby={`${id}-benefit`}>
-          <h3 id={`${id}-benefit`} className="meta">Para qué sirve</h3>
-          <p className="lib-tq-lead">{exercise.benefit}</p>
+      {why && (
+        <section className="lib-tq-block" aria-labelledby={`${id}-why`}>
+          <h3 id={`${id}-why`} className="meta">Por qué está aquí</h3>
+          <p className="lib-tq-lead">{why.role}</p>
+          <p className="lib-tq-setup">{why.variant}</p>
         </section>
       )}
 
       <section className="lib-tq-block" aria-labelledby={`${id}-how`}>
-        <h3 id={`${id}-how`} className="meta">Cómo se hace</h3>
+        <h3 id={`${id}-how`} className="meta">Hazlo así</h3>
         <p className="lib-tq-setup">{exercise.setup}</p>
         <ol className="lib-tq-steps">
           {exercise.phases.map((phase, index) => (
@@ -58,53 +64,85 @@ export function ExerciseTechnique({ exercise, showVisual = true, showBenefit = t
         </ol>
       </section>
 
-      <figure className="lib-tq-cue">
-        <figcaption className="meta">La clave</figcaption>
-        <blockquote><p>{exercise.cue}</p></blockquote>
-      </figure>
+      <section className="lib-tq-block" aria-labelledby={`${id}-rom`}>
+        <h3 id={`${id}-rom`} className="meta">Recorrido</h3>
+        <TechniqueVisual exercise={exercise} />
+        <p className="lib-tq-setup">{rangeOfMotion[exercise.pattern]}</p>
+        {tempo && <p className="lib-tq-tempo"><Timer size={16} aria-hidden="true" />{tempo}</p>}
+      </section>
 
-      <section className="lib-tq-mistakes" aria-labelledby={`${id}-avoid`}>
-        <h3 id={`${id}-avoid`} className="lib-tq-mistakes-title">
+      <section className="lib-tq-block" aria-labelledby={`${id}-feel`}>
+        <h3 id={`${id}-feel`} className="meta">Debes sentir</h3>
+        {feel && <p className="lib-tq-lead">{feel}</p>}
+        <p className="lib-tq-setup">{normalEffort(exercise)}</p>
+      </section>
+
+      <section className="lib-tq-mistakes" aria-labelledby={`${id}-stop`}>
+        <h3 id={`${id}-stop`} className="lib-tq-mistakes-title">
           <CircleAlert size={17} aria-hidden="true" />
-          Errores comunes
+          Detente si aparece
         </h3>
-        <p>{exercise.avoid}</p>
-        <small>Detente si aparece dolor agudo, mareo o pérdida de equilibrio.</small>
+        <ul className="lib-tq-stop">
+          {stopSigns.map((sign) => <li key={sign}>{sign}</li>)}
+        </ul>
+        <small>Si no se va al detenerte, consulta a un profesional de salud.</small>
       </section>
 
-      <section className="lib-tq-muscles" aria-labelledby={`${id}-muscles`}>
-        <h3 id={`${id}-muscles`} className="meta lib-tq-muscles-title">Músculos que trabajas</h3>
-        <MuscleMap primary={exercise.primary} secondary={exercise.secondary} className="lib-tq-map" label={`Músculos trabajados: ${exercise.muscle}`} />
-        <div className="lib-tq-muscle-list">
-          <div>
-            <p className="lib-tq-key"><i className="lib-tq-key-primary" aria-hidden="true" />Principales</p>
-            <p className="lib-tq-muscle-names">{exercise.primary.map((muscle) => muscleLabels[muscle]).join(" · ")}</p>
-          </div>
-          {exercise.secondary.length > 0 && (
-            <div>
-              <p className="lib-tq-key"><i className="lib-tq-key-secondary" aria-hidden="true" />De apoyo</p>
-              <p className="lib-tq-muscle-names is-secondary">{exercise.secondary.map((muscle) => muscleLabels[muscle]).join(" · ")}</p>
-            </div>
+      <details className="lib-tq-more">
+        <summary>Ver técnica completa <ChevronDown size={17} aria-hidden="true" /></summary>
+        <div className="lib-tq-more-body">
+          {showBenefit && (
+            <section className="lib-tq-block" aria-labelledby={`${id}-benefit`}>
+              <h3 id={`${id}-benefit`} className="meta">Para qué sirve</h3>
+              <p className="lib-tq-lead">{exercise.benefit}</p>
+            </section>
           )}
-        </div>
-      </section>
 
-      <div className="list lib-tq-notes">
-        <section className="lib-tq-note" aria-labelledby={`${id}-breath`}>
-          <span className="icon-tile" aria-hidden="true"><Wind size={18} /></span>
-          <div>
-            <h3 id={`${id}-breath`}>Respiración</h3>
-            <p>{exercise.breathing}</p>
+          <figure className="lib-tq-cue">
+            <figcaption className="meta">La clave</figcaption>
+            <blockquote><p>{exercise.cue}</p></blockquote>
+          </figure>
+
+          <section className="lib-tq-block" aria-labelledby={`${id}-avoid`}>
+            <h3 id={`${id}-avoid`} className="meta">Errores comunes</h3>
+            <p className="lib-tq-setup">{exercise.avoid}</p>
+          </section>
+
+          <section className="lib-tq-muscles" aria-labelledby={`${id}-muscles`}>
+            <h3 id={`${id}-muscles`} className="meta lib-tq-muscles-title">Músculos que trabajas</h3>
+            <MuscleMap primary={exercise.primary} secondary={exercise.secondary} className="lib-tq-map" label={`Músculos trabajados: ${exercise.muscle}`} />
+            <div className="lib-tq-muscle-list">
+              <div>
+                <p className="lib-tq-key"><i className="lib-tq-key-primary" aria-hidden="true" />Principales</p>
+                <p className="lib-tq-muscle-names">{exercise.primary.map((muscle) => muscleLabels[muscle]).join(" · ")}</p>
+              </div>
+              {exercise.secondary.length > 0 && (
+                <div>
+                  <p className="lib-tq-key"><i className="lib-tq-key-secondary" aria-hidden="true" />De apoyo</p>
+                  <p className="lib-tq-muscle-names is-secondary">{exercise.secondary.map((muscle) => muscleLabels[muscle]).join(" · ")}</p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <div className="list lib-tq-notes">
+            <section className="lib-tq-note" aria-labelledby={`${id}-breath`}>
+              <span className="icon-tile" aria-hidden="true"><Wind size={18} /></span>
+              <div>
+                <h3 id={`${id}-breath`}>Respiración</h3>
+                <p>{exercise.breathing}</p>
+              </div>
+            </section>
+            <section className="lib-tq-note" aria-labelledby={`${id}-easier`}>
+              <span className="icon-tile" aria-hidden="true"><Feather size={18} /></span>
+              <div>
+                <h3 id={`${id}-easier`}>Versión más fácil</h3>
+                <p>{exercise.adaptation}</p>
+              </div>
+            </section>
           </div>
-        </section>
-        <section className="lib-tq-note" aria-labelledby={`${id}-easier`}>
-          <span className="icon-tile" aria-hidden="true"><Feather size={18} /></span>
-          <div>
-            <h3 id={`${id}-easier`}>Versión más fácil</h3>
-            <p>{exercise.adaptation}</p>
-          </div>
-        </section>
-      </div>
+        </div>
+      </details>
     </div>
   );
 }

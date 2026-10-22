@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Info, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowRight, ArrowUp, Check, ChevronDown, Equal, Info, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import { muscleLabels } from "@/data/catalog";
 import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExercisePicker } from "@/components/exercises/exercise-picker";
 import { Button, Switch } from "@/components/ui";
 import { MuscleMap } from "@/components/ui/muscle-map";
-import { useSettings } from "@/lib/store";
+import { recordAdjustments } from "@/lib/progression";
+import type { Adjustment } from "@/lib/progression";
+import { useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById } from "@/lib/training";
 import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
 import { warmupMinutes, warmupTarget } from "@/lib/warmup";
@@ -31,6 +33,23 @@ export function TodayExercises({ source, today, active, visible, onSaveRoutine }
   if (source === "program") return active?.next ? <ProgramExercises active={active} visible={visible} /> : null;
   if (!today.ready) return null;
   return <CustomExercises today={today} visible={visible} onSaveRoutine={onSaveRoutine} />;
+}
+
+/** «40 → 42,5 kg · Completaste el rango con margen»: lo que PULSO cambió frente a tu última vez. */
+function AdjustmentLine({ adjustment }: { adjustment: Adjustment | null }) {
+  if (!adjustment) return null;
+  const Icon = adjustment.direction === "up" ? ArrowUp : adjustment.direction === "down" ? ArrowDown : Equal;
+  return (
+    <p className={cn("train-ex-adjust", `is-${adjustment.direction}`)}>
+      <Icon size={14} strokeWidth={2.4} aria-hidden="true" />
+      <span><b className="num">{adjustment.change}</b> · {adjustment.reason}</span>
+    </p>
+  );
+}
+
+function adjustedCaption(adjustments: Array<Adjustment | null>) {
+  const count = adjustments.filter(Boolean).length;
+  return count ? `PULSO ajustó ${count} ${count === 1 ? "ejercicio" : "ejercicios"} según cómo te fue la última vez.` : null;
 }
 
 function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; visible: boolean; onSaveRoutine: () => void }) {
@@ -103,6 +122,8 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
           </div>
         )}
 
+        {adjustedCaption(today.adjustments) && <p className="train-ex-caption">{adjustedCaption(today.adjustments)}</p>}
+
         {records.length ? (
           <ol className="train-ex-list">
             {records.map((record, index) => {
@@ -116,7 +137,7 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
                     index={index}
                     meta={(
                       <span className="train-ex-meta">
-                        <span className="num train-ex-target">{targetLabel(exercise, record.sets.length, record.range)}</span>
+                        <span className="num train-ex-target">{targetLabel(exercise, record.sets.length, record.range, record.rir)}</span>
                         {exercise.increment > 0 && (
                           <button
                             key={kg}
@@ -142,12 +163,33 @@ function CustomExercises({ today, visible, onSaveRoutine }: { today: TodayPlan; 
                       </>
                     )}
                   />
+                  <AdjustmentLine adjustment={today.adjustments[index] ?? null} />
                 </li>
               );
             })}
           </ol>
         ) : (
           <p className="train-ex-empty">Sin ejercicios. Agrega alguno o pide otra variante.</p>
+        )}
+
+        {records.length > 0 && (
+          <details className="train-why">
+            <summary>Por qué estos ejercicios<ChevronDown size={16} aria-hidden="true" /></summary>
+            <ul>
+              {records.map((record, index) => {
+                const exercise = exerciseById(record.exerciseId);
+                if (!exercise) return null;
+                const why = today.whyFor(exercise);
+                return (
+                  <li key={`${record.exerciseId}-${index}`}>
+                    <strong>{exercise.name}</strong>
+                    <span>{why.role} {why.variant}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="train-why-note">Lo que ves es lo que mejor encaja contigo hoy: tu objetivo, lo que tienes, cómo te recuperas y cómo te ha ido. No hay un «mejor ejercicio» universal.</p>
+          </details>
         )}
 
         <div className="train-ex-actions">
@@ -223,8 +265,10 @@ function Muscles({ primary, secondary }: { primary: MuscleGroup[]; secondary: Mu
 
 function ProgramExercises({ active, visible }: { active: ActiveProgram; visible: boolean }) {
   const [settings] = useSettings();
+  const [workouts] = useWorkouts();
   const unit = settings.unit;
   const { program, day, records } = active;
+  const adjustments = useMemo(() => recordAdjustments(records, workouts, unit), [records, unit, workouts]);
   // Rangos del programa, alineados con los registros (que omiten ejercicios inexistentes).
   const items = (day?.items ?? []).filter((item) => exerciseById(item.exerciseId));
   return (
@@ -236,6 +280,7 @@ function ProgramExercises({ active, visible }: { active: ActiveProgram; visible:
           <ArrowRight size={14} aria-hidden="true" />
         </Link>
       </div>
+      {adjustedCaption(adjustments) && <p className="train-ex-caption">{adjustedCaption(adjustments)}</p>}
       <ol className="train-ex-list">
         {records.map((record: ExerciseRecord, index) => {
           const exercise = exerciseById(record.exerciseId);
@@ -248,12 +293,13 @@ function ProgramExercises({ active, visible }: { active: ActiveProgram; visible:
                 index={index}
                 meta={(
                   <span className="train-ex-meta">
-                    <span className="num train-ex-target">{targetLabel(exercise, record.sets.length, items[index]?.range)}</span>
+                    <span className="num train-ex-target">{targetLabel(exercise, record.sets.length, items[index]?.range, record.rir)}</span>
                     {kg > 0 && <span className="num">{formatNumber(toDisplayWeight(kg, unit))} {unit}</span>}
                     <span className="num">{restText(record.restSeconds ?? 60)} desc.</span>
                   </span>
                 )}
               />
+              <AdjustmentLine adjustment={adjustments[index] ?? null} />
             </li>
           );
         })}

@@ -146,6 +146,9 @@
 .lib-target .nmetric-label { font-size: 13.5px; }
 .lib-target-dash { margin: 0 .02em; font-weight: 300; font-stretch: 100%; color: var(--ink-3); }
 .lib-target-x { margin-top: .32em; font-family: var(--font-display); font-size: 34px; font-weight: 500; line-height: 1; color: var(--ink-3); }
+.lib-target-meta { font-size: 14.5px; color: var(--ink-2); }
+.lib-target-meta b { color: var(--ink); font-weight: 600; }
+.lib-target-help { max-width: 44ch; margin-top: -6px; font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
 .lib-benefit { max-width: 40ch; font-size: 17px; line-height: 1.4; color: var(--ink-2); }
 .lib-actions { display: none; }
 
@@ -209,6 +212,18 @@
 .lib-tq-note { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; }
 .lib-tq-note h3 { margin-bottom: 3px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
 .lib-tq-note p { font-size: 14.5px; line-height: 1.45; color: var(--ink-2); }
+
+.lib-tq-tempo { display: flex; align-items: flex-start; gap: 8px; max-width: 60ch; font-size: 14.5px; font-weight: 600; line-height: 1.4; }
+.lib-tq-tempo svg { flex: none; margin-top: 2px; color: var(--accent-text); }
+.lib-tq-stop { display: flex; flex-direction: column; gap: 4px; margin: 0; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.4; }
+.lib-tq-stop li::marker { color: var(--warning); }
+/* Lo avanzado, plegado: se abre con «Ver técnica completa». */
+.lib-tq-more { border-top: 1px solid var(--line); }
+.lib-tq-more summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; font-size: 15px; font-weight: 600; cursor: pointer; list-style: none; }
+.lib-tq-more summary::-webkit-details-marker { display: none; }
+.lib-tq-more summary svg { flex: none; color: var(--ink-2); transition: transform var(--motion-fast) var(--ease-standard); }
+.lib-tq-more[open] summary svg { transform: rotate(180deg); }
+.lib-tq-more-body { display: flex; flex-direction: column; gap: 30px; padding-top: 8px; }
 
 /* ─── Mi progreso ──────────────────────────────────────────────────────── */
 .lib-progress { display: flex; flex-direction: column; gap: 30px; }

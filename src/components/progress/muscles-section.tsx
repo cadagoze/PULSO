@@ -16,9 +16,9 @@ export function MusclesView() {
   const [workouts] = useWorkouts();
   const now = useNow();
   if (!now) return null;
-  const beginner = (now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities)) === 1;
+  const level = now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities);
   const week = summarizePeriod(workouts, "semana", now);
-  const data = muscleVolume(workouts, week.start, week.end, week.activeWeeks, beginner);
+  const data = muscleVolume(workouts, week.start, week.end, week.activeWeeks, level);
 
   return (
     <div className="prog-muscles-view">
@@ -37,7 +37,7 @@ export function MusclesView() {
         </div>
       </div>
       <MuscleList data={data} />
-      <MuscleEvidence beginner={beginner} />
+      <MuscleEvidence level={level} />
     </div>
   );
 }

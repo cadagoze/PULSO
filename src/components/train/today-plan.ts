@@ -2,12 +2,14 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
-import { availableEquipment, estimateMinutes, generateWorkout, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal } from "@/lib/generator";
+import { availableEquipment, estimateMinutes, generateWorkout, levelFromActivities, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal, trainingLevel } from "@/lib/generator";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { carriedPain, recentHardStreak } from "@/lib/adaptation";
-import { effortFor, progressedSets } from "@/lib/progression";
-import { useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
+import { effortFor, progressedSets, recordAdjustments } from "@/lib/progression";
+import { exerciseTrend, whyExercise } from "@/lib/selection";
+import type { ExerciseWhy } from "@/lib/selection";
+import { useFavorites, useNutritionProfile, usePreference, useProfile, useProgram, useReadiness, useSettings, useWorkouts } from "@/lib/store";
 import { exerciseById, lastRecordFor } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import { SHORT_MINUTES, shortVersion } from "@/lib/short-session";
@@ -44,6 +46,7 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const [readinessEntries] = useReadiness();
   const [preference] = usePreference();
   const [settings, updateSettings] = useSettings();
+  const [favorites] = useFavorites();
 
   const [minutesChoice, setMinutesChoice] = useState<number | null>(null);
   const [focusChoice, setFocusChoice] = useState<WorkoutFocus | null>(null);
@@ -74,12 +77,12 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const avoid = settings.swappedOut;
   const plan = useMemo(() => {
     if (!hydrated) return null;
-    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg, avoid }));
-  }, [avoid, bodyKg, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, recommendation, recovery, variant, workouts, zone]);
+    return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg, avoid, favorites }));
+  }, [avoid, bodyKg, favorites, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, recommendation, recovery, variant, workouts, zone]);
   const limitations = useMemo(() => todayLimitations(profile?.limitations, pain), [pain, profile?.limitations]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", JSON.stringify(avoid ?? {}), workouts.length, todayKey].join("|");
+  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", JSON.stringify(avoid ?? {}), favorites.join(","), workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const baseRecords = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
   const restSeconds = plan?.restSeconds ?? settings.defaultRest;
@@ -102,6 +105,12 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const fullEstimated = useMemo(() => (short ? estimateMinutes([...(includeWarmup ? warmupRecords(warmupOf(baseRecords, minutes)) : []), ...baseRecords], restSeconds) : estimated), [baseRecords, estimated, includeWarmup, minutes, restSeconds, short, warmupOf]);
   const name = plan ? plan.name : "Entrenamiento de hoy";
 
+  // Lo que PULSO cambió frente a tu última vez (carga, repeticiones o mantener), con su motivo.
+  const adjustments = useMemo(() => recordAdjustments(records, workouts, settings.unit), [records, settings.unit, workouts]);
+  // Por qué está cada ejercicio: el motivo del generador, o uno calculado para los que agregaste o cambiaste tú.
+  const userLevel = useMemo(() => (hourNow ? trainingLevel(profile?.activities, workouts, new Date(hourNow)) : levelFromActivities(profile?.activities)), [hourNow, profile?.activities, workouts]);
+  const whyFor = (exercise: Exercise): ExerciseWhy => plan?.why[exercise.id] ?? whyExercise(exercise, { location: preference.location, limitations, level: userLevel, trend: hourNow ? exerciseTrend(workouts, exercise.id, hourNow) : null, favorite: favorites.includes(exercise.id) });
+
   const exercises = records.map((record) => exerciseById(record.exerciseId)).filter((item): item is Exercise => Boolean(item));
   const primary = [...new Set(exercises.flatMap((exercise) => exercise.primary))];
   const secondary = [...new Set(exercises.flatMap((exercise) => exercise.secondary))].filter((muscle: MuscleGroup) => !primary.includes(muscle));
@@ -121,6 +130,8 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
     recovery,
     adaptation,
     records,
+    adjustments,
+    whyFor,
     warmup,
     fullRecords,
     restSeconds,

@@ -6,6 +6,7 @@ import { ArrowDown, ArrowLeft, ArrowUp, BookOpenCheck, Calculator, Flag, Flame, 
 import { ExerciseTechnique } from "@/components/exercises/exercise-technique";
 import { Sheet, Stepper, Switch } from "@/components/ui";
 import { plateBreakdown } from "@/lib/progression";
+import { useExerciseWhy } from "@/lib/use-exercise-why";
 import { useSettings } from "@/lib/store";
 import { isWorkingSet } from "@/lib/training";
 import { cn, formatNumber } from "@/lib/utils";
@@ -203,6 +204,7 @@ export function ExerciseMenu(props: ExerciseMenuProps) {
   const shownView: MenuView = !target && view !== "prefs" ? "menu" : view;
   const record = target?.record;
   const exercise = target?.exercise;
+  const why = useExerciseWhy(open && shownView === "technique" ? exercise : undefined);
   const heaviest = record ? Math.max(0, ...record.sets.filter(isWorkingSet).map((set) => set.load)) : 0;
   const restNow = record?.restSeconds ?? defaultRest;
   const title = shownView === "menu" ? exercise?.name ?? "Entrenamiento" : viewTitles[shownView];
@@ -261,7 +263,7 @@ export function ExerciseMenu(props: ExerciseMenuProps) {
         </div>
       )}
 
-      {shownView === "technique" && exercise && <ExerciseTechnique exercise={exercise} />}
+      {shownView === "technique" && exercise && <ExerciseTechnique exercise={exercise} why={why} />}
       {shownView === "plates" && <PlateCalculator initial={heaviest} barWeight={props.barWeight} plates={props.plates} loadUnit={loadUnit} />}
       {shownView === "rest" && <RestEditor key={restNow} initial={restNow} defaultRest={defaultRest} onSave={props.onRest} />}
       {shownView === "note" && <NoteEditor key={record?.note ?? ""} initial={record?.note ?? ""} onSave={props.onNote} />}

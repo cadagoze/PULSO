@@ -91,6 +91,10 @@ export interface ExerciseRecord {
   group?: string;
   /** Rango objetivo adaptado (p. ej. más repeticiones si tus pesas son livianas); sin valor, el del ejercicio. */
   range?: [number, number];
+  /** Repeticiones en reserva objetivo (prescripción del día). */
+  rir?: number;
+  /** «¿Cómo salió?» al terminar el ejercicio: ajusta su próxima sesión. */
+  feel?: "easy" | "good" | "hard" | "pain";
 }
 
 export interface TrainingRoutine {
@@ -256,6 +260,8 @@ export interface Settings {
   /** Nivel que PULSO ya te anunció y el día en que lo alcanzaste (para avisarlo una sola vez). */
   levelReached?: ExerciseLevel;
   levelReachedOn?: string;
+  /** Lunes de la última semana cuya revisión ya viste («Entendido»): se muestra una vez por semana. */
+  weekReviewSeen?: string;
   barWeight: number;
   plates: number[];
   /** Color de acento elegido; sin valor, automático según cómo te identificas. */

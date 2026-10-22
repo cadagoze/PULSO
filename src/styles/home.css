@@ -2,6 +2,16 @@
 
 .home { gap: 28px; }
 .home-side { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+/* Revisión semanal: lunes a miércoles, hasta «Entendido». */
+.home-review { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px; border-radius: var(--radius-l); background: var(--surface-2); }
+.home-review-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.home-review-next { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.home-review-next ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.home-review-next li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.home-review-next li svg { flex: none; margin-top: 3px; }
+.home-review-next li.is-up svg { color: var(--accent-text); }
+.home-review-next li.is-down svg { color: var(--warning); }
+.home-review-next strong, .home-review-next b { color: var(--ink); font-weight: 600; }
 .home-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .home-section-link { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin: -12px 0; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 

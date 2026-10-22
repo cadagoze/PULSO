@@ -1,3 +1,5 @@
+import { exerciseTrend } from "@/lib/selection";
+import { exerciseById } from "@/lib/training";
 import { localDateKey } from "@/lib/utils";
 import type { ReadinessEntry, WorkoutEntry } from "@/types";
 
@@ -50,4 +52,72 @@ export function forgetSwaps(swaps: Record<string, number> | undefined, exerciseI
   if (!swaps) return swaps;
   const next = Object.fromEntries(Object.entries(swaps).filter(([id]) => !exerciseIds.includes(Number(id))));
   return Object.keys(next).length === Object.keys(swaps).length ? swaps : next;
+}
+
+/** Ejercicios cuya última vez (en las últimas 3 semanas) marcaste «Molestia»: se cambian por otra variante. */
+export function painfulExercises(workouts: WorkoutEntry[], now: number): Set<number> {
+  const painful = new Set<number>();
+  const seen = new Set<number>();
+  for (const workout of newestFirst(workouts)) {
+    if (now - Date.parse(workout.completedAt) > 21 * DAY) break;
+    for (const record of workout.records ?? []) {
+      if (seen.has(record.exerciseId)) continue;
+      seen.add(record.exerciseId);
+      if (record.feel === "pain") painful.add(record.exerciseId);
+    }
+  }
+  return painful;
+}
+
+export interface Learned {
+  key: string;
+  /** Qué aprendió PULSO y qué cambia en tus próximas sesiones. */
+  text: string;
+}
+
+const nameOf = (id: number) => exerciseById(id)?.name;
+
+/**
+ * Lo que PULSO aprendió de ti en las últimas semanas, en orden de importancia (molestias primero), como
+ * máximo cuatro: molestias, cansancio acumulado, ejercicios que te costaron o te salieron fáciles, los que
+ * progresas (se mantienen) y los que cambias seguido (dejan de proponerse). Todo sale de tu historial.
+ */
+export function learnedFrom(workouts: WorkoutEntry[], swaps: Record<string, number> | undefined, now: number): Learned[] {
+  const items: Learned[] = [];
+  const recent = newestFirst(workouts).filter((workout) => now - Date.parse(workout.completedAt) <= 14 * DAY);
+  if (!recent.length) return items;
+
+  for (const id of painfulExercises(workouts, now)) {
+    const name = nameOf(id);
+    if (name) items.push({ key: `pain-${id}`, text: `Te molestó ${name}: no subimos su carga y proponemos otra variante.` });
+  }
+
+  const streak = recentHardStreak(workouts, new Date(now));
+  if (streak >= 2) items.push({ key: "streak", text: `Llevas ${streak} sesiones difíciles seguidas: bajamos un poco el volumen para que te recuperes.` });
+
+  const seen = new Set<number>();
+  for (const workout of recent) {
+    for (const record of workout.records ?? []) {
+      const name = nameOf(record.exerciseId);
+      if (!name || seen.has(record.exerciseId)) continue;
+      seen.add(record.exerciseId);
+      if (record.feel === "hard") items.push({ key: `hard-${record.exerciseId}`, text: `${name} te costó: la próxima vez repetimos antes de subir.` });
+      else if (record.feel === "easy") items.push({ key: `easy-${record.exerciseId}`, text: `${name} te salió fácil: la próxima vez subimos un poco.` });
+    }
+  }
+
+  for (const id of seen) {
+    const trend = exerciseTrend(workouts, id, now);
+    if (trend?.progressing && trend.sessions >= 2) {
+      items.push({ key: `progress-${id}`, text: `${nameOf(id)} avanza: lo mantenemos en tus sesiones para que sigas mejorando.` });
+      break;
+    }
+  }
+
+  for (const [id, times] of Object.entries(swaps ?? {})) {
+    const name = nameOf(Number(id));
+    if (name && times >= 2) items.push({ key: `swap-${id}`, text: `Cambiaste ${name} varias veces: dejamos de proponerlo.` });
+  }
+
+  return items.slice(0, 4);
 }

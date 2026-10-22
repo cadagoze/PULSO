@@ -3,8 +3,9 @@
 import { BookOpen } from "lucide-react";
 import { muscleLabels } from "@/data/catalog";
 import { allMuscles, muscleSetsBetween } from "@/lib/analytics";
+import { weeklySetTarget } from "@/lib/selection";
 import { formatNumber } from "@/lib/utils";
-import type { MuscleGroup, WorkoutEntry } from "@/types";
+import type { ExerciseLevel, MuscleGroup, WorkoutEntry } from "@/types";
 
 type State = "low" | "ok" | "high";
 
@@ -19,9 +20,9 @@ export interface MuscleVolumeData {
   inRange: number;
 }
 
-/** Series de trabajo por músculo en el periodo, expresadas por semana para compararlas con el rango eficaz. */
-export function muscleVolume(workouts: WorkoutEntry[], start: string, end: string, weeks: number, beginner: boolean): MuscleVolumeData {
-  const [low, high] = beginner ? [6, 10] : [10, 20];
+/** Series de trabajo por músculo en el periodo, expresadas por semana para compararlas con la referencia de tu nivel. */
+export function muscleVolume(workouts: WorkoutEntry[], start: string, end: string, weeks: number, level: ExerciseLevel): MuscleVolumeData {
+  const [low, high] = weeklySetTarget(level);
   const total = muscleSetsBetween(workouts, start, end);
   const sets = Object.fromEntries(allMuscles.map((muscle) => [muscle, total[muscle] / Math.max(1, weeks)])) as Record<MuscleGroup, number>;
   const rows = [...allMuscles].sort((a, b) => sets[b] - sets[a] || muscleLabels[a].localeCompare(muscleLabels[b]));
@@ -46,13 +47,18 @@ export function MuscleList({ data }: { data: MuscleVolumeData }) {
   );
 }
 
-export function MuscleEvidence({ beginner }: { beginner: boolean }) {
+const evidence: Record<ExerciseLevel, string> = {
+  1: "Al empezar, 4–8 series semanales por músculo ya dan buenos resultados.",
+  2: "8–12 series semanales por músculo es una buena referencia para seguir progresando.",
+  3: "Con experiencia, 10–20 series semanales por músculo, según cómo te recuperes.",
+};
+
+export function MuscleEvidence({ level }: { level: ExerciseLevel }) {
   return (
     <p className="prog-evidence">
       <BookOpen size={16} aria-hidden="true" />
       <span>
-        10–20 series semanales por músculo es un rango eficaz para ganar músculo.
-        {beginner ? " Al comenzar, 6–10 ya dan muy buenos resultados." : ""} Cuentan las series de trabajo: 1 para el músculo principal y 0,5 para los secundarios.
+        {evidence[level]} Más no siempre es mejor: cada serie extra suma menos y cuesta más recuperarse. Cuentan las series de trabajo: 1 para el músculo principal y 0,5 para los secundarios.
       </span>
     </p>
   );

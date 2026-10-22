@@ -10,6 +10,8 @@ import { isWorkingSet, setHeading } from "@/lib/training";
 import { useNow } from "@/lib/use-now";
 import { cn, formatNumber, fromDisplayWeight, toDisplayWeight } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, SetRecord } from "@/types";
+import { FeelChips } from "./feel-prompt";
+import type { Feel } from "./feel-prompt";
 import { prefersReducedMotion } from "./session-screen";
 import { NumberField, plain } from "./set-row";
 import { isRecordSet, kindBadges, limits, loadStep, performanceLabel, previousSet, setBadge, valueStep, volumeLabel } from "./session-utils";
@@ -156,6 +158,8 @@ export interface SetBlockProps {
   onCountdownDismiss: () => void;
   onTogglePause: () => void;
   onAddSet: (recordIndex: number) => void;
+  /** «¿Cómo salió?» al terminar el ejercicio (sólo en los de fuerza, fuera del calentamiento). */
+  onFeel?: (recordIndex: number, feel: Feel) => void;
 }
 
 /**
@@ -184,6 +188,12 @@ export function SetBlock(props: SetBlockProps) {
               <h2>Ejercicio completado</h2>
             </div>
             <MetaLine items={[top ? <>Mejor serie <b className="num">{performanceLabel(top, record.unit, loadUnit)}</b></> : null, volume > 0 ? <b className="num">{volumeLabel(volume, loadUnit)}</b> : null]} />
+            {props.onFeel && (
+              <div className="ses-feel-done">
+                <p className="ses-feel-q">¿Cómo salió?</p>
+                <FeelChips value={record.feel} label={`¿Cómo salió ${exercise.name}?`} onSelect={(feel) => props.onFeel?.(recordIndex, feel)} />
+              </div>
+            )}
           </>
         )}
         <button type="button" className="ses-ghost" onClick={() => props.onAddSet(recordIndex)}><Plus size={17} /> Serie extra</button>

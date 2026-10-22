@@ -7,6 +7,7 @@ import { beep, primeAudio, speak, useWakeLock, vibrate, voiceOn } from "@/lib/fe
 import { addSwap, forgetSwaps } from "@/lib/adaptation";
 import { effortFor, exerciseBests, progressedSets } from "@/lib/progression";
 import type { EffortContext, ExerciseBests } from "@/lib/progression";
+import { rirText, targetText } from "@/lib/prescription";
 import { markProgramSession } from "@/lib/programs";
 import { useDraft, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { completedSets, exerciseById, lastRecordFor, recordHeading, recordsVolume, sessionSets, setHeading, warmupCount } from "@/lib/training";
@@ -15,6 +16,8 @@ import type { Exercise, ExerciseRecord, SetRecord, Settings, TrainingDraft, Work
 import { ExerciseMenu } from "./exercise-menu";
 import type { MenuTarget, MenuView } from "./exercise-menu";
 import { ExerciseSets } from "./exercise-sets";
+import { FeelPrompt, feelNotes } from "./feel-prompt";
+import type { Feel } from "./feel-prompt";
 import { FinishSheet } from "./finish-sheet";
 import { NoSession, SessionSkeleton } from "./no-session";
 import { RestOverlay } from "./rest-timer";
@@ -22,7 +25,7 @@ import { RirSheet } from "./rir-sheet";
 import { SessionDock } from "./session-dock";
 import type { DockMode } from "./session-dock";
 import { SessionTopBar } from "./session-header";
-import { adjustedRest, markSet, movedRecords, patchSet, restAfterSet, togglePaused, withExtraSet, withoutLastSet, withWarmups } from "./session-actions";
+import { adjustedRest, markSet, movedRecords, patchSet, repDrop, restAfterSet, togglePaused, withExtraSet, withoutLastSet, withWarmups } from "./session-actions";
 import { SessionHead } from "./session-head";
 import { SessionHero } from "./session-hero";
 import { prefersReducedMotion, SessionScreen } from "./session-screen";
@@ -113,6 +116,8 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   const [sessionOpen, setSessionOpen] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
   const [rirTarget, setRirTarget] = useState<SetRef | null>(null);
+  // Ejercicio recién terminado que espera su «¿Cómo salió?» (se pregunta en el siguiente, mientras descansas).
+  const [feelAsk, setFeelAsk] = useState<number | null>(null);
   // «Terminar y guardar» desde Inicio o la barra del entrenamiento en curso (o «?terminar» al recargar): abre la hoja para guardar.
   const [finishOpen, setFinishOpen] = useState(() => (finishRequestPending() || new URLSearchParams(window.location.search).has("terminar")) && completedSets(draft.records) > 0);
   const [error, setError] = useState<(SetRef & { message: string }) | null>(null);
@@ -191,22 +196,33 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setCountdown((value) => (value?.recordIndex === recordIndex && value.setIndex === setIndex ? null : value));
     const completing = !set.done;
     const records = markSet(current.records, recordIndex, setIndex, completing);
-    const rest = completing ? restAfterSet(current, recordIndex, records, settingsRef.current.autoRest) : 0;
+    const baseRest = completing ? restAfterSet(current, recordIndex, records, settingsRef.current.autoRest) : 0;
+    // Si bajaste varias repeticiones con la misma carga, te faltó recuperarte: 30 s más.
+    const drop = baseRest > 0 ? repDrop(records[recordIndex], setIndex) : 0;
+    const rest = baseRest + (drop ? 30 : 0);
     const now = Date.now();
     patch((draftNow) => ({
       ...draftNow,
       ...(rest > 0 ? { restUntil: now + rest * 1000, restTotal: rest } : {}),
       records: markSet(draftNow.records, recordIndex, setIndex, completing),
     }));
-    if (!completing) return;
+    if (!completing) {
+      setFeelAsk((value) => (value === recordIndex ? null : value));
+      return;
+    }
     if (settingsRef.current.vibration) vibrate(30);
     if (settingsRef.current.sound) beep({ frequency: 1180, duration: 0.05 });
     setFocus(null);
     setJustDone({ recordIndex, setIndex, next: nextExerciseAfter(records, recordIndex) });
+    if (drop) showToast(`Bajaste ${drop} repeticiones: 30 s más de descanso para recuperarte.`);
     // Última serie de la sesión: tras ver el check, se abre la hoja para guardar (así cuenta en tu semana).
     const progress = sessionSets(records);
     if (progress.done === progress.total) window.setTimeout(() => setFinishOpen(true), 900);
-  }, [patch]);
+    // Terminaste un ejercicio de fuerza (y la sesión sigue): ¿cómo salió? Cualquier otra serie descarta la pregunta.
+    const finished = records[recordIndex];
+    const askable = finished.sets.every((item) => item.done) && recordIndex >= warmupCount(records) && exerciseById(finished.exerciseId)?.category === "strength";
+    setFeelAsk(askable && progress.done < progress.total ? recordIndex : null);
+  }, [patch, showToast]);
 
   const onAddSet = useCallback((recordIndex: number) => {
     updateRecord(recordIndex, withExtraSet);
@@ -218,6 +234,12 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
   }, [updateRecord]);
 
   const onRir = useCallback((recordIndex: number, setIndex: number) => setRirTarget({ recordIndex, setIndex }), []);
+
+  const onFeel = useCallback((recordIndex: number, feel: Feel) => {
+    updateRecord(recordIndex, (record) => ({ ...record, feel }));
+    setFeelAsk(null);
+    showToast(feelNotes[feel]);
+  }, [showToast, updateRecord]);
 
   const onCountdown = useCallback((recordIndex: number, setIndex: number) => {
     const set = draftRef.current.records[recordIndex]?.sets[setIndex];
@@ -297,6 +319,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     });
     setCountdown(null);
     setFocus(null);
+    setFeelAsk(null);
     showToast(`Sustituido por ${exercise.name}`);
   }
 
@@ -329,6 +352,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     setCurrent((value) => (value === position ? target : value === target ? position : value));
     setCountdown(null);
     setFocus(null);
+    setFeelAsk(null);
   }
 
   async function deleteExercise(position: number) {
@@ -337,6 +361,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     patch((current) => ({ ...current, records: normalizeGroups(current.records.filter((_, item) => item !== position)) }));
     setCurrent((value) => (value > position ? value - 1 : value));
     setCountdown(null);
+    setFeelAsk(null);
     setError(null);
     setFocus(null);
     setJustDone(null);
@@ -421,6 +446,9 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
     ? { record: menuRecord, exercise: menuExercise, index: menu.index, count, linkedWithNext: Boolean(menuRecord.group) && draft.records[menu.index + 1]?.group === menuRecord.group }
     : null;
   const rirSet = rirTarget ? draft.records[rirTarget.recordIndex]?.sets[rirTarget.setIndex] : undefined;
+  const inWarmup = index < warmupCount(draft.records);
+  const feelRecord = feelAsk !== null && feelAsk !== index ? draft.records[feelAsk] : undefined;
+  const feelExercise = feelRecord ? exerciseById(feelRecord.exerciseId) : undefined;
   const replacing = picker?.mode === "replace" ? exerciseById(draft.records[picker.index]?.exerciseId ?? -1) : undefined;
 
   return (
@@ -461,6 +489,9 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             key={`head-${index}-${record.exerciseId}`}
             exercise={exercise}
             record={record}
+            target={inWarmup ? undefined : targetText(record, exercise)}
+            // Mientras aprendes (primeras sesiones), qué significa el RIR.
+            explain={!inWarmup && record.rir !== undefined && workouts.length < 6 ? rirText(record.rir) : undefined}
             superset={record.group ? letters.get(record.group) : undefined}
             fromPrev={direction < 0}
             onTechnique={() => openMenu(index, { view: "technique" })}
@@ -473,10 +504,14 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
           </header>
         )}
 
+        {feelAsk !== null && feelExercise && (
+          <FeelPrompt name={feelExercise.name} onSelect={(feel) => onFeel(feelAsk, feel)} onDismiss={() => setFeelAsk(null)} />
+        )}
+
         {record && exercise && (
           <SetBlock
             mode={setMode}
-            heading={index < warmupCount(draft.records) && setIndex >= 0 ? recordHeading(draft.records, index, setIndex) : undefined}
+            heading={inWarmup && setIndex >= 0 ? recordHeading(draft.records, index, setIndex) : undefined}
             recordIndex={index}
             record={record}
             exercise={exercise}
@@ -497,6 +532,7 @@ function ActiveSession({ draft, setDraft, settings, onSaved }: ActiveSessionProp
             onCountdownDismiss={onCountdownDismiss}
             onTogglePause={togglePause}
             onAddSet={onAddSet}
+            onFeel={!inWarmup && exercise.category === "strength" ? onFeel : undefined}
           />
         )}
 

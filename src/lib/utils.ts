@@ -80,3 +80,8 @@ export function localDaySeed(now: number) {
   const date = new Date(now);
   return Math.round(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
 }
+
+/** «a, b y c». */
+export function joinList(items: string[]) {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} y ${items.at(-1)}`;
+}

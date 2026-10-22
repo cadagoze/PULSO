@@ -7,6 +7,9 @@
 .prog-top { display: flex; flex-direction: column; gap: 22px; }
 .prog-summary { display: flex; flex-direction: column; gap: 44px; min-width: 0; }
 .prog-summary > * { min-width: 0; }
+.prog-learned { display: flex; flex-direction: column; gap: 12px; }
+.prog-learned-list .grow small { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.prog-learned-note { font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
 .prog-list { list-style: none; margin: 0; padding: 0; }
 .prog-stack { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .prog-sheet-help { font-size: 13.5px; }
@@ -246,9 +249,11 @@
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 64px; row-gap: 56px; align-items: start;
     grid-template-areas: "metrics chart" "more chart";
   }
+  .prog-summary.has-learned { grid-template-areas: "metrics chart" "learned chart" "more chart"; }
   .prog-summary-empty { grid-template-areas: "cover more"; }
   .prog-area-metrics { grid-area: metrics; align-self: center; }
   .prog-area-chart { grid-area: chart; }
+  .prog-area-learned { grid-area: learned; }
   .prog-area-more { grid-area: more; }
   .prog-area-cover { grid-area: cover; }
   .prog-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: 48px; align-items: start; }

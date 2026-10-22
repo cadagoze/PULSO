@@ -1,4 +1,5 @@
-import { exerciseById, isWorkingSet, sortedWorkouts } from "@/lib/training";
+import { exerciseById, isWorkingSet, lastRecordFor, sortedWorkouts } from "@/lib/training";
+import { formatNumber, toDisplayWeight } from "@/lib/utils";
 import type { Exercise, ExerciseRecord, PersonalRecordHit, PersonalRecordKind, SetRecord, WorkoutEntry } from "@/types";
 
 /** 1RM estimado con Epley. Las repeticiones en reserva cuentan como repeticiones posibles. */
@@ -141,27 +142,40 @@ export interface Suggestion {
   value: number;
   load: number;
   message: string;
-  /** Si el esfuerzo que marcaste cambió la sugerencia: fácil, difícil o dos difíciles seguidas. */
-  because?: "easy" | "hard" | "hard-streak";
+  /** Si cómo te fue cambió la sugerencia: fácil, difícil, dos difíciles seguidas o una molestia. */
+  because?: "easy" | "hard" | "hard-streak" | "pain";
 }
 
-/** Cómo te fue con un ejercicio: el esfuerzo de la última sesión que lo tuvo (2 fácil, 3 bien, 4 difícil) y cuántas seguidas fueron difíciles. */
+/**
+ * Cómo te fue con un ejercicio: el esfuerzo de la última sesión que lo tuvo (2 fácil, 3 bien, 4 difícil),
+ * cuántas seguidas fueron difíciles y si te molestó. Manda lo que respondiste en ese ejercicio («¿Cómo
+ * salió?»); si no respondiste, el esfuerzo de la sesión.
+ */
 export interface EffortContext {
   effort?: number;
   hardStreak: number;
+  pain?: boolean;
 }
 
-/** El esfuerzo que marcaste en las últimas sesiones con este ejercicio (sin contar un entrenamiento, si se indica). */
+const feelEffort = { easy: 2, good: 3, hard: 4, pain: 4 } as const;
+
+/** Lo que marcaste en las últimas sesiones con este ejercicio (sin contar un entrenamiento, si se indica). */
 export function effortFor(workouts: WorkoutEntry[], exerciseId: number, excludeId?: string): EffortContext {
   let effort: number | undefined;
+  let pain: boolean | undefined;
   let hardStreak = 0;
   for (const workout of sortedWorkouts(workouts)) {
-    if (workout.id === excludeId || !workout.records?.some((record) => record.exerciseId === exerciseId && record.sets.some((set) => set.done))) continue;
-    if (effort === undefined) effort = workout.effort ?? 3;
-    if ((workout.effort ?? 0) >= 4) hardStreak += 1;
+    const record = workout.id === excludeId ? undefined : workout.records?.find((item) => item.exerciseId === exerciseId && item.sets.some((set) => set.done));
+    if (!record) continue;
+    const value = record.feel ? feelEffort[record.feel] : workout.effort;
+    if (effort === undefined) {
+      effort = value ?? 3;
+      pain = record.feel === "pain";
+    }
+    if ((value ?? 0) >= 4) hardStreak += 1;
     else break;
   }
-  return { effort, hardStreak };
+  return { effort, hardStreak, ...(pain ? { pain } : {}) };
 }
 
 /**
@@ -179,6 +193,10 @@ export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel
   const sets = workingDone(last);
   const topLoad = Math.max(0, ...sets.map((set) => set.load));
   const minValue = Math.min(...sets.filter((set) => set.load === topLoad).map((set) => set.value));
+  // Con molestia, nunca se sube: se repite y se propone cambiar a una variante más tolerable.
+  if (context.pain) {
+    return { kind: "hold", value: minValue, load: topLoad, because: "pain", message: `La última vez te molestó: repite ${minValue} ${word}${withLoad(topLoad)} o cambia a otra variante desde su menú.` };
+  }
   if (context.hardStreak >= 2) {
     return { kind: "hold", value: low, load: topLoad, because: "hard-streak", message: `Tras dos sesiones difíciles seguidas, apunta a ${low} ${word}${withLoad(topLoad)}.` };
   }
@@ -240,6 +258,67 @@ function baseSuggestion(exercise: Exercise, last: ExerciseRecord | undefined, un
 export function progressedSets(exercise: Exercise, count: number, last?: ExerciseRecord, context?: EffortContext): SetRecord[] {
   const suggestion = suggestNext(exercise, last, "kg", (kg) => kg, context);
   return Array.from({ length: count }, () => ({ value: suggestion.value, load: suggestion.load, done: false, kind: "normal" as const }));
+}
+
+/** Lo que PULSO cambió respecto de tu última vez con un ejercicio, y por qué. */
+export interface Adjustment {
+  /** «40 → 42,5 kg», «9 → 10 rep.» o «Mantiene 40 kg». */
+  change: string;
+  /** El motivo, en una frase. */
+  reason: string;
+  direction: "up" | "hold" | "down";
+}
+
+const holdReasons = {
+  pain: "Te molestó la última vez: no subimos y puedes cambiar de variante.",
+  hard: "Tu última sesión fue difícil: repetimos antes de subir.",
+  "hard-streak": "Llevas dos sesiones difíciles seguidas: apuntamos a la parte baja del rango.",
+} as const;
+
+/** La carga más alta de las series y las repeticiones (o segundos) más bajas con ella. */
+function peakOf(sets: SetRecord[]) {
+  const load = Math.max(...sets.map((set) => set.load));
+  return { load, value: Math.min(...sets.filter((set) => set.load === load).map((set) => set.value)) };
+}
+
+/**
+ * Qué cambió hoy frente a tu última vez («40 → 42,5 kg · Completaste el rango con margen»): carga que
+ * sube o baja, una repetición más o una carga que se mantiene a propósito. Null si todo sigue igual o
+ * es el primer registro. Se compara con las series que de verdad se proponen (ya ajustadas a tus pesas).
+ */
+export function describeAdjustment(exercise: Exercise, last: ExerciseRecord | undefined, record: ExerciseRecord, context: EffortContext | undefined, unitLabel: string, toDisplay: (kg: number) => number): Adjustment | null {
+  const before = last ? workingDone(last) : [];
+  const after = record.sets.filter(isWorkingSet);
+  if (!last || !before.length || !after.length) return null;
+  const from = peakOf(before);
+  const to = peakOf(after);
+  const suggestion = suggestNext(exercise, last, unitLabel, toDisplay, context);
+  const word = exercise.unit === "reps" ? "rep." : "s";
+  const load = (kg: number) => `${formatNumber(toDisplay(kg), 2)} ${unitLabel}`;
+
+  if (suggestion.because && suggestion.because !== "easy") {
+    return { change: `Mantiene ${to.load > 0 ? load(to.load) : `${to.value} ${word}`}`, reason: holdReasons[suggestion.because], direction: "hold" };
+  }
+  if (to.load !== from.load) {
+    const up = to.load > from.load;
+    // Sólo se explica como progreso lo que de verdad sube; si la carga se movió por las pesas que tienes, se dice.
+    const reason = up && suggestion.kind === "load" ? (suggestion.because === "easy" ? "Tu última sesión fue fácil." : "Completaste el rango con margen.")
+      : !up && suggestion.kind === "deload" ? "Te costó llegar al rango: bajamos la carga para consolidar la técnica."
+        : "Ajustada a las pesas que tienes.";
+    return { change: `${formatNumber(toDisplay(from.load), 2)} → ${load(to.load)}`, reason, direction: up ? "up" : "down" };
+  }
+  if (to.value > from.value) {
+    return { change: `${from.value} → ${to.value} ${word}`, reason: suggestion.because === "easy" ? "Tu última sesión fue fácil." : "Sumas una repetición dentro del rango.", direction: "up" };
+  }
+  return null;
+}
+
+/** Los ajustes de cada ejercicio de una sesión (en el mismo orden), con la unidad de carga que usas. */
+export function recordAdjustments(records: ExerciseRecord[], workouts: WorkoutEntry[], unit: "kg" | "lb"): Array<Adjustment | null> {
+  return records.map((record) => {
+    const exercise = exerciseById(record.exerciseId);
+    return exercise ? describeAdjustment(exercise, lastRecordFor(workouts, exercise.id), record, effortFor(workouts, exercise.id), unit, (kg) => toDisplayWeight(kg, unit)) : null;
+  });
 }
 
 /** Series de aproximación para cargas medianas o altas. */

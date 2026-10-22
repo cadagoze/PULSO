@@ -1,6 +1,9 @@
 import { exercises } from "@/data/mock-data";
-import { weeklySeries } from "@/lib/analytics";
+import { painfulExercises } from "@/lib/adaptation";
+import { muscleSetsBetween, weekRange, weeklySeries } from "@/lib/analytics";
+import { isCompound, prescribe, roleOf } from "@/lib/prescription";
 import { effortFor, progressedSets } from "@/lib/progression";
+import { exerciseTrend, historyScore, leastNeeded, scoreCandidate, sessionOrder, whyExercise, type ExerciseTrend, type ExerciseWhy, type ScoreContext } from "@/lib/selection";
 import { isWorkingSet, lastRecordFor } from "@/lib/training";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingLocation, TrainingPreference, WorkoutEntry } from "@/types";
@@ -52,6 +55,12 @@ export interface GeneratorInput {
   zone?: BodyZone;
   /** Veces que cambiaste cada ejercicio (id → veces): pierden prioridad y, con dos o más, sólo salen si no hay otro. */
   avoid?: Record<string, number>;
+  /** Tus favoritos de la biblioteca (ids): ganan un poco de prioridad. */
+  favorites?: number[];
+  /** Momento del cálculo (historial de 6 semanas, series de esta semana). */
+  now?: number;
+  /** «Otra variante» (0 = la sesión de siempre): explora en vez de mantener los ejercicios que vienes haciendo. */
+  variant?: number;
 }
 
 export interface GeneratedWorkout {
@@ -62,6 +71,8 @@ export interface GeneratedWorkout {
   restSeconds: number;
   estimatedMinutes: number;
   notes: string[];
+  /** Por qué está cada ejercicio y por qué esa variante (id → motivos). */
+  why: Record<number, ExerciseWhy>;
 }
 
 /** Capacidades disponibles: lo marcado en casa, o lo de tu gimnasio (completo si no lo has ajustado). */
@@ -108,16 +119,6 @@ function hash(value: number) {
 function exerciseCount(minutes: number, focus: WorkoutFocus) {
   if (focus === "mobility") return Math.max(4, Math.min(7, Math.round(minutes / 2.5)));
   return minutes <= 10 ? 3 : minutes <= 20 ? 4 : minutes <= 30 ? 5 : minutes <= 45 ? 6 : 7;
-}
-
-function restFor(exercise: Exercise, goal: WorkoutGoal, focus: WorkoutFocus) {
-  if (focus === "mobility") return 15;
-  if (focus === "conditioning" || exercise.category === "cardio") return 30;
-  const compound = !["isolation", "core", "carry"].includes(exercise.pattern);
-  if (goal === "strength") return compound ? 150 : 75;
-  if (goal === "weight" || goal === "energy") return compound ? 75 : 45;
-  // Músculo y constancia: descansos medios.
-  return compound ? 90 : 60;
 }
 
 /** Una serie de trabajo menos en los ejercicios que tienen tres o más. */
@@ -167,6 +168,24 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
 
   const chosen: Exercise[] = [];
   const skippedForRecovery = new Set<string>();
+  // Lo que la selección sabe de tu historial: cómo viene cada ejercicio, qué te molestó y qué músculos
+  // llevan pocas series esta semana.
+  const now = input.now ?? Date.now();
+  const history = input.workouts ?? [];
+  const week = weekRange(new Date(now));
+  const context: ScoreContext = {
+    goal,
+    level,
+    recovery,
+    chosen,
+    avoid: input.avoid,
+    painful: painfulExercises(history, now),
+    favorites: input.favorites?.length ? new Set(input.favorites) : undefined,
+    trends: new Map<number, ExerciseTrend | null>(),
+    weekSets: history.length ? muscleSetsBetween(history, week.start, week.end) : undefined,
+    exploring: (input.variant ?? 0) > 0,
+    seed,
+  };
   // Carga ideal de cada ejercicio: la de tu historial o una sugerencia inicial según tu peso y nivel.
   const idealLoad = (exercise: Exercise) => {
     const last = input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined;
@@ -181,14 +200,13 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     const target = idealLoad(exercise);
     return !unfit(target / nearestLoad(target, available));
   };
-  // Lo que sueles cambiar por otro baja en la selección (no se excluye: sigue si no hay alternativa).
-  const avoided = (exercise: Exercise) => Math.min(3, input.avoid?.[exercise.id] ?? 0) * 25;
   const usable = exercises.filter((exercise) =>
     isAvailable(exercise, equipment)
     && loadFits(exercise)
     && !(exercise.stresses ?? []).some((area) => limitations.includes(area))
     && exercise.level <= Math.min(3, level + (input.readiness === "recovery" ? 0 : 1))
     && !(input.exclude ?? []).includes(exercise.id));
+  for (const exercise of usable) context.trends.set(exercise.id, history.length ? exerciseTrend(history, exercise.id, now) : null);
 
   const zone = zoneById(input.zone);
   if (zone) {
@@ -211,7 +229,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
         const rotation = hash(exercise.id * 7919 + seed) % 14;
         // Más específico, mejor: una extensión de tríceps antes que un press de banca para «brazos».
         const specific = exercise.primary.length ? primary / exercise.primary.length : 0;
-        return { exercise, primary, score: Math.min(primary, 1.5) * 20 + specific * 30 + hits(exercise.secondary) * 6 + levelFit + loaded + rotation - repeat - sameMuscle - avoided(exercise) };
+        return { exercise, primary, score: Math.min(primary, 1.5) * 20 + specific * 30 + hits(exercise.secondary) * 6 + levelFit + loaded + rotation - repeat - sameMuscle + historyScore(exercise, context) };
       }).sort((a, b) => b.score - a.score);
       // Primero lo que trabaja la zona como músculo principal; si no alcanza, lo que la apoya.
       const pick = scored.find((item) => item.primary >= 1) ?? scored.find((item) => item.primary > 0) ?? scored[0];
@@ -231,14 +249,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     if (chosen.length >= count) break;
     const candidates = usable.filter((exercise) => patterns.includes(exercise.pattern) && !chosen.some((item) => item.id === exercise.id));
     if (!candidates.length) continue;
-    const scored = candidates.map((exercise) => {
-      const fresh = recovery && exercise.primary.length ? exercise.primary.reduce((sum, muscle) => sum + recovery[muscle], 0) / exercise.primary.length : 100;
-      const loaded = exercise.equipment.length > 0 ? 14 : 0;
-      const levelFit = 10 - Math.abs(exercise.level - level) * 6;
-      const overlap = chosen.some((item) => item.primary.some((muscle) => exercise.primary.includes(muscle))) ? -25 : 0;
-      const rotation = hash(exercise.id * 7919 + seed) % 18;
-      return { exercise, fresh, score: fresh * 0.5 + loaded + levelFit + overlap + rotation - avoided(exercise) };
-    }).sort((a, b) => b.score - a.score);
+    const scored = candidates.map((exercise) => ({ exercise, ...scoreCandidate(exercise, context) })).sort((a, b) => b.score - a.score);
     const pick = scored.find((item) => item.fresh >= 45) ?? (focus === "mobility" || focus === "conditioning" ? scored[0] : undefined);
     if (!pick) {
       skippedForRecovery.add(patterns[0]);
@@ -253,23 +264,35 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   }
   if (skippedForRecovery.size) notes.push("Algunos músculos siguen recuperándose del último entrenamiento; la selección los deja descansar.");
 
-  const restSeconds = Math.round(chosen.reduce((sum, exercise) => sum + restFor(exercise, goal, focus), 0) / Math.max(1, chosen.length) / 15) * 15 || 60;
+  // Orden: el principal primero, luego compuestos, accesorios y el núcleo al final.
+  const ordered = sessionOrder(chosen);
   let adaptedReps = false;
   let suggestedLoads = false;
-  const records: ExerciseRecord[] = chosen.map((exercise) => {
-    const count = Math.max(2, Math.min(5, exercise.sets + setDelta + ((goal === "strength" || goal === "muscle") && level > 1 && exercise.pattern !== "core" ? 1 : 0) - (input.minutes <= 10 ? 1 : 0)));
+  let mainPicked = false;
+  const records: ExerciseRecord[] = ordered.map((exercise) => {
+    // Prescripción: series, rango, margen (RIR) y descanso según tu objetivo, nivel y el papel del ejercicio.
+    const role = roleOf(exercise, !mainPicked && isCompound(exercise));
+    if (role === "main") mainPicked = true;
+    const plan = prescribe(exercise, { goal, level, role, minutes: input.minutes, easier: setDelta < 0 });
+    const effort = history.length ? effortFor(history, exercise.id) : undefined;
+    // Muy difícil la última vez: 30 s más de descanso; dos difíciles seguidas: una serie menos.
+    const count = Math.max(2, plan.sets - ((effort?.hardStreak ?? 0) >= 2 ? 1 : 0));
+    const rest = focus === "mobility" ? 15 : focus === "conditioning" ? 30 : Math.min(240, plan.rest + ((effort?.effort ?? 0) >= 4 ? 30 : 0));
+    const prescribed = plan.range[0] !== exercise.range[0] || plan.range[1] !== exercise.range[1];
     const record: ExerciseRecord = {
       exerciseId: exercise.id,
       unit: exercise.unit,
-      sets: progressedSets(exercise, count, input.workouts ? lastRecordFor(input.workouts, exercise.id) : undefined, input.workouts ? effortFor(input.workouts, exercise.id) : undefined),
-      restSeconds: restFor(exercise, goal, focus),
+      sets: progressedSets({ ...exercise, range: plan.range }, count, history.length ? lastRecordFor(history, exercise.id) : undefined, effort),
+      restSeconds: rest,
+      ...(prescribed ? { range: plan.range } : {}),
+      ...(exercise.category === "strength" && exercise.unit === "reps" ? { rir: plan.rir } : {}),
     };
     // Ajuste a tus pesas: carga más cercana a la ideal y repeticiones (o una serie más) para compensar.
     const capability = loads ? loadCapability(exercise, equipment) : undefined;
     const available = capability ? loads?.[capability] : undefined;
     if (!available?.length) return record;
     const fresh = record.sets.every((set) => set.load === 0);
-    const fit = fitLoad(exercise, fresh ? startingLoad(exercise, input.bodyKg, level) : record.sets[0].load, available);
+    const fit = fitLoad(exercise, fresh ? startingLoad(exercise, input.bodyKg, level) : record.sets[0].load, available, plan.range);
     if (fresh) suggestedLoads = true;
     if (fit.adapted) adaptedReps = true;
     const [low, high] = fit.range;
@@ -278,6 +301,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     if (fit.extraSet && record.sets.length < 5) record.sets.push({ ...record.sets[record.sets.length - 1] });
     return record;
   });
+  const restSeconds = Math.round(records.reduce((sum, record) => sum + (record.restSeconds ?? 60), 0) / Math.max(1, records.length) / 15) * 15 || 60;
   if (adaptedReps) notes.push("Ajustamos repeticiones y series a las pesas que tienes: con peso liviano, más repeticiones y bajada lenta.");
   if (suggestedLoads) notes.push("Las cargas son una sugerencia inicial según tu peso y nivel: ajústalas si te sobran o faltan repeticiones.");
 
@@ -286,9 +310,16 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   for (let guard = 0; guard < 40 && records.length && estimateMinutes(records, restSeconds) > budget; guard += 1) {
     const reducible = [...records].reverse().find((record) => record.sets.length > 2);
     if (reducible && (records.length <= 3 || reducible !== records.at(-1))) reducible.sets.pop();
-    else if (records.length > 3) records.pop();
+    else if (records.length > 3) records.splice(leastNeeded(records.map((record) => exercises.find((item) => item.id === record.exerciseId)).filter((item): item is Exercise => Boolean(item))), 1);
     else break;
   }
+
+  // El porqué de cada ejercicio (y si reemplaza a uno que te molestó, del mismo patrón).
+  const why = Object.fromEntries(records.map((record) => {
+    const exercise = exercises.find((item) => item.id === record.exerciseId);
+    const replaced = exercise ? exercises.find((item) => context.painful.has(item.id) && item.pattern === exercise.pattern && item.id !== exercise.id) : undefined;
+    return [record.exerciseId, exercise ? whyExercise(exercise, { location: input.preference.location, limitations, level, trend: context.trends.get(exercise.id), favorite: context.favorites?.has(exercise.id), replacedForPain: replaced?.name }) : { role: "", variant: "" }];
+  }));
 
   return {
     name: `${zone ? zone.label : focusLabels[focus]} · ${input.minutes} min`,
@@ -298,6 +329,7 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     restSeconds,
     estimatedMinutes: estimateMinutes(records, restSeconds),
     notes,
+    why,
   };
 }
 
@@ -361,7 +393,7 @@ type ProfileForToday = { goals?: string[]; activities?: string[]; limitations?: 
  * siempre muestra la sesión de la portada. `now` fija la semilla del día; `minutes`, `focus` y `variant`
  * permiten ajustarla desde Entrenar.
  */
-export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, pain, recovery, now, minutes, focus, zone, variant = 0, bodyKg, avoid }: {
+export function todayGeneratorInput({ profile, nutritionGoal, preference, workouts, readiness, pain, recovery, now, minutes, focus, zone, variant = 0, bodyKg, avoid, favorites }: {
   profile: ProfileForToday;
   nutritionGoal?: NutritionGoal;
   preference: TrainingPreference;
@@ -378,6 +410,8 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
   bodyKg?: number | null;
   /** Ejercicios que sueles cambiar (Ajustes). */
   avoid?: Record<string, number>;
+  /** Favoritos de la biblioteca. */
+  favorites?: number[];
 }): GeneratorInput {
   const zoneInfo = zoneById(zone);
   return {
@@ -391,8 +425,12 @@ export function todayGeneratorInput({ profile, nutritionGoal, preference, workou
     readiness,
     recovery,
     workouts,
-    seed: localDaySeed(now) + variant,
+    // Semilla de la semana (no del día): sin historial, la sesión no cambia de ejercicios a diario.
+    seed: Math.floor(localDaySeed(now) / 7) * 7 + variant,
+    variant,
+    now,
     bodyKg: bodyKg ?? undefined,
     ...(avoid ? { avoid } : {}),
+    ...(favorites?.length ? { favorites } : {}),
   };
 }

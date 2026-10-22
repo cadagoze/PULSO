@@ -6,14 +6,17 @@ import type { CSSProperties } from "react";
 import { ButtonLink, PageHeader } from "@/components/ui";
 import { RoutineCard } from "@/components/ui/cards";
 import { KeyMetrics } from "@/components/progress/key-metrics";
+import { LearnedCard } from "@/components/progress/learned-card";
 import { MoreList } from "@/components/progress/more-list";
 import { summarizePeriod, type PeriodSummary } from "@/components/progress/period";
 import { defaultMetric, PeriodChart } from "@/components/progress/period-chart";
 import { clearFromSummary } from "@/components/progress/progress-nav";
 import { WeekShareSheet } from "@/components/progress/week-share-sheet";
+import { learnedFrom } from "@/lib/adaptation";
 import { bestWeekStreak, weekStreak } from "@/lib/analytics";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
+import { cn } from "@/lib/utils";
 
 /** Una frase bajo el título: lo que falta para la meta de la semana, sin presión. */
 function headline(week: PeriodSummary, goal: number, state: { met: boolean; paused: boolean }) {
@@ -55,12 +58,13 @@ export function SummaryTab() {
       trend: summarizePeriod(workouts, "doce", at),
       streak: weekStreak(workouts, goal, settings.pausedWeeks, date),
       best: bestWeekStreak(workouts, goal, settings.pausedWeeks, date),
+      learned: learnedFrom(workouts, settings.swappedOut, at),
     };
-  }, [day, goal, settings.pausedWeeks, workouts]);
+  }, [day, goal, settings.pausedWeeks, settings.swappedOut, workouts]);
 
   if (!now || !data) return <ProgressSkeleton />;
 
-  const { week, trend, streak, best } = data;
+  const { week, trend, streak, best, learned } = data;
   const empty = workouts.length === 0;
 
   return (
@@ -91,12 +95,13 @@ export function SummaryTab() {
           <div className="prog-area-more rise" style={rise(1)}><MoreList workouts={workouts} nowMs={now} /></div>
         </div>
       ) : (
-        <div className="prog-summary">
+        <div className={cn("prog-summary", learned.length > 0 && "has-learned")}>
           <div className="prog-area-metrics rise" style={rise(0)}><KeyMetrics summary={week} goal={goal} unit={settings.unit} streak={streak.streak} best={Math.max(best, streak.streak)} /></div>
           <div className="prog-area-chart rise" style={rise(1)}>
             <PeriodChart summary={trend} metric={defaultMetric(trend)} unit={settings.unit} title={defaultMetric(trend) === "volume" ? "Volumen por semana · 12 semanas" : "Tiempo por semana · 12 semanas"} />
           </div>
-          <div className="prog-area-more rise" style={rise(2)}><MoreList workouts={workouts} nowMs={now} /></div>
+          {learned.length > 0 && <div className="prog-area-learned rise" style={rise(2)}><LearnedCard items={learned} /></div>}
+          <div className="prog-area-more rise" style={rise(3)}><MoreList workouts={workouts} nowMs={now} /></div>
         </div>
       )}
       {!empty && shareMounted && <WeekShareSheet open={sharing} onClose={() => setSharing(false)} now={now} />}

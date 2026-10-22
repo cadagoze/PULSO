@@ -74,6 +74,25 @@
 @keyframes train-flash { from { opacity: .95; } to { opacity: 0; } }
 .btn-icon.train-row-action { width: 44px; height: 44px; background: transparent; box-shadow: none; color: var(--ink-3); }
 @media (hover: hover) { .btn-icon.train-row-action:hover { background: var(--surface-2); color: var(--ink); } }
+/* Lo que PULSO ajustó frente a tu última vez, bajo el ejercicio: cambio y motivo. */
+.train-ex-caption { margin-top: -4px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.train-ex-adjust { display: flex; align-items: flex-start; gap: 7px; margin: 6px 10px 2px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.train-ex-adjust svg { flex: none; margin-top: 2px; }
+.train-ex-adjust b { color: var(--ink); font-weight: 600; }
+.train-ex-adjust.is-up svg { color: var(--accent-text); }
+.train-ex-adjust.is-down svg { color: var(--warning); }
+/* Por qué estos ejercicios: plegado, para quien quiere entender la selección. */
+.train-why { border-top: 1px solid var(--line); }
+.train-why summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; font-size: 14.5px; font-weight: 600; cursor: pointer; list-style: none; }
+.train-why summary::-webkit-details-marker { display: none; }
+.train-why summary svg { flex: none; color: var(--ink-2); transition: transform var(--motion-fast) var(--ease-standard); }
+.train-why[open] summary svg { transform: rotate(180deg); }
+.train-why ul { list-style: none; margin: 0; padding: 4px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.train-why li { display: flex; flex-direction: column; gap: 2px; }
+.train-why li strong { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; }
+.train-why li span { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.train-why-note { margin-top: 12px; font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
+.train-hero-adjusted { align-self: flex-start; text-align: left; font-size: 13px; line-height: 1.35; }
 .train-ex-empty { padding: 20px; border-radius: var(--radius); background: var(--surface-2); color: var(--ink-2); font-size: 14px; text-align: center; }
 .train-ex-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .train-save.is-saved, .train-save.is-saved:hover { background: var(--accent-soft); color: var(--accent-text); }

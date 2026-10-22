@@ -58,6 +58,8 @@ export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
   // El mismo movimiento en casa y en el gimnasio: uno de los dos es este ejercicio.
   const homeAlt = useMemo(() => placeAlternative(exercise, "home"), [exercise]);
   const gymAlt = useMemo(() => placeAlternative(exercise, "gym"), [exercise]);
+  // Sin ningún equipo: el mismo patrón con tu peso corporal (si el ejercicio ya lo es, no hace falta).
+  const bareAlt = useMemo(() => (exercise.equipment.length ? alternativesFor(exercise).find((item) => item.equipment.length === 0) : undefined), [exercise]);
   const easier = exercise.easier ? exerciseById(exercise.easier) : undefined;
   const harder = exercise.harder ? exerciseById(exercise.harder) : undefined;
   const mainMuscle = exercise.primary[0];
@@ -79,15 +81,16 @@ export function ExerciseAlternatives({ exercise }: { exercise: Exercise }) {
         </ol>
       </section>
 
-      {(homeAlt || gymAlt) && (
+      {(homeAlt || gymAlt || bareAlt) && (
         <section className="lib-alt-section" aria-labelledby="lib-place-title">
           <div className="lib-section-head">
-            <h3 id="lib-place-title" className="meta">Casa o gimnasio</h3>
+            <h3 id="lib-place-title" className="meta">Dónde lo hagas</h3>
             <span className="meta lib-section-note">Mismo patrón</span>
           </div>
           <ol className="list lib-ladder">
             <LadderStep exercise={homeAlt ?? exercise} label="En casa" current={!homeAlt} />
             <LadderStep exercise={gymAlt ?? exercise} label="En el gimnasio" current={!gymAlt} />
+            {bareAlt && bareAlt.id !== homeAlt?.id && <LadderStep exercise={bareAlt} label="Sin equipo" />}
           </ol>
         </section>
       )}

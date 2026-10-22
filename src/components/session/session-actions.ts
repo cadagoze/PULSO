@@ -44,6 +44,19 @@ export function restAfterSet(draft: TrainingDraft, recordIndex: number, records:
   return Math.max(0, record.restSeconds ?? draft.restSeconds);
 }
 
+/**
+ * Si en esta serie bajaste 3 o más repeticiones respecto de la anterior con la misma carga, te faltó
+ * recuperarte: 30 s más de descanso antes de la siguiente. Con más carga, bajar es esperable. Devuelve
+ * cuántas bajaste (0 si no aplica). `record` ya tiene la serie marcada como hecha.
+ */
+export function repDrop(record: ExerciseRecord, setIndex: number) {
+  const set = record.sets[setIndex];
+  if (!set?.done || record.unit !== "reps" || !isWorkingSet(set) || !record.sets.some((item) => !item.done)) return 0;
+  const before = record.sets.slice(0, setIndex).filter((item) => item.done && isWorkingSet(item)).at(-1);
+  const drop = before && Math.abs(set.load - before.load) < 0.01 ? before.value - set.value : 0;
+  return drop >= 3 ? drop : 0;
+}
+
 /** Una serie más, copia de la última (las de calentamiento pasan a ser normales). */
 export function withExtraSet(record: ExerciseRecord): ExerciseRecord {
   const last = record.sets[record.sets.length - 1];

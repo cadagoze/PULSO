@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "@/components/ui/app-link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Check, ListPlus, Lock, Play } from "lucide-react";
 import { categoryLabels, levelLabels, patternLabels } from "@/data/catalog";
-import { Button, NumberMetric, SegmentedControl } from "@/components/ui";
+import { Button, MetaLine, NumberMetric, SegmentedControl } from "@/components/ui";
 import { Toast, useToast } from "@/components/ui/toast";
 import { ExerciseTechnique, equipmentText } from "@/components/exercises/exercise-technique";
 import { ExerciseVisual } from "@/components/exercises/exercise-visual";
@@ -12,12 +12,15 @@ import { AddToRoutineSheet } from "@/components/library/add-to-routine-sheet";
 import { ExerciseAlternatives } from "@/components/library/exercise-alternatives";
 import { ExerciseProgress } from "@/components/library/exercise-progress";
 import { FavoriteButton } from "@/components/library/favorite-button";
-import { availableEquipment, isAvailable } from "@/lib/generator";
+import { restText } from "@/components/train/shared";
+import { availableEquipment, isAvailable, levelFromActivities, trainingGoal, trainingLevel } from "@/lib/generator";
+import { prescribe, rirText, roleOf } from "@/lib/prescription";
 import { useStartWorkout } from "@/lib/session";
 import { effortFor, progressedSets } from "@/lib/progression";
 import { exerciseById, lastRecordFor } from "@/lib/training";
-import { useDraft, usePreference, useWorkouts } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { useDraft, useNutritionProfile, usePreference, useProfile, useSettings, useWorkouts } from "@/lib/store";
+import { useNow } from "@/lib/use-now";
+import { cn, formatNumber, toDisplayWeight } from "@/lib/utils";
 import type { Exercise } from "@/types";
 
 type Tab = "technique" | "progress" | "alternatives";
@@ -41,17 +44,35 @@ function Detail({ exercise }: { exercise: Exercise }) {
   const [workouts] = useWorkouts();
   const [draft] = useDraft();
   const [preference] = usePreference();
+  const [profile] = useProfile();
+  const [nutrition] = useNutritionProfile();
+  const [settings] = useSettings();
+  const now = useNow();
   const start = useStartWorkout();
   const available = isAvailable(exercise, availableEquipment(preference));
   const hasPhoto = Boolean(exercise.image);
 
+  // «Hoy»: series, rango, margen (RIR) y descanso según tu objetivo y tu nivel; la carga, desde tu última vez.
+  const level = now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities);
+  const goal = trainingGoal(profile?.goals, nutrition?.goal);
+  const plan = prescribe(exercise, { goal, level, role: roleOf(exercise, false) });
+  const last = useMemo(() => lastRecordFor(workouts, exercise.id), [exercise.id, workouts]);
+  const effort = useMemo(() => effortFor(workouts, exercise.id), [exercise.id, workouts]);
+  const sets = progressedSets({ ...exercise, range: plan.range }, plan.sets, last, effort);
+  const rir = exercise.category === "strength" && exercise.unit === "reps" ? plan.rir : undefined;
+  const load = last && sets[0]?.load ? `${formatNumber(toDisplayWeight(sets[0].load, settings.unit))} ${settings.unit}` : null;
+
   const startNow = () => {
+    const [low, high] = plan.range;
     start({
       name: exercise.name,
       records: [{
         exerciseId: exercise.id,
         unit: exercise.unit,
-        sets: progressedSets(exercise, exercise.sets, lastRecordFor(workouts, exercise.id), effortFor(workouts, exercise.id)),
+        sets,
+        restSeconds: plan.rest,
+        ...(low !== exercise.range[0] || high !== exercise.range[1] ? { range: plan.range } : {}),
+        ...(rir !== undefined ? { rir } : {}),
       }],
       source: { type: "free" },
     });
@@ -62,7 +83,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
     showToast(`Agregado a ${routineName}`);
   };
 
-  const [low, high] = exercise.range;
+  const [low, high] = plan.range;
   const perSide = exercise.unilateral ? " por lado" : "";
 
   // Las mismas acciones viven en línea (escritorio) y en la barra fija sobre la navegación (móvil).
@@ -109,9 +130,9 @@ function Detail({ exercise }: { exercise: Exercise }) {
 
       <div className="lib-detail-main">
         <section className="lib-brief" aria-labelledby="lib-target-title">
-          <h2 id="lib-target-title" className="meta">Objetivo recomendado</h2>
+          <h2 id="lib-target-title" className="meta">Hoy</h2>
           <div className="lib-target">
-            <NumberMetric size="l" value={exercise.sets} label={exercise.sets === 1 ? "serie" : "series"} />
+            <NumberMetric size="l" value={plan.sets} label={plan.sets === 1 ? "serie" : "series"} />
             <span className="lib-target-x" aria-hidden="true">×</span>
             <NumberMetric
               size="l"
@@ -120,6 +141,12 @@ function Detail({ exercise }: { exercise: Exercise }) {
               label={`${exercise.unit === "reps" ? "repeticiones" : "segundos"}${perSide}`}
             />
           </div>
+          <MetaLine className="lib-target-meta" items={[
+            rir !== undefined ? <>RIR <b className="num">{rir}</b></> : null,
+            <>Descanso <b className="num">{restText(plan.rest)}</b></>,
+            load ? <>Carga <b className="num">{load}</b></> : null,
+          ]} />
+          {rir !== undefined && workouts.length < 6 && <p className="lib-target-help">{rirText(rir)}</p>}
           <p className="lib-benefit">{exercise.benefit}</p>
         </section>
 
@@ -130,7 +157,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
         </div>
 
         <section key={tab} className="lib-panel rise" role="tabpanel" aria-label={tabs.find((item) => item.value === tab)?.label}>
-          {tab === "technique" && <ExerciseTechnique exercise={exercise} showVisual={hasPhoto} showBenefit={false} />}
+          {tab === "technique" && <ExerciseTechnique exercise={exercise} showBenefit={false} />}
           {tab === "progress" && <ExerciseProgress exercise={exercise} onStart={startNow} />}
           {tab === "alternatives" && <ExerciseAlternatives exercise={exercise} />}
         </section>

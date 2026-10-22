@@ -9,6 +9,7 @@ import { HomeHeader } from "@/components/home/home-header";
 import { ProgressNote } from "@/components/home/progress-note";
 import { TodayHero } from "@/components/home/today-hero";
 import { useHomeCoach } from "@/components/home/use-home-coach";
+import { WeekReview } from "@/components/home/week-review";
 import { WeekStrip } from "@/components/home/week-strip";
 import { InstallCard } from "@/components/install/install-card";
 import { todayLine } from "@/lib/motivation";
@@ -49,6 +50,7 @@ function CoachHome({ now }: { now: number }) {
         )}
       </div>
       <div className="home-side">
+        <WeekReview now={now} />
         {/* El chequeo sirve antes de entrenar: con la sesión en curso o ya hecha, queda sólo la recuperación. */}
         <BodyStatus now={now} today={localDateKey(date)} check={!draft && !home.trainedToday} />
         <WeekStrip now={now} />

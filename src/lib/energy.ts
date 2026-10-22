@@ -44,7 +44,7 @@ export interface GoalGuide {
   intervals: { min: number; max: number } | null;
   /** Minutos de actividad moderada por semana (salud general). */
   activityMinutes: number | null;
-  /** Series semanales por grupo muscular (al ganar músculo). */
+  /** Series semanales por grupo muscular (al ganar músculo): de 4 al empezar a 20 con experiencia (ver `weeklySetTarget`). */
   setsPerMuscle: { min: number; max: number } | null;
   steps: string;
   focus: string;
@@ -74,9 +74,9 @@ export const goalGuides: Record<NutritionGoal, GoalGuide> = {
     strength: { min: 3, max: 4 },
     intervals: null,
     activityMinutes: null,
-    setsPerMuscle: { min: 10, max: 20 },
+    setsPerMuscle: { min: 4, max: 20 },
     steps: "Camina a diario; el cardio intenso, con moderación",
-    focus: "Trabaja entre 6 y 12 repeticiones dejando 1–3 en reserva, y sube la carga cuando llegues al tope del rango. Cada grupo muscular necesita de 10 a 20 series a la semana.",
+    focus: "Trabaja entre 6 y 12 repeticiones dejando 1–3 en reserva, y sube la carga cuando llegues al tope del rango. Cada grupo muscular responde bien con 4–8 series a la semana al empezar, 8–12 con algo de experiencia y 10–20 con mucha: más no siempre es mejor.",
   },
 };
 

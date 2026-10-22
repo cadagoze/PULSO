@@ -154,6 +154,7 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
   const note = painNote(today.readiness?.pain) ?? (recommendation && recommendation !== "planned" ? today.plan?.notes[0] : undefined);
   const begin = () => void start({ name: today.name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } });
   const total = today.records.length;
+  const adjusted = today.adjustments.filter(Boolean).length;
   const context = today.edited ? "Con tus cambios" : today.zone ? "Zona elegida por ti" : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
 
   if (!today.ready) {
@@ -176,6 +177,11 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
       </Title>
       <WarmupPreview items={today.warmup} included={today.includeWarmup} onToggle={today.setIncludeWarmup} />
       <SessionList records={today.records} onMore={onShowList} />
+      {adjusted > 0 && (
+        <button type="button" className="link-button train-hero-adjusted" onClick={onShowList}>
+          PULSO ajustó {adjusted} {adjusted === 1 ? "ejercicio" : "ejercicios"} · ver por qué
+        </button>
+      )}
       {restDay ? <RestActions onTrain={begin} disabled={!total} /> : (
         <div className="train-hero-actions">
           <Button size="l" disabled={!total} onClick={begin}>

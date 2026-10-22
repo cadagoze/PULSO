@@ -365,7 +365,7 @@ test('el objetivo de alimentación ajusta la rutina y la guía semanal', () => {
   assert.deepEqual({ ...energy.goalGuides.lose.intervals }, { min: 1, max: 2 });
   assert.equal(energy.goalGuides.lose.strength.min, 3);
   assert.equal(energy.goalGuides.maintain.activityMinutes, 150);
-  assert.deepEqual({ ...energy.goalGuides.gain.setsPerMuscle }, { min: 10, max: 20 });
+  assert.deepEqual({ ...energy.goalGuides.gain.setsPerMuscle }, { min: 4, max: 20 });
 });
 
 test('agua: meta para beber según el peso, comida según la hora e historial acotado', () => {
@@ -690,15 +690,17 @@ test('pesos: el generador adapta la rutina a las pesas de casa', () => {
   const heavyOnly = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'], loads: { dumbbells: [20] } } });
   assert.ok(!heavyOnly.records.some((record) => record.exerciseId === 47), 'sin elevaciones laterales con sólo mancuernas de 20 kg');
   const lightOnly = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'], loads: { dumbbells: [3] } } });
+  const unknown = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'] } });
   const loaded = lightOnly.records.filter((record) => record.sets.some((set) => set.load > 0));
   assert.ok(loaded.length > 0, 'usa las mancuernas livianas en algún ejercicio');
   for (const record of loaded) {
     assert.ok(record.sets.every((set) => set.load === 3), 'carga igual a la que tienes');
     const exercise = exercises.find((item) => item.id === record.exerciseId);
-    if (record.range) assert.ok(record.range[0] >= exercise.range[0], 'peso liviano: no menos repeticiones');
+    const same = unknown.records.find((item) => item.exerciseId === record.exerciseId);
+    const baseRange = same?.range ?? exercise.range;
+    if (record.range) assert.ok(record.range[0] >= baseRange[0], 'peso liviano: no menos repeticiones que sin pesas marcadas');
   }
-  const unknown = generator.generateWorkout({ ...base, preference: { location: 'home', equipment: ['dumbbells'] } });
-  assert.ok(unknown.records.every((record) => record.sets.every((set) => set.load === 0) && !record.range), 'sin pesos marcados, la rutina queda como antes');
+  assert.ok(unknown.records.every((record) => record.sets.every((set) => set.load === 0)), 'sin pesos marcados, sin cargas inventadas');
 });
 
 const barcode = load('src/lib/barcode.ts');
@@ -1659,4 +1661,336 @@ test('sesión: acciones puras (carga que se copia, descanso, series, pausa y ord
   assert.equal(longer.restTotal, 105);
   assert.deepEqual(plain(actions.movedRecords(draft.records, 0, 1).map((item) => item.exerciseId)), [11, 10]);
   assert.equal(actions.movedRecords(draft.records, 0, -1), draft.records, 'fuera de rango no cambia');
+});
+
+// ─── Ejercicios, generador y progresión: enseñar a entrenar ──────────────────
+const prescription = load('src/lib/prescription.ts');
+const selection = load('src/lib/selection.ts');
+const technique = load('src/data/technique.ts');
+const adaptationLib = load('src/lib/adaptation.ts');
+const trainingReview = load('src/lib/training-review.ts');
+const loadedBy = (pattern) => exercises.find((item) => item.category === 'strength' && item.pattern === pattern && item.increment > 0 && item.unit === 'reps');
+const pair = (range) => Array.from(range);
+
+test('prescripción: rangos por objetivo, margen (RIR), descansos y series por nivel', () => {
+  const squat = loadedBy('squat');
+  const curl = loadedBy('isolation');
+  const plan = (exercise, goal, role, extra = {}) => prescription.prescribe(exercise, { goal, level: 2, role, ...extra });
+  // Rangos: fuerza 4–8 en el principal, hipertrofia 6–12, aislamientos 10–15 y, para moverse más, rangos altos.
+  assert.deepEqual(pair(plan(squat, 'strength', 'main').range), [4, 8]);
+  assert.deepEqual(pair(plan(squat, 'muscle', 'main').range), [6, 12]);
+  assert.deepEqual(pair(plan(squat, 'habits', 'main').range), [8, 12]);
+  assert.deepEqual(pair(plan(curl, 'muscle', 'accessory').range), [10, 15]);
+  assert.deepEqual(pair(plan(curl, 'habits', 'accessory').range), [12, 20]);
+  // Descansos: pesado 2–3 min, moderado 90–150 s, aislamiento 60–120 s.
+  assert.equal(plan(squat, 'strength', 'main').rest, 180);
+  assert.equal(plan(squat, 'muscle', 'compound').rest, 120);
+  assert.equal(plan(curl, 'muscle', 'accessory').rest, 90);
+  const bodyweight = exercises.find((item) => item.category === 'strength' && item.increment === 0 && prescription.isCompound(item) && item.unit === 'reps');
+  assert.ok(plan(bodyweight, 'strength', 'main').rest <= 90, 'sin carga externa no hace falta el descanso largo');
+  // RIR: 2 en compuestos y 1 en accesorios; quien empieza, uno más; el modo suave, uno más (máximo 3).
+  assert.equal(plan(squat, 'muscle', 'main').rir, 2);
+  assert.equal(plan(curl, 'muscle', 'accessory').rir, 1);
+  assert.equal(prescription.prescribe(squat, { goal: 'muscle', level: 1, role: 'main' }).rir, 3);
+  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).rir, 3);
+  assert.equal(plan(curl, 'muscle', 'accessory', { easier: true }).rir, 2);
+  // Series: quien empieza no suma; desde intermedio una más en fuerza y músculo; lo suave, una menos; entre 2 y 5.
+  const starter = prescription.prescribe(squat, { goal: 'muscle', level: 1, role: 'main' }).sets;
+  assert.equal(plan(squat, 'muscle', 'main').sets, Math.min(5, starter + 1));
+  assert.equal(plan(squat, 'habits', 'main').sets, starter);
+  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).sets, Math.max(2, Math.min(5, squat.sets)));
+  assert.ok(prescription.prescribe(squat, { goal: 'strength', level: 3, role: 'main', minutes: 10, easier: true }).sets >= 2);
+  // Movilidad: sin esfuerzo, descanso mínimo.
+  const stretch = exercises.find((item) => item.category === 'mobility');
+  assert.deepEqual({ rir: plan(stretch, 'muscle', 'accessory').rir, rest: plan(stretch, 'muscle', 'accessory').rest }, { rir: 3, rest: 15 });
+  // Papeles y textos.
+  assert.equal(prescription.roleOf(squat, true), 'main');
+  assert.equal(prescription.roleOf(squat, false), 'compound');
+  assert.equal(prescription.roleOf(curl, false), 'accessory');
+  assert.equal(prescription.roleOf(exercises.find((item) => item.pattern === 'core' && item.category === 'strength'), false), 'core');
+  assert.match(prescription.rirText(2), /2 repeticiones posibles/);
+  assert.match(prescription.rirText(1), /1 repetición posible/);
+  const press = { ...training.exerciseById(12), unilateral: false };
+  assert.equal(prescription.targetText({ unit: 'reps', rir: 2 }, press), '8–12 rep · RIR 2');
+  assert.equal(prescription.targetText({ unit: 'reps', rir: 2, range: [4, 8] }, press), '4–8 rep · RIR 2');
+  assert.equal(prescription.targetText({ unit: 'reps' }, press), '8–12 rep');
+  assert.equal(prescription.targetText({ unit: 'reps', range: [10, 10] }, { ...press, unilateral: true }), '10 rep por lado');
+  assert.equal(prescription.targetText({ unit: 'seconds' }, { ...press, range: [20, 40], unilateral: false }), '20–40 s');
+});
+
+test('generador: rango y RIR por objetivo, orden por prioridad y cobertura de patrones', () => {
+  const byId = (id) => exercises.find((item) => item.id === id);
+  const run = (goal, minutes = 45, seed = 5) => generator.generateWorkout({ preference: { location: 'gym', equipment: [] }, minutes, focus: 'full', goal, level: 2, seed });
+  const rangeOf = (record) => pair(record.range ?? byId(record.exerciseId).range);
+  const strength = run('strength');
+  const habits = run('habits');
+  // Cuerpo completo: rodilla + empuje + tirón + bisagra, también cuando el tiempo es corto.
+  const group = (pattern) => (pattern === 'squat' || pattern === 'lunge' ? 'knee' : pattern.endsWith('push') ? 'push' : pattern.endsWith('pull') ? 'pull' : pattern);
+  for (const location of ['gym', 'home']) {
+    for (const minutes of [20, 30, 45, 60]) {
+      for (let seed = 1; seed <= 12; seed += 1) {
+        const plan = generator.generateWorkout({ preference: { location, equipment: location === 'home' ? ['dumbbells', 'bench'] : [] }, minutes, focus: 'full', goal: 'muscle', level: 2, seed });
+        const groups = plan.records.map((record) => group(byId(record.exerciseId).pattern));
+        const missing = ['knee', 'push', 'pull', 'hinge'].filter((item) => !groups.includes(item));
+        const repeated = ['knee', 'push', 'pull', 'hinge'].some((item) => groups.filter((value) => value === item).length > 1);
+        assert.ok(plan.records.length < 4 || !missing.length || !repeated, `${location} ${minutes} min seed ${seed}: falta ${missing} y se repite ${groups}`);
+      }
+    }
+  }
+  // El principal manda: fuerza 4–8 con descanso largo; «moverme más», rangos altos y menos descanso.
+  assert.deepEqual(rangeOf(strength.records[0]), [4, 8]);
+  assert.equal(strength.records[0].restSeconds, 180);
+  assert.ok(rangeOf(habits.records[0])[1] >= 12);
+  assert.ok(habits.records[0].restSeconds < strength.records[0].restSeconds);
+  // Cada ejercicio de fuerza con repeticiones lleva su margen (RIR 1–3).
+  for (const record of [...strength.records, ...habits.records]) {
+    const exercise = byId(record.exerciseId);
+    if (exercise.category === 'strength' && exercise.unit === 'reps') assert.ok(record.rir >= 1 && record.rir <= 3, `${exercise.name}: RIR ${record.rir}`);
+    else assert.equal(record.rir, undefined);
+  }
+  // Orden por prioridad: compuestos (con carga primero), después lo demás y el núcleo al final.
+  const flags = habits.records.map((record) => prescription.isCompound(byId(record.exerciseId)));
+  assert.ok(byId(habits.records[0].exerciseId).increment > 0);
+  assert.equal(flags.lastIndexOf(true) + 1, flags.filter(Boolean).length, 'los compuestos van juntos al principio');
+  assert.equal(byId(habits.records.at(-1).exerciseId).pattern, 'core');
+  // Cada ejercicio lleva su porqué (papel y variante).
+  for (const record of habits.records) {
+    assert.ok(habits.why[record.exerciseId].role.length > 15 && habits.why[record.exerciseId].variant.length > 15, `porqué de ${record.exerciseId}`);
+  }
+});
+
+test('selección: continuidad, molestias, cambios y semanas (puntajes internos, sin rankings)', () => {
+  const press = training.exerciseById(12);
+  const NOW = Date.UTC(2026, 9, 20, 15);
+  const at = (daysAgo, load, feel) => ({ id: `d${daysAgo}`, date: utils.localDateKey(new Date(NOW - daysAgo * DAY)), completedAt: new Date(NOW - daysAgo * DAY).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: 12, unit: 'reps', ...(feel ? { feel } : {}), sets: [set(10, load), set(10, load), set(10, load)] }] });
+  // Tendencia: sube la carga estimada → progresa; sin cambios en tres sesiones → estancado.
+  const rising = [at(20, 20), at(13, 22), at(6, 24)];
+  assert.deepEqual({ ...selection.exerciseTrend(rising, 12, NOW) }, { sessions: 3, weeks: 2, progressing: true, stalled: false });
+  const flat = [at(20, 20), at(13, 20), at(6, 20), at(1, 20)];
+  assert.equal(selection.exerciseTrend(flat, 12, NOW).stalled, true);
+  assert.equal(selection.exerciseTrend(flat, 12, NOW).progressing, false);
+  assert.equal(selection.exerciseTrend([], 12, NOW), null);
+  assert.equal(selection.exerciseTrend([at(60, 20)], 12, NOW), null, 'sólo cuentan las últimas 6 semanas');
+
+  // Puntaje interno: lo que progresas se mantiene; lo que cambias o te molestó baja; «otra variante» explora.
+  const base = { goal: 'muscle', level: 2, chosen: [], painful: new Set(), trends: new Map(), exploring: false, seed: 3 };
+  const score = (extra) => selection.scoreCandidate(press, { ...base, ...extra }).score;
+  const trend = selection.exerciseTrend(rising, 12, NOW);
+  assert.ok(score({ trends: new Map([[12, trend]]) }) - score({}) >= 28, 'continuidad');
+  assert.equal(score({ trends: new Map([[12, trend]]), exploring: true }) - score({ exploring: true }), 0, 'al explorar no hay continuidad');
+  assert.equal(score({ trends: new Map([[12, selection.exerciseTrend(flat, 12, NOW)]]) }), score({}), 'estancado: sin continuidad');
+  assert.equal(score({}) - score({ avoid: { 12: 2 } }), 50, 'cambiado dos veces');
+  assert.equal(score({}) - score({ painful: new Set([12]) }), 60, 'molestia');
+  // Series semanales de referencia por nivel.
+  assert.deepEqual([1, 2, 3].map((level) => pair(selection.weeklySetTarget(level))), [[4, 8], [8, 12], [10, 20]]);
+
+  // El generador respeta la molestia (cambia a otra variante) y mantiene lo que progresa.
+  const input = { preference: { location: 'gym', equipment: [] }, minutes: 45, focus: 'upper', goal: 'muscle', level: 2, now: NOW };
+  const first = generator.generateWorkout({ ...input, seed: 2 }).records[0].exerciseId;
+  const history = (feel) => [13, 6].map((daysAgo, index) => ({ ...at(daysAgo, 20 + index * 2, index === 1 ? feel : undefined), records: [{ exerciseId: first, unit: 'reps', ...(index === 1 && feel ? { feel } : {}), sets: [set(10, 20 + index * 2), set(10, 20 + index * 2), set(10, 20 + index * 2)] }] }));
+  const painful = generator.generateWorkout({ ...input, seed: 2, workouts: history('pain') });
+  assert.ok(!painful.records.some((record) => record.exerciseId === first), 'no repite lo que te molestó');
+  assert.ok(Object.values(painful.why).some((reason) => /te molestó/i.test(reason.variant)), 'y lo explica');
+  // Lo que progresas se mantiene: un ejercicio que no salía solo, con tres semanas de avance, entra y se queda;
+  // «Otra variante» explora y deja de sostenerlo.
+  const chosen = new Set(generator.generateWorkout({ ...input, seed: 2 }).records.map((record) => record.exerciseId));
+  const candidate = exercises.find((item) => item.category === 'strength' && item.pattern === 'vertical-push' && item.increment > 0 && item.equipment.length > 0 && !chosen.has(item.id));
+  const progressing = [20, 13, 6].map((daysAgo, index) => ({ ...at(daysAgo, 10), id: `c${daysAgo}`, records: [{ exerciseId: candidate.id, unit: 'reps', sets: [set(10, 10 + index * 2), set(10, 10 + index * 2), set(10, 10 + index * 2)] }] }));
+  const included = (extra, seed) => generator.generateWorkout({ ...input, seed, ...extra }).records.some((record) => record.exerciseId === candidate.id);
+  const seeds = Array.from({ length: 12 }, (_, index) => index + 1);
+  assert.equal(seeds.filter((seed) => included({}, seed)).length, 0, 'sin historial no sale');
+  assert.equal(seeds.filter((seed) => included({ workouts: progressing }, seed)).length, seeds.length, 'con avance sostenido, se mantiene');
+  assert.ok(seeds.filter((seed) => included({ workouts: progressing, variant: 4 }, seed)).length <= 3, 'al pedir otra variante se explora');
+  assert.ok(Object.values(generator.generateWorkout({ ...input, seed: 3, workouts: progressing }).why).some((reason) => /Lo mantenemos: has progresado/.test(reason.variant)), 'y lo explica');
+});
+
+test('selección: el porqué explica papel, variante y lo aprendido', () => {
+  const hinge = loadedBy('hinge') ?? exercises.find((item) => item.pattern === 'hinge');
+  const why = (exercise, extra = {}) => selection.whyExercise(exercise, { location: 'gym', level: 2, ...extra });
+  assert.match(why(hinge).role, /Necesitamos una bisagra de cadera: trabaja/);
+  assert.match(why(exercises.find((item) => item.pattern === 'core')).role, /^Núcleo/);
+  assert.match(why(hinge, { location: 'home', replacedForPain: 'Peso muerto' }).variant, /te molestó peso muerto/i);
+  assert.match(why(hinge, { trend: { sessions: 3, weeks: 3, progressing: true, stalled: false } }).variant, /Lo mantenemos: has progresado en las últimas 3 semanas/);
+  assert.match(why(hinge, { trend: { sessions: 4, weeks: 4, progressing: false, stalled: true } }).variant, /antes de cambiarlo, revisa el descanso y el margen \(RIR\)/);
+  const bodyweight = exercises.find((item) => item.equipment.length === 0 && item.category === 'strength' && item.level === 2);
+  assert.match(why(bodyweight, { location: 'home' }).variant, /equipamiento|Entrenas en casa/);
+  // Ni rankings ni porcentajes en ningún motivo.
+  for (const exercise of exercises.filter((item) => item.category === 'strength').slice(0, 40)) {
+    const text = Object.values(why(exercise)).join(' ');
+    assert.doesNotMatch(text, /%|mejor ejercicio|#1|ranking/i);
+  }
+  // Orden y recorte por cobertura.
+  const ordered = selection.sessionOrder([exercises.find((item) => item.pattern === 'core'), loadedBy('horizontal-push'), loadedBy('squat'), loadedBy('isolation')]);
+  assert.deepEqual(ordered.map((item) => item.pattern), ['squat', 'horizontal-push', 'isolation', 'core']);
+  const squat = loadedBy('squat');
+  const lunge = loadedBy('lunge') ?? exercises.find((item) => item.pattern === 'lunge');
+  assert.equal(selection.leastNeeded([squat, loadedBy('horizontal-push'), lunge, loadedBy('hinge') ?? hinge]), 2, 'sale la repetición de rodilla antes que la bisagra');
+  assert.equal(selection.leastNeeded([squat, loadedBy('horizontal-push'), hinge]), 2, 'si todos son distintos, el último');
+});
+
+test('progresión: «¿Cómo salió?» manda sobre el esfuerzo de la sesión y la molestia nunca sube', () => {
+  const press = training.exerciseById(12);
+  const NOW = Date.UTC(2026, 9, 20, 15);
+  const top = [set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 })];
+  const on = (daysAgo, feel, effort = 3) => ({ id: `f${daysAgo}`, date: utils.localDateKey(new Date(NOW - daysAgo * DAY)), completedAt: new Date(NOW - daysAgo * DAY).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', effort, records: [{ exerciseId: 12, unit: 'reps', ...(feel ? { feel } : {}), sets: top }] });
+  const next = (workouts) => progression.suggestNext(press, training.lastRecordFor(workouts, 12), 'kg', (kg) => kg, progression.effortFor(workouts, 12));
+  assert.equal(next([on(2, undefined, 3)]).kind, 'load', 'sin respuesta, la sesión normal sube');
+  // Muy difícil en el ejercicio, aunque la sesión fue «bien»: se repite.
+  assert.deepEqual({ kind: next([on(2, 'hard', 3)]).kind, because: next([on(2, 'hard', 3)]).because }, { kind: 'hold', because: 'hard' });
+  // Muy fácil en el ejercicio, aunque la sesión fue difícil: manda el ejercicio.
+  assert.equal(next([on(2, 'easy', 5)]).because, 'easy');
+  // Bien: doble progresión de siempre.
+  assert.equal(next([on(2, 'good', 5)]).kind, 'load');
+  // Molestia: mantiene la carga y propone cambiar de variante; nunca sube.
+  const pain = next([on(2, 'pain')]);
+  assert.deepEqual({ kind: pain.kind, load: pain.load, because: pain.because }, { kind: 'hold', load: 20, because: 'pain' });
+  assert.match(pain.message, /te molestó.*cambia a otra variante/);
+  assert.equal(progression.effortFor([on(2, 'pain')], 12).pain, true);
+  assert.equal(progression.effortFor([on(2, 'pain'), on(9, 'good')], 12).hardStreak, 1);
+  // Ejercicios que te molestaron en las últimas 3 semanas (sólo cuenta la última vez).
+  const painful = adaptationLib.painfulExercises;
+  assert.deepEqual(Array.from(painful([on(2, 'pain')], NOW)), [12]);
+  assert.deepEqual(Array.from(painful([on(2, 'good'), on(9, 'pain')], NOW)), [], 'si la última vez salió bien, ya no');
+  assert.deepEqual(Array.from(painful([on(30, 'pain')], NOW)), [], 'de hace más de 3 semanas, ya pasó');
+});
+
+test('ajustes visibles: qué cambió frente a tu última vez y por qué', () => {
+  const press = training.exerciseById(12); // 8–12 reps, +2 kg
+  const top = [set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 })];
+  const mid = [set(10, 20), set(10, 20), set(10, 20)];
+  const last = (sets) => ({ exerciseId: 12, unit: 'reps', sets });
+  const adjust = (sets, context) => {
+    const previous = last(sets);
+    const proposed = last(progression.progressedSets(press, 3, previous, context));
+    return progression.describeAdjustment(press, previous, proposed, context, 'kg', (kg) => kg);
+  };
+  assert.deepEqual({ ...adjust(top, { effort: 3, hardStreak: 0 }) }, { change: '20 → 22 kg', reason: 'Completaste el rango con margen.', direction: 'up' });
+  assert.equal(adjust(top, { effort: 2, hardStreak: 0 }).reason, 'Tu última sesión fue fácil.');
+  assert.deepEqual({ ...adjust(mid, { effort: 3, hardStreak: 0 }) }, { change: '10 → 11 rep.', reason: 'Sumas una repetición dentro del rango.', direction: 'up' });
+  const hard = adjust(top, { effort: 4, hardStreak: 1 });
+  assert.deepEqual({ change: hard.change, direction: hard.direction }, { change: 'Mantiene 20 kg', direction: 'hold' });
+  assert.match(hard.reason, /difícil.*repetimos antes de subir/);
+  assert.match(adjust(top, { effort: 4, hardStreak: 1, pain: true }).reason, /Te molestó la última vez/);
+  assert.match(adjust(mid, { effort: 4, hardStreak: 2 }).reason, /dos sesiones difíciles seguidas/);
+  assert.equal(progression.describeAdjustment(press, undefined, last(top), undefined, 'kg', (kg) => kg), null, 'primera vez: nada que comparar');
+  // Si la carga se mueve por las pesas que tienes, no se presenta como progreso (ni como bajada por fatiga).
+  const snapped = progression.describeAdjustment(press, last(top), last(top.map((item) => ({ ...item, load: 16 }))), { effort: 3, hardStreak: 0 }, 'kg', (kg) => kg);
+  assert.deepEqual({ ...snapped }, { change: '20 → 16 kg', reason: 'Ajustada a las pesas que tienes.', direction: 'down' });
+  const snappedUp = progression.describeAdjustment(press, last(mid), last(mid.map((item) => ({ ...item, load: 24 }))), { effort: 3, hardStreak: 0 }, 'kg', (kg) => kg);
+  assert.equal(snappedUp.reason, 'Ajustada a las pesas que tienes.');
+  // En libras, la carga se muestra en libras.
+  const lb = progression.describeAdjustment(press, last(top), last(progression.progressedSets(press, 3, last(top), { effort: 3, hardStreak: 0 })), { effort: 3, hardStreak: 0 }, 'lb', (kg) => utils.toDisplayWeight(kg, 'lb'));
+  assert.match(lb.change, /lb$/);
+});
+
+test('revisión semanal: sólo al empezar la semana, con lo hecho y lo que viene, y una vez', () => {
+  const monday = new Date(2026, 9, 19, 9); // lunes 19 de octubre de 2026
+  const day = (date, extra = {}) => ({ id: `r${date}`, date, completedAt: `${date}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', prs: [], records: [{ exerciseId: 12, unit: 'reps', sets: [set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 }), set(12, 20, { rir: 2 })] }], ...extra });
+  const workouts = [day('2026-10-13'), day('2026-10-16', { prs: [{ exerciseId: 12, kind: 'load', value: 20 }] })];
+  const options = { now: monday, goal: 3, unit: 'kg' };
+  const result = trainingReview.trainingReview(workouts, options);
+  assert.equal(result.weekStart, '2026-10-12');
+  assert.deepEqual(Array.from(result.lines), ['2 sesiones de 3', '6 series de trabajo', '1 récord nuevo']);
+  assert.equal(result.next.length, 1);
+  assert.deepEqual({ name: result.next[0].name, change: result.next[0].change, direction: result.next[0].direction }, { name: training.exerciseById(12).name, change: '20 → 22 kg', direction: 'up' });
+  // Meta cumplida, una vez vista no vuelve, y sólo lunes a miércoles.
+  assert.match(trainingReview.trainingReview([...workouts, day('2026-10-14')], options).lines[0], /3 sesiones de 3: meta cumplida/);
+  assert.equal(trainingReview.trainingReview(workouts, { ...options, seen: '2026-10-12' }), null);
+  assert.ok(trainingReview.trainingReview(workouts, { ...options, now: new Date(2026, 9, 21, 20) }), 'el miércoles aún aparece');
+  assert.equal(trainingReview.trainingReview(workouts, { ...options, now: new Date(2026, 9, 22, 9) }), null, 'el jueves ya no');
+  assert.equal(trainingReview.trainingReview([day('2026-10-05')], options), null, 'sin sesiones la semana pasada, no hay revisión');
+  assert.equal(trainingReview.trainingReview([], options), null);
+});
+
+test('PULSO aprendió: molestias, cansancio, lo que costó o salió fácil, lo que progresas y lo que cambias', () => {
+  const NOW = Date.UTC(2026, 9, 20, 15);
+  const at = (daysAgo, recordExtra = {}, extra = {}) => ({ id: `l${daysAgo}`, date: utils.localDateKey(new Date(NOW - daysAgo * DAY)), completedAt: new Date(NOW - daysAgo * DAY).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: 12, unit: 'reps', sets: [set(10, 20), set(10, 20), set(10, 20)], ...recordExtra }], ...extra });
+  const name = training.exerciseById(12).name;
+  assert.deepEqual(Array.from(adaptationLib.learnedFrom([], undefined, NOW)), [], 'sin historial no hay nada que contar');
+  assert.deepEqual(Array.from(adaptationLib.learnedFrom([at(40)], { 12: 3 }, NOW)), [], 'sin sesiones recientes, tampoco');
+  assert.match(adaptationLib.learnedFrom([at(2, { feel: 'pain' })], undefined, NOW)[0].text, new RegExp(`Te molestó ${name}: no subimos su carga y proponemos otra variante`));
+  assert.match(adaptationLib.learnedFrom([at(2, { feel: 'hard' })], undefined, NOW)[0].text, /te costó: la próxima vez repetimos antes de subir/);
+  assert.match(adaptationLib.learnedFrom([at(2, { feel: 'easy' })], undefined, NOW)[0].text, /te salió fácil: la próxima vez subimos un poco/);
+  assert.equal(adaptationLib.learnedFrom([at(2, { feel: 'good' })], undefined, NOW).length, 0, 'bien: nada que ajustar');
+  const streak = adaptationLib.learnedFrom([at(1, {}, { effort: 4 }), at(3, {}, { effort: 4 })], undefined, NOW);
+  assert.ok(streak.some((item) => /2 sesiones difíciles seguidas/.test(item.text)));
+  assert.ok(adaptationLib.learnedFrom([at(2)], { 12: 2 }, NOW).some((item) => /Cambiaste .* varias veces: dejamos de proponerlo/.test(item.text)));
+  const rising = [at(13, { sets: [set(10, 20), set(10, 20), set(10, 20)] }), at(6, { sets: [set(10, 24), set(10, 24), set(10, 24)] })];
+  assert.ok(adaptationLib.learnedFrom(rising, undefined, NOW).some((item) => /avanza: lo mantenemos/.test(item.text)));
+  // Como máximo cuatro, con las molestias primero.
+  const many = adaptationLib.learnedFrom([at(1, { feel: 'pain' }, { effort: 4 }), at(3, { feel: 'hard' }, { effort: 4 })], { 12: 2, 14: 2, 15: 2 }, NOW);
+  assert.ok(many.length <= 4);
+  assert.match(many[0].key, /^pain-/);
+});
+
+test('programas: la recomendación sale de tus días, tu lugar y tu nivel', () => {
+  const featured = programs.featuredPrograms({ location: 'gym', level: 2, hasDumbbells: false });
+  const pick = (extra) => programs.recommendedProgram(featured, { location: 'gym', days: 3, level: 2, ...extra })?.id;
+  assert.equal(pick({ days: 2 }), featured[0].id, '2 o 3 días: cuerpo completo');
+  assert.equal(pick({ days: 3 }), featured[0].id);
+  assert.equal(pick({ days: 4 }), 'torso-pierna', '4 días: torso y pierna');
+  assert.equal(pick({ days: 5 }), 'push-pull-legs', '5 días con experiencia: push, pull y legs');
+  assert.equal(pick({ days: 6 }), 'push-pull-legs');
+  assert.equal(pick({ days: 5, level: 1 }), 'torso-pierna', 'quien empieza nunca arranca con push, pull y legs');
+  assert.equal(pick({ days: 6, level: 1 }), 'torso-pierna');
+  assert.equal(pick({ location: 'home', days: 6 }), featured[0].id, 'en casa, cuerpo completo');
+  // Cada sesión de programa lleva rango, margen y descanso por papel.
+  const program = programs.programById('full-body-gimnasio');
+  const records = programs.programSessionRecords(program, 1, 1, []);
+  assert.ok(records.length >= 3);
+  assert.ok(records.every((record) => record.restSeconds > 0));
+  const withRir = records.filter((record) => exercises.find((item) => item.id === record.exerciseId).category === 'strength' && record.unit === 'reps');
+  assert.ok(withRir.length > 0 && withRir.every((record) => record.rir >= 1 && record.rir <= 3));
+});
+
+test('sesión: una caída de 3 repeticiones o más con la misma carga pide 30 s de descanso extra', () => {
+  const sets = (...values) => values.map(([value, load, done = true]) => ({ value, load, done, kind: 'normal' }));
+  const record = (...values) => ({ exerciseId: 12, unit: 'reps', sets: sets(...values) });
+  assert.equal(actions.repDrop(record([12, 20], [8, 20], [8, 20, false]), 1), 4);
+  assert.equal(actions.repDrop(record([12, 20], [10, 20], [10, 20, false]), 1), 0, 'bajar 2 es normal');
+  assert.equal(actions.repDrop(record([12, 20], [8, 25], [8, 25, false]), 1), 0, 'con más carga, bajar es esperable');
+  assert.equal(actions.repDrop(record([12, 20], [8, 20]), 1), 0, 'sin series pendientes, no hay siguiente descanso');
+  assert.equal(actions.repDrop(record([12, 20, false], [8, 20, false]), 0), 0, 'una serie sin hacer no cuenta');
+  assert.equal(actions.repDrop({ exerciseId: 99, unit: 'seconds', sets: sets([40, 0], [30, 0], [30, 0, false]) }, 1), 0, 'por tiempo, no aplica');
+  assert.equal(actions.repDrop(record([12, 20], [8, 20, true], [8, 20, false]), 0), 0, 'la primera serie no se compara con nada');
+});
+
+test('ficha del ejercicio: recorrido por patrón, ritmo, esfuerzo normal y señales para detenerse', () => {
+  for (const pattern of ['squat', 'hinge', 'lunge', 'horizontal-push', 'vertical-push', 'horizontal-pull', 'vertical-pull', 'core', 'carry', 'isolation', 'cardio', 'mobility']) {
+    assert.ok(technique.rangeOfMotion[pattern].length > 40, `recorrido de ${pattern}`);
+  }
+  const strength = exercises.find((item) => item.category === 'strength' && item.unit === 'reps' && item.pattern !== 'carry');
+  assert.match(technique.tempoCue(strength), /Baja en 2–3 segundos/);
+  assert.equal(technique.tempoCue(exercises.find((item) => item.category === 'mobility')), null);
+  assert.equal(technique.tempoCue(exercises.find((item) => item.unit === 'seconds' && item.category === 'strength')), null);
+  assert.match(technique.normalEffort(strength), /cansancio, el ardor en el músculo y respirar agitado/);
+  assert.match(technique.normalEffort(exercises.find((item) => item.category === 'mobility')), /nunca dolor/);
+  assert.ok(technique.stopSigns.length >= 5);
+  assert.ok(technique.stopSigns.some((sign) => /Dolor agudo/.test(sign)) && technique.stopSigns.some((sign) => /pecho/.test(sign)));
+  // Sin lenguaje médico absoluto.
+  const text = [...Object.values(technique.rangeOfMotion), ...technique.stopSigns].join(' ');
+  assert.doesNotMatch(text, /garantiz|cura\b|diagnóstic|siempre es seguro|sin riesgo/i);
+});
+
+test('selección: tus favoritos pesan sin imponerse y se nombran en el porqué', () => {
+  const NOW = Date.UTC(2026, 9, 20, 15);
+  const press = training.exerciseById(12);
+  const base = { goal: 'muscle', level: 2, chosen: [], painful: new Set(), trends: new Map(), exploring: false, seed: 3 };
+  const score = (extra) => selection.scoreCandidate(press, { ...base, ...extra }).score;
+  assert.equal(score({ favorites: new Set([12]) }) - score({}), 14);
+  // Un favorito que además cambias seguido o te molestó no se impone.
+  assert.ok(score({ favorites: new Set([12]), avoid: { 12: 2 } }) < score({}));
+  assert.ok(score({ favorites: new Set([12]), painful: new Set([12]) }) < score({}));
+  // En el generador: entra mucho más seguido que sin marcarlo, pero no en toda sesión que no encaje.
+  const shoulders = exercises.find((item) => item.name === 'Press de hombros con mancuernas');
+  const gym = { preference: { location: 'gym', equipment: [] }, minutes: 45, focus: 'full', goal: 'muscle', level: 2, now: NOW };
+  const seeds = Array.from({ length: 20 }, (_, index) => index + 1);
+  const count = (extra) => seeds.filter((seed) => generator.generateWorkout({ ...gym, seed, ...extra }).records.some((record) => record.exerciseId === shoulders.id)).length;
+  const without = count({});
+  const favored = count({ favorites: [shoulders.id] });
+  assert.ok(favored >= without + 8, `${without} → ${favored} de ${seeds.length}`);
+  const plan = generator.generateWorkout({ ...gym, seed: seeds.find((seed) => generator.generateWorkout({ ...gym, seed, favorites: [shoulders.id] }).records.some((record) => record.exerciseId === shoulders.id)), favorites: [shoulders.id] });
+  assert.match(plan.why[shoulders.id].variant, /favoritos/);
+  assert.match(selection.whyExercise(shoulders, { location: 'gym', level: 2, favorite: true }).variant, /Es uno de tus favoritos/);
+  assert.doesNotMatch(selection.whyExercise(shoulders, { location: 'gym', level: 2 }).variant, /favoritos/);
 });

@@ -27,9 +27,9 @@ export function rangeText(range: [number, number], unit: Exercise["unit"]) {
   return unit === "seconds" ? `${core} s` : core;
 }
 
-/** "3 × 8–12" con el número de series del registro y el rango del ejercicio. */
-export function targetLabel(exercise: Exercise, sets: number, range: [number, number] = exercise.range) {
-  return `${sets} × ${rangeText(range, exercise.unit)}`;
+/** "3 × 8–12" con el número de series del registro y el rango del ejercicio; con RIR: "3 × 8–12 · RIR 2". */
+export function targetLabel(exercise: Exercise, sets: number, range: [number, number] = exercise.range, rir?: number) {
+  return `${sets} × ${rangeText(range, exercise.unit)}${rir === undefined ? "" : ` · RIR ${rir}`}`;
 }
 
 export function restText(seconds: number) {

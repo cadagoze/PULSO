@@ -6,9 +6,9 @@ import { ChevronRight, Plus } from "lucide-react";
 import { programs } from "@/data/programs";
 import { goalLabels, levelLabels } from "@/data/catalog";
 import { RoutineCard } from "@/components/ui/cards";
-import { availableEquipment, levelFromActivities, trainingGoal, trainingLevel } from "@/lib/generator";
+import { availableEquipment, levelFromActivities, trainingLevel } from "@/lib/generator";
 import { featuredPrograms, nextProgramSession, programById, programTotalSessions, recommendedProgram } from "@/lib/programs";
-import { useNutritionProfile, usePreference, useProfile, useProgram, useSettings, useWorkouts } from "@/lib/store";
+import { usePreference, useProfile, useProgram, useSettings, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 import { locationLabels, pad2 } from "@/components/train/shared";
 import { programPhoto } from "@/components/train/program-covers";
@@ -23,14 +23,13 @@ export function SuggestedRoutines({ onCreate }: { onCreate: () => void }) {
   const [preference] = usePreference();
   const [progress] = useProgram();
   const [profile] = useProfile();
-  const [nutrition] = useNutritionProfile();
   const [settings] = useSettings();
   const [workouts] = useWorkouts();
   const now = useNow();
   // El nivel sube con tu constancia (nunca baja de lo que respondiste al empezar).
   const level = now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities);
   const featured = featuredPrograms({ location: preference.location, level, hasDumbbells: availableEquipment(preference).has("dumbbells") });
-  const recommended = recommendedProgram(featured, { location: preference.location, days: settings.weeklyGoal, goal: trainingGoal(profile?.goals, nutrition?.goal) });
+  const recommended = recommendedProgram(featured, { location: preference.location, days: settings.weeklyGoal, level });
   const active = progress ? programById(progress.programId) : undefined;
   const shown = [...(active ? [active] : []), ...(recommended ? [recommended] : []), ...featured].filter((program, index, list) => list.findIndex((item) => item.id === program.id) === index);
   const more = programs.filter((program) => !shown.some((item) => item.id === program.id));

@@ -88,6 +88,10 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-head-tag { margin-bottom: 4px; }
 .ses-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 42px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-case); line-height: 1; text-wrap: balance; overflow-wrap: anywhere; }
 .ses-safety { font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
+/* Objetivo de cada serie: rango y margen (RIR); mientras aprendes, qué significa. */
+.ses-target { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 15px; }
+.ses-target b { font-weight: 600; color: var(--ink); }
+.ses-target small { flex-basis: 100%; max-width: 44ch; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
 .ses-head-note { display: flex; gap: 8px; align-items: flex-start; max-width: 46ch; font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
 .ses-head-note svg { flex: none; margin-top: 2px; }
 .ses-head-text { color: var(--ink-2); font-size: 16px; max-width: 38ch; }
@@ -139,6 +143,15 @@ html:has(.ses-screen), html:has(.ses-screen) body { background: color-mix(in srg
 .ses-paused svg { flex: none; color: var(--warning); }
 .ses-prompt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 10px 10px 10px 14px; border-radius: var(--radius); background: var(--accent-soft); font-size: 14px; animation: ses-swap-in var(--motion-base) var(--ease-standard) backwards; }
 .ses-prompt-actions { display: flex; align-items: center; gap: 4px; }
+/* «¿Cómo salió?»: tras la última serie de un ejercicio (en el siguiente, mientras descansas) y en su resumen. */
+.ses-feel { display: flex; flex-direction: column; gap: 8px; padding: 10px 6px 12px 14px; border-radius: var(--radius); background: var(--surface-2); animation: ses-swap-in var(--motion-base) var(--ease-standard) backwards; }
+.ses-feel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-block: -6px; font-size: 14px; }
+.ses-feel-head span { color: var(--ink-2); }
+.ses-feel-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ses-feel-chips .ses-chip { padding: 0 13px; }
+.ses-feel-chips .ses-chip.has-value { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.ses-feel-done { display: flex; flex-direction: column; gap: 8px; }
+.ses-feel-q { font-size: 14px; font-weight: 600; }
 .ses-block-error { margin: 0; animation: ses-shake 360ms var(--ease-standard); }
 .ses-block.is-complete { gap: 14px; padding-top: 18px; }
 .ses-complete { display: flex; align-items: center; gap: 12px; }
