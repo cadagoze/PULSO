@@ -152,10 +152,10 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
   const restDay = useRestDay();
   const recommendation = today.readiness?.recommendation;
   const note = painNote(today.readiness?.pain) ?? (recommendation && recommendation !== "planned" ? today.plan?.notes[0] : undefined);
-  const begin = () => void start({ name: today.name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } });
+  const begin = () => void start({ name: today.name, records: today.fullRecords, restSeconds: today.restSeconds, source: today.planDay ? { type: "plan", dayId: today.planDay.id } : { type: "generated" } });
   const total = today.records.length;
   const adjusted = today.adjustments.filter(Boolean).length;
-  const context = today.edited ? "Con tus cambios" : today.zone ? "Zona elegida por ti" : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
+  const context = today.edited ? "Con tus cambios" : today.zone ? "Zona elegida por ti" : today.planDay ? `Tu plan · ${today.planDay.split}` : today.focus === today.suggested ? "Sugerida según tu recuperación" : "Enfoque elegido por ti";
 
   if (!today.ready) {
     return (
@@ -173,7 +173,7 @@ function CustomBody({ today, place, onShowList, onAdjust }: { today: TodayPlan; 
     <>
       <Head meta={restDay ? "Hoy es descanso · opcional" : "Tu rutina de hoy"} context={<><b>{goalLabels[today.goal]}</b> · {context}</>} number={today.estimated} label="min" />
       <Title details={[count(total, "ejercicio", "ejercicios"), place, levelLabels[today.level]]} note={note}>
-        {zoneById(today.zone)?.label ?? focusLabels[today.focus]}
+        {zoneById(today.zone)?.label ?? today.planDay?.name ?? focusLabels[today.focus]}
       </Title>
       <WarmupPreview items={today.warmup} included={today.includeWarmup} onToggle={today.setIncludeWarmup} />
       <SessionList records={today.records} onMore={onShowList} />

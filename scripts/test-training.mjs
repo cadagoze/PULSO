@@ -1169,6 +1169,10 @@ test('calentamiento: enfocado en la sesión del día', () => {
   const short = warmupLib.warmupFor({ records: [31, 6].map(rec), minutes: 15 });
   assert.equal(short.filter((item) => item.phase === 'mobility').length, 1);
   assert.equal(short[0].value, 45);
+  // Sesión exprés (10 minutos o menos): sólo la activación, para dejar el tiempo al entrenamiento.
+  const express = warmupLib.warmupFor({ records: [31, 6].map(rec), minutes: 10 });
+  assert.deepEqual(steps(express).map((step) => step.split(':')[0]), ['activation']);
+  assert.equal(warmupLib.warmupMinutes(express), 1);
   // Equipamiento: aperturas con banda sólo si hay bandas.
   const pull = [107, 14].map(rec);
   assert.equal(warmupLib.warmupFor({ records: pull, equipment: new Set(['bands']) }).at(-1).exercise.id, 54);
@@ -1372,7 +1376,7 @@ test('aprende de ti: el esfuerzo que marcas ajusta la progresión', () => {
   assert.equal(suggest([at('2026-10-18', top)]).because, undefined);
   assert.equal(progression.suggestNext(press, undefined, 'kg', (kg) => kg, { effort: 4, hardStreak: 2 }).kind, 'start');
   // effortFor: la última sesión con el ejercicio y la racha de difíciles.
-  assert.deepEqual({ ...progression.effortFor([at('2026-10-18', mid, 4), at('2026-10-15', mid, 4), at('2026-10-12', mid, 3)], 12) }, { effort: 4, hardStreak: 2 });
+  assert.deepEqual({ ...progression.effortFor([at('2026-10-18', mid, 4), at('2026-10-15', mid, 4), at('2026-10-12', mid, 3)], 12, undefined, Date.UTC(2026, 9, 21, 12)) }, { effort: 4, hardStreak: 2, gapDays: 2 });
   assert.deepEqual({ ...progression.effortFor([], 12) }, { effort: undefined, hardStreak: 0 });
   // Las series de la próxima sesión ya vienen ajustadas.
   const sets = Array.from(progression.progressedSets(press, 3, { exerciseId: 12, unit: 'reps', sets: top }, { effort: 4, hardStreak: 1 }));
@@ -1401,19 +1405,27 @@ test('aprende de ti: cansancio acumulado, molestias al terminar y lo que cambias
   assert.ok(!avoided.includes(first), `ya no propone ${first}`);
 });
 
-test('aprende de ti: el nivel sube con constancia y nunca baja de lo que dijiste', () => {
+test('aprende de ti: el nivel sale de lo que haces, no de lo que dices ni de los días que tienes', () => {
   const now = new Date(2026, 9, 20, 9);
-  const weeks = (count) => Array.from({ length: count }, (_, week) => [1, 3].map((day) => {
+  const weeks = (count, withProgress = false) => Array.from({ length: count }, (_, week) => [1, 3].map((day) => {
     const date = new Date(now);
     date.setDate(date.getDate() - 7 * (week + 1) + day - ((now.getDay() + 6) % 7));
     const key = utils.localDateKey(date);
-    return { id: `${week}-${day}`, date: key, completedAt: `${key}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 3, sets: 9, mode: 'full' };
+    // Con progreso: dos ejercicios que suben la carga con el tiempo (las semanas más recientes, con más peso).
+    const load = 20 + (count - week) * 2;
+    const records = withProgress ? [10, 12].map((exerciseId) => ({ exerciseId, unit: 'reps', sets: [set(10, load), set(10, load), set(10, load)] })) : undefined;
+    return { id: `${week}-${day}`, date: key, completedAt: `${key}T18:00:00.000Z`, durationMinutes: 40, exerciseCount: 3, sets: 9, mode: 'full', ...(records ? { records } : {}) };
   })).flat();
   assert.equal(generator.trainingLevel([], [], now), 1);
   assert.equal(generator.trainingLevel([], weeks(4), now), 1);
   assert.equal(generator.trainingLevel([], weeks(5), now), 2, '5 semanas constantes: intermedio');
-  assert.equal(generator.trainingLevel([], weeks(10), now), 3, '10 semanas: avanzado');
-  assert.equal(generator.trainingLevel(['regular'], [], now), 3, 'nunca baja de lo que respondiste');
+  assert.equal(generator.trainingLevel([], weeks(10), now), 2, '10 semanas sin progreso medible: sigue intermedio');
+  assert.equal(generator.trainingLevel([], weeks(10, true), now), 3, '10 semanas progresando: avanzado');
+  // Decir que entrenas con regularidad sólo da el nivel intermedio: lo avanzado se gana con el historial.
+  assert.equal(generator.trainingLevel(['regular'], [], now), 2);
+  assert.equal(generator.trainingLevel(['some'], [], now), 2);
+  assert.equal(generator.trainingLevel(['walking'], [], now), 1);
+  assert.equal(generator.trainingLevel(['regular'], weeks(10, true), now), 3);
 });
 
 test('aprende de ti: el coach explica lo aprendido cuando no hay chequeo', () => {
@@ -1610,7 +1622,7 @@ test('evaluación: cinco decisiones arman el perfil de siempre y repetirla conse
   assert.equal(generator.levelFromActivities(profile.activities), 1);
   assert.deepEqual(plain(generator.profileLimitations(profile.limitations)), ['knees']);
   assert.equal(generator.goalFromProfile(profile.goals), 'muscle');
-  assert.equal(assessment.buildProfile({ ...answers, considerations: ['none'], days: 5 }, null, at).activities[0], 'regular');
+  assert.equal(assessment.buildProfile({ ...answers, considerations: ['none'], days: 5 }, null, at).activities[0], 'some', 'los días no dicen cuánta experiencia tienes');
   assert.deepEqual(plain(assessment.buildProfile({ ...answers, place: 'gym' }, null, at).equipment), [], 'sólo gimnasio: sin equipo de casa');
 
   // Repetir: conserva fecha de inicio, nombre e identidad; parte de tus respuestas actuales.
@@ -1676,30 +1688,40 @@ test('prescripción: rangos por objetivo, margen (RIR), descansos y series por n
   const squat = loadedBy('squat');
   const curl = loadedBy('isolation');
   const plan = (exercise, goal, role, extra = {}) => prescription.prescribe(exercise, { goal, level: 2, role, ...extra });
-  // Rangos: fuerza 4–8 en el principal, hipertrofia 6–12, aislamientos 10–15 y, para moverse más, rangos altos.
+  const planAt = (exercise, goal, role, level) => prescription.prescribe(exercise, { goal, level, role });
+  // Rangos: fuerza, el principal de 3 a 8 (la carga alta rinde más); músculo, 5–10 y aislamientos 10–20; salud general, 8–15.
   assert.deepEqual(pair(plan(squat, 'strength', 'main').range), [4, 8]);
-  assert.deepEqual(pair(plan(squat, 'muscle', 'main').range), [6, 12]);
+  assert.deepEqual(pair(planAt(squat, 'strength', 'main', 3).range), [3, 6]);
+  assert.deepEqual(pair(plan(squat, 'muscle', 'main').range), [5, 10]);
   assert.deepEqual(pair(plan(squat, 'habits', 'main').range), [8, 12]);
-  assert.deepEqual(pair(plan(curl, 'muscle', 'accessory').range), [10, 15]);
-  assert.deepEqual(pair(plan(curl, 'habits', 'accessory').range), [12, 20]);
-  // Descansos: pesado 2–3 min, moderado 90–150 s, aislamiento 60–120 s.
+  assert.deepEqual(pair(plan(curl, 'muscle', 'accessory').range), [10, 20]);
+  assert.deepEqual(pair(plan(curl, 'habits', 'accessory').range), [10, 15]);
+  // Quien empieza aprende la técnica con cargas moderadas.
+  assert.deepEqual(pair(planAt(squat, 'strength', 'main', 1).range), [6, 10]);
+  assert.deepEqual(pair(planAt(squat, 'muscle', 'main', 1).range), [8, 12]);
+  assert.deepEqual(pair(planAt(curl, 'muscle', 'accessory', 1).range), [10, 15]);
+  // Descansos: lo pesado 2–3 min, compuestos moderados 90–120 s, aislamientos 60–90 s; quien empieza, menos.
   assert.equal(plan(squat, 'strength', 'main').rest, 180);
   assert.equal(plan(squat, 'muscle', 'compound').rest, 120);
-  assert.equal(plan(curl, 'muscle', 'accessory').rest, 90);
+  assert.equal(plan(curl, 'muscle', 'accessory').rest, 75);
+  assert.equal(planAt(squat, 'strength', 'main', 1).rest, 150);
+  assert.equal(planAt(squat, 'strength', 'compound', 1).rest, 90);
   const bodyweight = exercises.find((item) => item.category === 'strength' && item.increment === 0 && prescription.isCompound(item) && item.unit === 'reps');
   assert.ok(plan(bodyweight, 'strength', 'main').rest <= 90, 'sin carga externa no hace falta el descanso largo');
-  // RIR: 2 en compuestos y 1 en accesorios; quien empieza, uno más; el modo suave, uno más (máximo 3).
-  assert.equal(plan(squat, 'muscle', 'main').rir, 2);
-  assert.equal(plan(curl, 'muscle', 'accessory').rir, 1);
-  assert.equal(prescription.prescribe(squat, { goal: 'muscle', level: 1, role: 'main' }).rir, 3);
-  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).rir, 3);
+  // RIR por nivel y papel: más margen cuanto menos experiencia; nunca el fallo por defecto (RIR 0).
+  assert.deepEqual(['main', 'compound', 'accessory'].map((role) => planAt(squat, 'muscle', role, 1).rir), [3, 3, 2]);
+  assert.deepEqual(['main', 'compound', 'accessory'].map((role) => planAt(squat, 'muscle', role, 2).rir), [2, 2, 1]);
+  assert.deepEqual(['main', 'compound', 'accessory'].map((role) => planAt(squat, 'muscle', role, 3).rir), [2, 1, 1]);
+  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).rir, 3, 'el modo suave suma uno (máximo 3)');
   assert.equal(plan(curl, 'muscle', 'accessory', { easier: true }).rir, 2);
-  // Series: quien empieza no suma; desde intermedio una más en fuerza y músculo; lo suave, una menos; entre 2 y 5.
+  for (const level of [1, 2, 3]) for (const role of ['main', 'compound', 'accessory', 'core']) assert.ok(planAt(squat, 'strength', role, level).rir >= 1, 'nadie va al fallo por defecto');
+  // Series: de 2 a 4 por ejercicio y sesión; desde intermedio una más en fuerza y músculo; lo suave, una menos.
   const starter = prescription.prescribe(squat, { goal: 'muscle', level: 1, role: 'main' }).sets;
-  assert.equal(plan(squat, 'muscle', 'main').sets, Math.min(5, starter + 1));
+  assert.equal(plan(squat, 'muscle', 'main').sets, Math.min(4, starter + 1));
   assert.equal(plan(squat, 'habits', 'main').sets, starter);
-  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).sets, Math.max(2, Math.min(5, squat.sets)));
+  assert.equal(plan(squat, 'muscle', 'main', { easier: true }).sets, Math.max(2, Math.min(4, squat.sets)));
   assert.ok(prescription.prescribe(squat, { goal: 'strength', level: 3, role: 'main', minutes: 10, easier: true }).sets >= 2);
+  for (const level of [1, 2, 3]) assert.ok(planAt(squat, 'strength', 'main', level).sets <= 4);
   // Movilidad: sin esfuerzo, descanso mínimo.
   const stretch = exercises.find((item) => item.category === 'mobility');
   assert.deepEqual({ rir: plan(stretch, 'muscle', 'accessory').rir, rest: plan(stretch, 'muscle', 'accessory').rest }, { rir: 3, rest: 15 });
@@ -1782,7 +1804,9 @@ test('selección: continuidad, molestias, cambios y semanas (puntajes internos, 
   assert.equal(score({}) - score({ avoid: { 12: 2 } }), 50, 'cambiado dos veces');
   assert.equal(score({}) - score({ painful: new Set([12]) }), 60, 'molestia');
   // Series semanales de referencia por nivel.
-  assert.deepEqual([1, 2, 3].map((level) => pair(selection.weeklySetTarget(level))), [[4, 8], [8, 12], [10, 20]]);
+  const volumeModule = load('src/lib/volume.ts');
+  assert.deepEqual([1, 2, 3].map((level) => ({ ...volumeModule.weeklyTarget(level, 'muscle') })), [{ low: 6, high: 10 }, { low: 10, high: 16 }, { low: 12, high: 20 }]);
+  assert.deepEqual([1, 2, 3].map((level) => ({ ...volumeModule.weeklyTarget(level, 'strength') })), [{ low: 3, high: 6 }, { low: 4, high: 9 }, { low: 4, high: 9 }]);
 
   // El generador respeta la molestia (cambia a otra variante) y mantiene lo que progresa.
   const input = { preference: { location: 'gym', equipment: [] }, minutes: 45, focus: 'upper', goal: 'muscle', level: 2, now: NOW };
@@ -1798,9 +1822,11 @@ test('selección: continuidad, molestias, cambios y semanas (puntajes internos, 
   const progressing = [20, 13, 6].map((daysAgo, index) => ({ ...at(daysAgo, 10), id: `c${daysAgo}`, records: [{ exerciseId: candidate.id, unit: 'reps', sets: [set(10, 10 + index * 2), set(10, 10 + index * 2), set(10, 10 + index * 2)] }] }));
   const included = (extra, seed) => generator.generateWorkout({ ...input, seed, ...extra }).records.some((record) => record.exerciseId === candidate.id);
   const seeds = Array.from({ length: 12 }, (_, index) => index + 1);
-  assert.equal(seeds.filter((seed) => included({}, seed)).length, 0, 'sin historial no sale');
+  assert.ok(seeds.filter((seed) => included({}, seed)).length <= seeds.length / 2, 'sin historial no se impone');
   assert.equal(seeds.filter((seed) => included({ workouts: progressing }, seed)).length, seeds.length, 'con avance sostenido, se mantiene');
-  assert.ok(seeds.filter((seed) => included({ workouts: progressing, variant: 4 }, seed)).length <= 3, 'al pedir otra variante se explora');
+  const withoutHistory = seeds.filter((seed) => included({}, seed)).length;
+  const exploring = seeds.filter((seed) => included({ workouts: progressing, variant: 4 }, seed)).length;
+  assert.ok(exploring < seeds.length && exploring <= withoutHistory + 3, `al pedir otra variante se explora (${exploring} de ${seeds.length}, sin historial ${withoutHistory})`);
   assert.ok(Object.values(generator.generateWorkout({ ...input, seed: 3, workouts: progressing }).why).some((reason) => /Lo mantenemos: has progresado/.test(reason.variant)), 'y lo explica');
 });
 
@@ -1929,10 +1955,12 @@ test('programas: la recomendación sale de tus días, tu lugar y tu nivel', () =
   assert.equal(pick({ days: 2 }), featured[0].id, '2 o 3 días: cuerpo completo');
   assert.equal(pick({ days: 3 }), featured[0].id);
   assert.equal(pick({ days: 4 }), 'torso-pierna', '4 días: torso y pierna');
-  assert.equal(pick({ days: 5 }), 'push-pull-legs', '5 días con experiencia: push, pull y legs');
-  assert.equal(pick({ days: 6 }), 'push-pull-legs');
-  assert.equal(pick({ days: 5, level: 1 }), 'torso-pierna', 'quien empieza nunca arranca con push, pull y legs');
-  assert.equal(pick({ days: 6, level: 1 }), 'torso-pierna');
+  assert.equal(pick({ days: 5 }), 'torso-pierna', 'a nivel intermedio, push, pull y legs no hace falta');
+  assert.equal(pick({ days: 5, level: 3 }), 'push-pull-legs', '5 días con experiencia: push, pull y legs');
+  assert.equal(pick({ days: 6, level: 3 }), 'push-pull-legs');
+  assert.equal(pick({ days: 5, level: 1 }), featured[0].id, 'quien empieza: cuerpo completo, nunca push, pull y legs');
+  assert.equal(pick({ days: 6, level: 1 }), featured[0].id);
+  assert.equal(pick({ days: 4, level: 1 }), featured[0].id);
   assert.equal(pick({ location: 'home', days: 6 }), featured[0].id, 'en casa, cuerpo completo');
   // Cada sesión de programa lleva rango, margen y descanso por papel.
   const program = programs.programById('full-body-gimnasio');
@@ -1964,6 +1992,7 @@ test('ficha del ejercicio: recorrido por patrón, ritmo, esfuerzo normal y seña
   assert.equal(technique.tempoCue(exercises.find((item) => item.category === 'mobility')), null);
   assert.equal(technique.tempoCue(exercises.find((item) => item.unit === 'seconds' && item.category === 'strength')), null);
   assert.match(technique.normalEffort(strength), /cansancio, el ardor en el músculo y respirar agitado/);
+  assert.match(technique.normalEffort(strength), /agujetas.*no miden/);
   assert.match(technique.normalEffort(exercises.find((item) => item.category === 'mobility')), /nunca dolor/);
   assert.ok(technique.stopSigns.length >= 5);
   assert.ok(technique.stopSigns.some((sign) => /Dolor agudo/.test(sign)) && technique.stopSigns.some((sign) => /pecho/.test(sign)));
@@ -1993,4 +2022,369 @@ test('selección: tus favoritos pesan sin imponerse y se nombran en el porqué',
   assert.match(plan.why[shoulders.id].variant, /favoritos/);
   assert.match(selection.whyExercise(shoulders, { location: 'gym', level: 2, favorite: true }).variant, /Es uno de tus favoritos/);
   assert.doesNotMatch(selection.whyExercise(shoulders, { location: 'gym', level: 2 }).variant, /favoritos/);
+});
+
+// ─── Plan de entrenamiento: estructura, volumen, tiempo y adaptación ───────────
+const planLib = load('src/lib/training-plan.ts');
+const structureLib = load('src/lib/program-structure.ts');
+const volumeLib = load('src/lib/volume.ts');
+const durationLib = load('src/lib/duration.ts');
+const adaptVolume = load('src/lib/volume-adaptation.ts');
+const plainJson = (value) => JSON.parse(JSON.stringify(value));
+const gymPreference = { location: 'gym', equipment: [] };
+const homePreference = { location: 'home', equipment: ['dumbbells', 'bench'] };
+const barePreference = { location: 'home', equipment: [] };
+const planOf = (extra) => planLib.buildTrainingPlan({ preference: gymPreference, goal: 'muscle', level: 2, minutes: 45, daysPerWeek: 3, warmup: true, now: Date.UTC(2026, 9, 21, 15), ...extra });
+const exerciseOfPlan = (item) => exercises.find((candidate) => candidate.id === item.exerciseId);
+
+test('volumen: una serie cuenta entera para el que lidera y una fracción para los que ayudan', () => {
+  const press = training.exerciseById(12);
+  const row = training.exerciseById(14);
+  assert.deepEqual(plainJson(volumeLib.muscleCredit(press)), { chest: 1, triceps: 0.5, shoulders: 0.25 });
+  assert.deepEqual(plainJson(volumeLib.muscleCredit(row)), { lats: 1, back: 0.5, biceps: 0.25, forearms: 0.25 });
+  const sets = volumeLib.effectiveSets([{ exercise: press, sets: 4 }, { exercise: row, sets: 4 }]);
+  assert.deepEqual([sets.chest, sets.triceps, sets.shoulders, sets.biceps], [4, 2, 1, 1]);
+  assert.equal(volumeLib.trackedSets(sets, 'lats'), 4, 'la espalda cuenta por la mayor entre dorsales y espalda media');
+  // Movilidad y cardio no suman series de fuerza.
+  const mobility = exercises.find((item) => item.category === 'mobility');
+  assert.ok(Object.values(volumeLib.effectiveSets([{ exercise: mobility, sets: 3 }])).every((value) => value === 0));
+  // Los registros de una sesión se cuentan igual (sin calentamientos).
+  const record = { exerciseId: 12, unit: 'reps', sets: [set(10, 20, { kind: 'warmup' }), set(10, 20), set(10, 20)] };
+  assert.equal(volumeLib.recordsEffectiveSets([record]).chest, 2);
+  assert.deepEqual([1, 2, 3].map((level) => volumeLib.sessionCap(level)), [6, 8, 10]);
+});
+
+test('duración: ejecución, descansos y transiciones; las superseries comparten el descanso', () => {
+  const rec = (exerciseId, sets, rest, extra = {}) => ({ exerciseId, unit: 'reps', restSeconds: rest, sets: Array.from({ length: sets }, () => ({ value: 10, load: 0, done: false, kind: 'normal' })), ...extra });
+  // 3 series de 10 repeticiones (3 s cada una + 15 s de preparación), 2 descansos de 90 s y 45 s para pasar al siguiente.
+  assert.equal(durationLib.sessionSeconds([rec(12, 3, 90)], 90), 3 * 45 + 2 * 90 + 45);
+  assert.equal(durationLib.estimateMinutes([rec(12, 3, 90)], 90), 6);
+  const separate = [rec(12, 3, 90), rec(14, 3, 90)];
+  const paired = [rec(12, 3, 90, { group: 'a' }), rec(14, 3, 90, { group: 'a' })];
+  assert.equal(durationLib.sessionSeconds(separate, 90), 720);
+  assert.equal(durationLib.sessionSeconds(paired, 90), 540, 'ahorra un descanso por vuelta del segundo ejercicio');
+  // El calentamiento cuenta como en su tarjeta: lo que dura cada movimiento y 15 s para cambiar, sin preparar series ni transiciones.
+  const warm = [rec(72, 1, 15, { unit: 'seconds', sets: [{ value: 60, load: 0, done: false, kind: 'warmup' }] }), rec(2, 1, 15, { sets: [{ value: 10, load: 0, done: false, kind: 'warmup' }] })];
+  assert.equal(durationLib.sessionSeconds(warm, 60), 60 + 15 + 10 * 3 + 15);
+  // Los ejercicios por tiempo cuentan sus segundos y el descanso largo pesa: el mismo número de ejercicios no dura lo mismo.
+  const plank = { exerciseId: 4, unit: 'seconds', restSeconds: 45, sets: [{ value: 40, load: 0, done: false }, { value: 40, load: 0, done: false }] };
+  assert.equal(durationLib.sessionSeconds([plank], 45), 40 + 40 + 45 + 45);
+  const heavy = Array.from({ length: 5 }, () => rec(12, 4, 180));
+  const light = Array.from({ length: 5 }, () => rec(12, 3, 60));
+  assert.ok(durationLib.estimateMinutes(heavy, 90) > durationLib.estimateMinutes(light, 90) * 2, 'cinco ejercicios pesados no son cinco aislamientos');
+});
+
+test('estructura: la recomendación sale de tus días, nivel, objetivo, tiempo y equipo', () => {
+  const rec = (extra) => structureLib.recommendStructure({ days: 3, level: 2, goal: 'muscle', minutes: 45, location: 'gym', variety: 70, ...extra });
+  assert.equal(rec({ days: 1 }).sessions, 1);
+  assert.deepEqual([rec({ days: 2 }).split, plainJson(rec({ days: 2 }).cycle)], ['full-body', ['A', 'B']]);
+  assert.deepEqual([rec({ days: 3, level: 1 }).split, plainJson(rec({ days: 3, level: 1 }).cycle)], ['full-body', ['A', 'B']]);
+  assert.deepEqual([rec({ days: 4 }).split, plainJson(rec({ days: 4 }).cycle)], ['upper-lower', ['UA', 'LA', 'UB', 'LB']]);
+  assert.equal(rec({ days: 5, level: 2 }).split, 'full-upper-lower');
+  // Quien empieza: tres sesiones de Full Body bastan (cada músculo tres veces por semana); los demás días, opcionales.
+  for (const days of [4, 5, 6]) assert.deepEqual([rec({ days, level: 1 }).split, rec({ days, level: 1 }).sessions], ['full-body', 3]);
+  assert.match(rec({ days: 5, level: 1 }).reason, /5 días.*al empezar|al empezar.*3 de Full Body/);
+  // Cinco días con experiencia, buen equipo y objetivo de fuerza o músculo: PPL + Torso / Pierna; con poco equipo, el híbrido de siempre.
+  assert.equal(rec({ days: 5, level: 3 }).split, 'ppl-upper-lower');
+  assert.equal(rec({ days: 5, level: 3, variety: 38 }).split, 'full-upper-lower');
+  assert.equal(rec({ days: 5, level: 3, goal: 'weight' }).split, 'full-upper-lower');
+  // Seis días no se recomiendan solos: hace falta experiencia, equipo y sesiones de verdad.
+  assert.ok(rec({ days: 6, level: 2 }).sessions <= 5 && rec({ days: 6, level: 2 }).split === 'full-upper-lower');
+  assert.equal(rec({ days: 6, level: 3, minutes: 60 }).split, 'push-pull-legs');
+  assert.notEqual(rec({ days: 6, level: 3, minutes: 30 }).split, 'push-pull-legs', 'con sesiones cortas no');
+  assert.notEqual(rec({ days: 6, level: 3, minutes: 60, variety: 35 }).split, 'push-pull-legs', 'con poco equipo tampoco');
+  assert.notEqual(rec({ days: 6, level: 3, minutes: 60, goal: 'habits' }).split, 'push-pull-legs');
+  // Salud general: tres sesiones aunque haya más días; poco equipo: Full Body y como mucho tres.
+  assert.equal(rec({ days: 5, goal: 'habits' }).sessions, 3);
+  assert.equal(rec({ days: 5, goal: 'energy' }).split, 'full-body');
+  assert.deepEqual([rec({ days: 5, variety: 22, level: 3 }).split, rec({ days: 5, variety: 22, level: 3 }).sessions], ['full-body', 3]);
+  // Nunca Push / Pull / Legs con 1–3 días, sea cual sea el nivel o el objetivo.
+  for (const level of [1, 2, 3]) for (const goal of ['strength', 'muscle', 'weight', 'energy', 'habits']) for (const days of [1, 2, 3]) assert.notEqual(rec({ days, level, goal }).split, 'push-pull-legs');
+  // Una razón en una línea y, a lo sumo, una alternativa.
+  for (const days of [1, 2, 3, 4, 5, 6]) {
+    const structure = rec({ days, level: days === 6 ? 3 : 2, minutes: 60 });
+    assert.ok(structure.reason.length > 20 && structure.reason.length < 240 && !structure.reason.includes('\n'), structure.reason);
+    assert.ok(!structure.alternative || structure.alternative.split !== structure.split);
+  }
+});
+
+test('plan: «3 días, 45 minutos, en casa con mancuernas» sale hecho, completo y progresable', () => {
+  const input = { preference: homePreference, goal: 'strength', level: 1, minutes: 45, daysPerWeek: 3, warmup: true, now: Date.UTC(2026, 9, 21, 15) };
+  const plan = planLib.buildTrainingPlan(input);
+  assert.deepEqual([plan.label, plan.daysPerWeek, plainJson(plan.cycle)], ['Full Body', 3, ['A', 'B']]);
+  assert.match(plan.reason, /3 días/);
+  assert.equal(plan.chosen, false);
+  assert.deepEqual(plainJson(plan.days.map((day) => day.name)), ['Full Body A', 'Full Body B']);
+  for (const day of plan.days) {
+    assert.ok(day.minutes <= 46, `${day.name}: ${day.minutes} min`);
+    assert.ok(day.exercises.length >= 4 && day.exercises.length <= 7, `${day.name}: ${day.exercises.length} ejercicios`);
+    assert.ok(day.exercises.every((item) => item.sets >= 2 && item.sets <= 5));
+  }
+  // Cada semana cubre rodilla, empuje, tirón y bisagra, con el equipo que hay.
+  const patterns = new Set(plan.days.flatMap((day) => day.exercises.map((item) => exerciseOfPlan(item).pattern)));
+  for (const needed of [['squat', 'lunge'], ['horizontal-push', 'vertical-push'], ['horizontal-pull', 'vertical-pull'], ['hinge']]) assert.ok(needed.some((pattern) => patterns.has(pattern)), `falta ${needed}`);
+  assert.deepEqual(plainJson(planLib.validatePlan(plan, input)), []);
+  // Quien empieza repite los mismos movimientos principales: la bisagra es el mismo ejercicio en A y B.
+  const hinge = plan.days.map((day) => day.exercises.find((item) => item.slot === 'hinge')?.exerciseId);
+  assert.equal(hinge[0], hinge[1], 'mismo ejercicio en A y B');
+  // Ningún día pasa de las series que rinden, y el volumen semanal queda en rango de principiante.
+  for (const muscle of ['chest', 'lats', 'shoulders', 'quads', 'hamstrings', 'glutes']) {
+    const weekly = volumeLib.trackedSets(plan.weekly, muscle);
+    assert.ok(weekly >= 3 && weekly <= 11, `${muscle}: ${weekly}`);
+  }
+});
+
+test('plan: 4 días, 60 minutos, gimnasio, hipertrofia → Torso / Pierna con variantes A/B', () => {
+  const input = { preference: gymPreference, goal: 'muscle', level: 2, minutes: 60, daysPerWeek: 4, warmup: true, now: Date.UTC(2026, 9, 21, 15) };
+  const plan = planLib.buildTrainingPlan(input);
+  assert.deepEqual([plan.label, plainJson(plan.cycle)], ['Torso / Pierna', ['UA', 'LA', 'UB', 'LB']]);
+  assert.deepEqual(plainJson(plan.days.map((day) => day.name)), ['Torso A', 'Pierna A', 'Torso B', 'Pierna B']);
+  assert.ok(plan.days.every((day) => day.minutes <= 61 && day.exercises.length >= 4));
+  // Torso: empuje y tirón; pierna: rodilla y bisagra. Las variantes B no repiten los principales de A.
+  const slotOf = (day, slot) => day.exercises.find((item) => item.slot === slot)?.exerciseId;
+  const [ua, la, ub, lb] = plan.days;
+  assert.notEqual(slotOf(ua, 'push-h'), slotOf(ub, 'push-h'));
+  assert.notEqual(slotOf(ua, 'pull-v'), slotOf(ub, 'pull-v'));
+  assert.notEqual(slotOf(la, 'hinge'), slotOf(lb, 'hinge'));
+  assert.ok(ua.exercises.every((item) => !['squat', 'hinge', 'lunge'].includes(exerciseOfPlan(item).pattern)), 'el torso no trae ejercicios de pierna');
+  assert.ok(la.exercises.every((item) => !['horizontal-push', 'vertical-push', 'horizontal-pull', 'vertical-pull'].includes(exerciseOfPlan(item).pattern)));
+  // Cada músculo principal llega a su rango de hipertrofia sin pasarse.
+  for (const muscle of ['chest', 'lats', 'shoulders', 'quads', 'hamstrings', 'glutes']) {
+    const weekly = volumeLib.trackedSets(plan.weekly, muscle);
+    assert.ok(weekly >= 8 && weekly <= 18, `${muscle}: ${weekly}`);
+  }
+  assert.deepEqual(plainJson(planLib.validatePlan(plan, input)), []);
+});
+
+test('plan: casos de 2, 3, 4 y 5 días, principiante e intermedio, casa y gimnasio, 20 y 60 minutos, con molestias', () => {
+  const stress = (area) => (exercise) => (exercise.stresses ?? []).includes(area);
+  let checked = 0;
+  for (const preference of [barePreference, homePreference, gymPreference]) {
+    for (const [level, goal] of [[1, 'strength'], [2, 'muscle'], [3, 'muscle']]) {
+      for (const daysPerWeek of [2, 3, 4, 5]) {
+        for (const minutes of [20, 60]) {
+          for (const limitations of [[], ['knees', 'shoulders']]) {
+            const input = { preference, goal, level, minutes, daysPerWeek, limitations, warmup: true, now: Date.UTC(2026, 9, 21, 15) };
+            const plan = planLib.buildTrainingPlan(input);
+            const label = `${preference.location} ${preference.equipment.join('+') || 'sin equipo'} L${level} ${daysPerWeek}d ${minutes}m ${limitations}`;
+            assert.deepEqual(plainJson(planLib.validatePlan(plan, input)), [], label);
+            for (const day of plan.days) {
+              assert.ok(day.minutes <= minutes * 1.06 + 1, `${label}: ${day.name} dura ${day.minutes}`);
+              // Con una zona que cuidar, un día de torso puede quedar corto (los ejercicios que la exigen se evitan); sin ella, al menos tres.
+              assert.ok(day.exercises.length >= (limitations.length ? 2 : 3), `${label}: ${day.name} tiene ${day.exercises.length}`);
+              for (const item of day.exercises) for (const area of limitations) assert.ok(!stress(area)(exerciseOfPlan(item)), `${label}: ${exerciseOfPlan(item).name} exige ${area}`);
+            }
+            checked += 1;
+          }
+        }
+      }
+    }
+  }
+  assert.equal(checked, 144);
+});
+
+test('plan: con 20 minutos son 3–4 movimientos de alto impacto, no la sesión normal cortada', () => {
+  const plan = planOf({ preference: gymPreference, goal: 'muscle', level: 2, minutes: 20, daysPerWeek: 3 });
+  for (const day of plan.days) {
+    assert.ok(day.exercises.length >= 3 && day.exercises.length <= 4, `${day.name}: ${day.exercises.length}`);
+    assert.ok(day.minutes <= 21, `${day.name}: ${day.minutes} min`);
+    // Lo que queda son los movimientos principales (pierna, empuje, tirón o bisagra), no accesorios.
+    assert.ok(day.exercises.filter((item) => ['squat', 'lunge', 'hinge', 'horizontal-push', 'vertical-push', 'horizontal-pull', 'vertical-pull'].includes(exerciseOfPlan(item).pattern)).length >= 3);
+  }
+  // Con tiempo justo se alternan en superserie (descansos compartidos) antes de quitar series.
+  assert.ok(plan.days.some((day) => day.exercises.some((item) => item.group)), 'hay superseries para ahorrar tiempo');
+  // Lo principal de la fuerza máxima no se empareja.
+  const strength = planOf({ preference: gymPreference, goal: 'strength', level: 2, minutes: 20, daysPerWeek: 3 });
+  assert.ok(strength.days.every((day) => day.exercises.every((item) => !item.group || item.role !== 'main')));
+  // Con 10 minutos son tres movimientos de 2 series; con 75, la sesión no se infla: hay más ejercicios pero no más de los que caben.
+  for (const preference of [gymPreference, homePreference]) {
+    const ten = planOf({ preference, minutes: 10, daysPerWeek: 3 });
+    assert.ok(ten.days.every((day) => day.exercises.length === 3 && day.minutes <= 11), ten.days.map((day) => day.minutes).join());
+    const long = planOf({ preference, minutes: 75, daysPerWeek: 3 });
+    assert.ok(long.days.every((day) => day.exercises.length >= 6 && day.exercises.length <= 8 && day.minutes <= 76));
+  }
+  assert.ok(generator.durationOptions.includes(75));
+  // Con 60 minutos hay más ejercicios y la duración sigue cabiendo.
+  const long = planOf({ minutes: 60, daysPerWeek: 3 });
+  assert.ok(long.days.every((day) => day.exercises.length >= 5 && day.minutes <= 61));
+});
+
+test('plan: equipo limitado y seis días, sin imposibles ni dogmas', () => {
+  // Sin equipo no hay con qué variar: Full Body y como mucho tres sesiones, y se avisa de lo que falta.
+  const bare = planOf({ preference: barePreference, goal: 'muscle', level: 2, daysPerWeek: 5, minutes: 45 });
+  assert.deepEqual([bare.split, bare.daysPerWeek, bare.availableDays], ['full-body', 3, 5]);
+  assert.match(bare.reason, /5 días.*Full Body|Full Body.*5 días|equipo/i);
+  assert.ok(bare.notes.some((note) => /barra de dominadas|bandas/.test(note)), 'dice qué equipo habilita tirones verticales');
+  // Seis días sin experiencia: menos días de pesas, el resto opcional.
+  const six = planOf({ goal: 'muscle', level: 2, daysPerWeek: 6, minutes: 60 });
+  assert.ok(six.daysPerWeek <= 5 && six.availableDays === 6);
+  assert.notEqual(six.split, 'push-pull-legs');
+  assert.match(six.reason, /6|seis|opcional/i);
+  // Seis días con experiencia, equipo y tiempo: Push / Pull / Legs dos veces.
+  const advanced = planOf({ goal: 'muscle', level: 3, daysPerWeek: 6, minutes: 60 });
+  assert.deepEqual([advanced.split, advanced.days.length, advanced.daysPerWeek], ['push-pull-legs', 6, 6]);
+  // La persona puede elegir otra estructura y el plan lo respeta (y lo dice).
+  const chosen = planOf({ daysPerWeek: 4, splitOverride: 'full-body' });
+  assert.deepEqual([chosen.split, chosen.chosen], ['full-body', true]);
+  assert.ok(chosen.options.some((option) => option.recommended && option.split === 'upper-lower'));
+  assert.ok(planOf({ daysPerWeek: 4 }).options.length <= 2);
+});
+
+test('plan: mismos datos, mismo plan; sólo lo que importa lo cambia', () => {
+  const input = { preference: gymPreference, goal: 'muscle', level: 2, minutes: 45, daysPerWeek: 4, warmup: true, now: Date.UTC(2026, 9, 21, 15), seed: 5 };
+  const ids = (plan) => plan.days.map((day) => day.exercises.map((item) => item.exerciseId));
+  const first = planLib.buildTrainingPlan(input);
+  assert.deepEqual(ids(planLib.buildTrainingPlan(input)), ids(first), 'determinista');
+  // Un historial de sesiones que no cambia nada (sin molestias ni cambios) no mueve los ejercicios que no progresan.
+  const DAYS = 86_400_000;
+  const noise = [2, 5, 9].map((daysAgo) => ({ id: `n${daysAgo}`, date: utils.localDateKey(new Date(input.now - daysAgo * DAYS)), completedAt: new Date(input.now - daysAgo * DAYS).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: 999, unit: 'reps', sets: [set(10, 20)] }] }));
+  assert.deepEqual(ids(planLib.buildTrainingPlan({ ...input, workouts: noise })), ids(first));
+  // Cambiar un ejercicio varias veces lo saca del plan; una molestia con él, también.
+  const lead = first.days[0].exercises[0].exerciseId;
+  assert.ok(!ids(planLib.buildTrainingPlan({ ...input, avoid: { [lead]: 2 } })).flat().includes(lead));
+  const hurt = [{ id: 'p', date: utils.localDateKey(new Date(input.now - 2 * DAYS)), completedAt: new Date(input.now - 2 * DAYS).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: lead, unit: 'reps', feel: 'pain', sets: [set(10, 20), set(10, 20)] }] }];
+  assert.ok(!ids(planLib.buildTrainingPlan({ ...input, workouts: hurt })).flat().includes(lead));
+  // Un favorito entra y lo que progresas se queda aunque cambie la semilla del bloque.
+  const keep = first.days[1].exercises.find((item) => exerciseOfPlan(item).increment > 0).exerciseId;
+  const progress = [20, 13, 6].map((daysAgo, index) => ({ id: `r${daysAgo}`, date: utils.localDateKey(new Date(input.now - daysAgo * DAYS)), completedAt: new Date(input.now - daysAgo * DAYS).toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', records: [{ exerciseId: keep, unit: 'reps', sets: [set(10, 20 + index * 2), set(10, 20 + index * 2), set(10, 20 + index * 2)] }] }));
+  for (const seed of [1, 2, 3, 4, 5, 6]) assert.ok(ids(planLib.buildTrainingPlan({ ...input, seed, workouts: progress })).flat().includes(keep), `seed ${seed}`);
+});
+
+test('plan: qué toca hoy sigue el ciclo y la recuperación sólo cambia el día cuando es claro', () => {
+  const NOW = Date.UTC(2026, 9, 21, 15);
+  const at = (daysAgo, dayId) => ({ id: `w${daysAgo}`, date: utils.localDateKey(new Date(NOW - daysAgo * DAY)), completedAt: new Date(NOW - daysAgo * DAY).toISOString(), durationMinutes: 40, exerciseCount: 4, sets: 12, mode: 'full', source: { type: 'plan', dayId }, records: [] });
+  const full = planLib.buildTrainingPlan({ preference: homePreference, goal: 'strength', level: 1, minutes: 45, daysPerWeek: 3, warmup: true, now: NOW });
+  assert.equal(planLib.nextPlanDay(full, [], NOW).id, 'A');
+  assert.equal(planLib.nextPlanDay(full, [at(2, 'A')], NOW).id, 'B');
+  assert.equal(planLib.nextPlanDay(full, [at(2, 'B'), at(4, 'A')], NOW).id, 'A', 'A B A · B A B: el ciclo sigue entre semanas');
+  assert.equal(planLib.nextPlanDay(full, [at(30, 'B')], NOW).id, 'A', 'tras una pausa larga se empieza de nuevo');
+  assert.equal(planLib.nextPlanDay(full, [{ ...at(2, 'B'), source: { type: 'generated' } }], NOW).id, 'A', 'lo que no es del plan no mueve el ciclo');
+  const split = planLib.buildTrainingPlan({ preference: gymPreference, goal: 'muscle', level: 2, minutes: 60, daysPerWeek: 4, warmup: true, now: NOW });
+  const tired = { chest: 100, back: 100, lats: 100, traps: 100, shoulders: 100, biceps: 100, triceps: 100, forearms: 100, abs: 100, obliques: 100, lowerBack: 100, glutes: 20, quads: 20, hamstrings: 20, adductors: 20, calves: 20 };
+  const fresh = Object.fromEntries(Object.keys(tired).map((muscle) => [muscle, 100]));
+  assert.equal(planLib.todayPlanDay(split, [at(1, 'UA')], NOW, fresh).day.id, 'LA');
+  const swapped = planLib.todayPlanDay(split, [at(1, 'UA')], NOW, tired);
+  assert.equal(swapped.day.id, 'UB', 'con las piernas cansadas, se hace el torso');
+  assert.match(swapped.note, /Hoy te tocaba Pierna A, pero tus piernas aún se recuperan: entrenas Torso B/);
+  // En Full Body todo el cuerpo trabaja: no hay otro día más fresco, se mantiene el que toca.
+  assert.equal(planLib.todayPlanDay(full, [at(1, 'A')], NOW, tired).day.id, 'B');
+  assert.equal(planLib.todayPlanDay(full, [at(1, 'A')], NOW, tired).note, undefined);
+});
+
+test('plan: la sesión de hoy sale del día del plan con progresión, rango, margen y porqué', () => {
+  const NOW = Date.UTC(2026, 9, 21, 15);
+  const input = { preference: gymPreference, goal: 'strength', level: 2, minutes: 45, daysPerWeek: 3, warmup: true, now: NOW, seed: 2 };
+  const plan = planLib.buildTrainingPlan(input);
+  const session = planLib.planSession(input, plan, plan.days[0]);
+  assert.equal(session.name, 'Full Body A');
+  assert.equal(session.records.length, plan.days[0].exercises.length);
+  assert.ok(session.estimatedMinutes <= 48);
+  for (const record of session.records) {
+    const exercise = exercises.find((item) => item.id === record.exerciseId);
+    if (exercise.category === 'strength' && exercise.unit === 'reps') assert.ok(record.rir >= 1 && record.rir <= 3);
+    assert.ok(record.restSeconds >= 45 && record.sets.length >= 2);
+    assert.ok(session.why[record.exerciseId].role.length > 15);
+  }
+  const main = session.records[0];
+  assert.deepEqual(plainJson(main.range ?? exercises.find((item) => item.id === main.exerciseId).range), [4, 8], 'fuerza: el principal en 4–8');
+  // Con energía moderada: la misma sesión con una serie menos y sin el último ejercicio.
+  const short = planLib.planSession(input, plan, plan.days[0], { readiness: 'short' });
+  assert.equal(short.records.length, session.records.length - 1);
+  assert.ok(short.records.reduce((sum, record) => sum + record.sets.length, 0) < session.records.reduce((sum, record) => sum + record.sets.length, 0));
+  assert.match(short.notes[0], /Energía moderada/);
+  // Con otro tiempo sólo se recortan los días, no la estructura.
+  const quick = planLib.buildTrainingPlan({ ...input, minutesOverride: 20 });
+  assert.equal(quick.split, plan.split);
+  assert.deepEqual(plainJson(quick.cycle), plainJson(plan.cycle));
+  assert.ok(quick.days[0].minutes < plan.days[0].minutes);
+});
+
+test('plan: los minutos de cada día son los de la sesión que harás, con su calentamiento y con o sin historial', () => {
+  const NOW = Date.UTC(2026, 9, 21, 15);
+  const base = { preference: gymPreference, goal: 'muscle', level: 2, minutes: 60, daysPerWeek: 4, warmup: true, now: NOW };
+  const history = [1, 3].map((daysAgo) => {
+    const date = new Date(NOW - daysAgo * 86_400_000);
+    return { id: `h${daysAgo}`, date: utils.localDateKey(date), completedAt: date.toISOString(), durationMinutes: 50, exerciseCount: 4, sets: 12, mode: 'full', effort: 3, records: [59, 12, 14, 46].map((exerciseId) => ({ exerciseId, unit: 'reps', sets: [set(12, 60), set(12, 60), set(12, 60)] })) };
+  });
+  const inputs = [base, { ...base, workouts: history }, { ...base, minutes: 20 }, { ...base, minutes: 10 }, { ...base, warmup: false }, { ...base, preference: homePreference, level: 1, goal: 'strength', minutes: 45, daysPerWeek: 3 }];
+  for (const input of inputs) {
+    const plan = planLib.buildTrainingPlan(input);
+    for (const planned of plan.days) assert.equal(planLib.planSession(input, plan, planned).estimatedMinutes, planned.minutes, `${planned.name} (${input.minutes} min)`);
+    // Con o sin calentamiento, ningún día pasa del tiempo que pediste (más el redondeo).
+    assert.ok(plan.days.every((planned) => planned.minutes <= input.minutes * 1.02 + 0.5), `${plan.days.map((planned) => planned.minutes)} para ${input.minutes} min`);
+  }
+});
+
+test('plan: si las sesiones duran bastante menos que tu tiempo, lo explica; las superseries van juntas', () => {
+  const home = (minutes) => planLib.buildTrainingPlan({ preference: homePreference, goal: 'strength', level: 1, minutes, daysPerWeek: 3, warmup: true, now: Date.UTC(2026, 9, 21, 15) });
+  assert.match(home(75).notes[0], /duran unos \d+ min, menos de los 75 que tienes/);
+  assert.equal(home(30).notes.some((note) => /duran unos/.test(note)), false);
+  for (const minutes of [10, 20, 30]) {
+    for (const daysPerWeek of [2, 3, 4, 5]) {
+      for (const planned of planOf({ minutes, daysPerWeek }).days) {
+        const groups = planned.exercises.map((item) => item.group ?? null);
+        for (const label of new Set(groups.filter(Boolean))) {
+          const at = groups.flatMap((group, index) => (group === label ? [index] : []));
+          assert.equal(at[at.length - 1] - at[0], at.length - 1, `${planned.name}: la superserie ${label} no está junta`);
+        }
+      }
+    }
+  }
+});
+
+test('adaptación del volumen: baja con fatiga o molestia, sube despacio con progreso y vuelve a empezar tras una pausa', () => {
+  const NOW = Date.UTC(2026, 9, 21, 15); // miércoles
+  const weekStart = (weeksAgo) => { const date = new Date(NOW); date.setDate(date.getDate() - ((date.getDay() + 6) % 7) - 7 * weeksAgo); return date; };
+  const session = (weeksAgo, dayOffset, { load = 40, effort = 3, feel, painAreas } = {}) => {
+    const date = weekStart(weeksAgo); date.setDate(date.getDate() + dayOffset); date.setHours(18, 0, 0, 0);
+    const key = utils.localDateKey(date);
+    return { id: `s${weeksAgo}${dayOffset}${load}`, date: key, completedAt: date.toISOString(), durationMinutes: 40, exerciseCount: 1, sets: 3, mode: 'full', effort, ...(painAreas ? { painAreas } : {}), records: [{ exerciseId: 59, unit: 'reps', ...(feel ? { feel } : {}), sets: [set(8, load), set(8, load), set(8, load)] }] };
+  };
+  // Sentadilla con barra (piernas): sin historial, nada cambia.
+  assert.deepEqual(plainJson(adaptVolume.volumeShift([], { now: NOW, level: 2, goal: 'muscle' })), { shift: {}, changes: [], deload: false });
+  // Dos semanas buenas seguidas con progreso: sube una serie por músculo de la región.
+  const good = [session(3, 0, { load: 40 }), session(2, 0, { load: 42 }), session(1, 0, { load: 44 })];
+  const up = adaptVolume.volumeShift(good, { now: NOW, level: 2, goal: 'muscle' });
+  assert.equal(up.shift.legs, 1);
+  assert.deepEqual(plainJson(up.changes), [{ region: 'legs', delta: 1, reason: 'Estás progresando bien y recuperándote sin problemas.' }]);
+  assert.equal(adaptVolume.volumeShift(good.slice(1), { now: NOW, level: 2, goal: 'muscle' }).shift.legs, undefined, 'una sola semana buena no alcanza');
+  // Dos sesiones difíciles en la semana, o una molestia: baja de a dos.
+  const hard = [session(2, 0, { load: 40 }), session(1, 0, { load: 40, effort: 4 }), session(1, 2, { load: 40, effort: 5 })];
+  const down = adaptVolume.volumeShift(hard, { now: NOW, level: 2, goal: 'muscle' });
+  assert.equal(down.shift.legs, -2);
+  assert.match(down.changes[0].reason, /sesiones fueron difíciles/);
+  const pain = adaptVolume.volumeShift([session(1, 0, { painAreas: ['knees'] })], { now: NOW, level: 2, goal: 'muscle' });
+  assert.equal(pain.shift.legs, -2);
+  assert.match(pain.changes[0].reason, /molestia/);
+  const felt = adaptVolume.volumeShift([session(1, 0, { feel: 'pain' })], { now: NOW, level: 2, goal: 'muscle' });
+  assert.equal(felt.shift.legs, -2);
+  assert.equal(adaptVolume.volumeShift([session(1, 0, { painAreas: ['shoulders'] })], { now: NOW, level: 2, goal: 'muscle' }).shift.legs, undefined, 'una molestia de hombros no toca las piernas');
+  // Nunca baja de −3 ni sube más del rango, y tras dos semanas sin entrenar vuelve a empezar conservador.
+  const spiral = [4, 3, 2, 1].map((weeksAgo) => session(weeksAgo, 0, { effort: 5, painAreas: ['knees'] }));
+  assert.equal(adaptVolume.volumeShift(spiral, { now: NOW, level: 2, goal: 'muscle' }).shift.legs, -3);
+  const rest = [session(4, 0, { effort: 5, painAreas: ['knees'] })];
+  assert.equal(adaptVolume.volumeShift(rest, { now: NOW, level: 2, goal: 'muscle' }).shift.legs, undefined, 'tras la pausa, de nuevo conservador');
+  // Fácil en dos ejercicios de la región también cuenta como una buena semana.
+  const easy = (weeksAgo, load) => { const date = weekStart(weeksAgo); date.setHours(18, 0, 0, 0); return { id: `e${weeksAgo}`, date: utils.localDateKey(date), completedAt: date.toISOString(), durationMinutes: 40, exerciseCount: 2, sets: 4, mode: 'full', effort: 3, records: [59, 41].map((exerciseId) => ({ exerciseId, unit: 'reps', feel: 'easy', sets: [set(8, load), set(8, load)] })) }; };
+  assert.equal(adaptVolume.volumeShift([easy(3, 40), easy(2, 40), easy(1, 40)], { now: NOW, level: 2, goal: 'muscle' }).shift.legs, 1);
+  // Un rendimiento que cae en dos ejercicios de la zona baja el volumen aunque no hayas marcado nada.
+  const week = (weeksAgo, effort, loads) => ['0', '2'].map((offset) => { const date = weekStart(weeksAgo); date.setDate(date.getDate() + Number(offset)); date.setHours(18, 0, 0, 0); return { id: `d${weeksAgo}${offset}`, date: utils.localDateKey(date), completedAt: date.toISOString(), durationMinutes: 40, exerciseCount: 2, sets: 6, mode: 'full', effort, records: Object.entries(loads).map(([exerciseId, load]) => ({ exerciseId: Number(exerciseId), unit: 'reps', sets: [set(8, load), set(8, load), set(8, load)] })) }; });
+  const legs = adaptVolume.volumeShift([...week(3, 3, { 59: 100, 41: 40 }), ...week(1, 3, { 59: 82, 41: 32 })], { now: NOW, level: 2, goal: 'muscle' });
+  assert.deepEqual([legs.shift.legs, legs.deload], [-2, false], 'sin esfuerzo alto, es sólo una baja del volumen de las piernas');
+  assert.match(legs.changes[0].reason, /rendimiento bajó/);
+  assert.equal(adaptVolume.volumeShift([...week(3, 3, { 59: 100, 41: 40 }), ...week(1, 3, { 59: 98, 41: 39 })], { now: NOW, level: 2, goal: 'muscle' }).shift.legs, undefined, 'una caída de 2 % es ruido');
+  assert.equal(adaptVolume.volumeShift([...week(3, 3, { 59: 100 }), ...week(1, 3, { 59: 82 })], { now: NOW, level: 2, goal: 'muscle' }).shift.legs, undefined, 'un solo ejercicio que baja, sin esfuerzo alto, puede ser un mal día');
+  // Descarga reactiva: rendimiento y esfuerzo a la vez. Todo el cuerpo baja, con los mismos ejercicios; nada de descargas fijas.
+  const tired = adaptVolume.volumeShift([...week(3, 3, { 59: 100, 60: 80 }), ...week(1, 5, { 59: 82, 60: 64 })], { now: NOW, level: 2, goal: 'muscle' });
+  assert.equal(tired.deload, true);
+  assert.ok(['chest', 'back', 'shoulders', 'arms', 'legs', 'core'].every((region) => tired.shift[region] === -5), 'esta semana, cerca de un 40 % menos de series por músculo (12 → 7)');
+  assert.match(tired.changes[0].reason, /más liviana/);
+  const steady = [5, 4, 3, 2, 1].flatMap((weeksAgo) => week(weeksAgo, 3, { 59: 100, 60: 80 }));
+  assert.equal(adaptVolume.volumeShift(steady, { now: NOW, level: 2, goal: 'muscle' }).deload, false, 'cinco semanas seguidas sin señales: ninguna descarga programada');
+  // El ajuste se ve en el plan: menos series de piernas y el motivo.
+  const input = { preference: gymPreference, goal: 'muscle', level: 2, minutes: 60, daysPerWeek: 4, warmup: true, now: NOW, shift: { legs: -2 } };
+  const adjustments = planLib.planAdjustments(input, [{ region: 'legs', delta: -2, reason: 'Tus últimas sesiones fueron difíciles: bajamos el volumen para que te recuperes.' }]);
+  assert.equal(adjustments.length, 1);
+  assert.ok(adjustments[0].from > adjustments[0].to, `${adjustments[0].from} → ${adjustments[0].to}`);
+  assert.equal(adjustments[0].label, 'Piernas');
 });

@@ -8,7 +8,8 @@ import type { BodyArea, Equipment, Exercise, ExerciseRecord } from "@/types";
  * 2. Movilidad: las articulaciones que vas a usar, con movimientos dinámicos (los estiramientos
  *    sostenidos quedan para el final).
  * 3. Activación: una versión ligera del primer gran movimiento del día.
- * Las series de aproximación con carga siguen en el menú de cada ejercicio.
+ * Las series de aproximación con carga siguen en el menú de cada ejercicio. Con 10 minutos o menos, sólo
+ * la activación (un minuto): el resto del tiempo es para entrenar.
  */
 
 export type WarmupPhase = "pulse" | "mobility" | "activation";
@@ -51,6 +52,8 @@ function baseOf(exercise: Exercise): Base {
   }
 }
 
+/** Sesiones exprés: el calentamiento se reduce a la activación. */
+const EXPRESS_MINUTES = 10;
 /** Jumping jacks de bajo impacto; con las rodillas a cuidar, marcha rápida. */
 const PULSE = 72;
 const PULSE_GENTLE = 5;
@@ -119,7 +122,9 @@ export function warmupFor({ records, limitations = [], equipment, minutes = 30 }
 
   const activation = ACTIVATION[baseOf(main[0])].map((id) => exerciseById(id)).find(fits);
   if (activation) items.push({ exercise: activation, phase: "activation", value: activation.unit === "reps" ? 10 : 30 });
-  return items;
+  if (minutes > EXPRESS_MINUTES) return items;
+  const lean = items.filter((item) => item.phase === "activation");
+  return lean.length ? lean : items.slice(0, 1);
 }
 
 /** El calentamiento como ejercicios de la sesión: una serie de calentamiento cada uno, con un descanso breve. */

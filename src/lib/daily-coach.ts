@@ -42,6 +42,8 @@ export interface DailyCoachInput {
   /** Enfoque de la sesión de hoy y si salió de la recuperación (no lo elegiste tú). */
   focus: WorkoutFocus;
   focusByRecovery: boolean;
+  /** El día de «Tu plan» que toca hoy (y, si cambió por la recuperación, por qué). */
+  planDay?: { name: string; split: string; note?: string };
   workouts: WorkoutEntry[];
   week: { done: number; goal: number };
   /** Elegiste la versión corta. */
@@ -100,7 +102,9 @@ function bodyStatus(input: DailyCoachInput): { status: string; positive: boolean
 
 /** Por qué entrenar normal hoy, en una línea (lo más específico primero). */
 function normalReason(input: DailyCoachInput) {
-  const { recovery, focus, focusByRecovery, workouts, week, now } = input;
+  const { recovery, focus, focusByRecovery, workouts, week, now, planDay } = input;
+  // Si hoy cambió el día del plan por la recuperación, eso es lo que hay que contar.
+  if (planDay?.note) return planDay.note;
   const today = localDateKey(now);
   const last = workouts.reduce<WorkoutEntry | null>((latest, workout) => (!latest || workout.completedAt > latest.completedAt ? workout : latest), null);
   const idle = last ? daysBetween(last.date, today) : null;
@@ -116,6 +120,7 @@ function normalReason(input: DailyCoachInput) {
   if (week.goal - week.done === 1) return "Con esta sesión cumples tu meta de la semana.";
   if (idle !== null && idle >= 5) return "Volver es lo que cuenta: hoy, a tu ritmo.";
   if (idle !== null && idle >= 2) return `Llevas ${idle} días sin entrenar y tu recuperación es buena.`;
+  if (planDay) return `Hoy toca ${planDay.name}, según tu plan de ${planDay.split}.`;
   return "Tu cuerpo está listo para entrenar.";
 }
 

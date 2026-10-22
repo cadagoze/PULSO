@@ -117,8 +117,8 @@ export function buildProfile(answers: AssessmentAnswers, previous?: AssessmentPr
   const goal = answers.goal ?? "habits";
   const copy = goalCopy[goal];
   const areas = answers.considerations.filter((item): item is Exclude<Limitation, "none"> => item === "knees" || item === "back" || item === "shoulders");
-  // Nivel (lo usa el generador): principiante, o según cuántos días entrenas.
-  const activities: Activity[] = answers.considerations.includes("beginner") ? ["walking"] : answers.days >= 4 ? ["regular"] : ["some"];
+  // Nivel (lo usa el generador): principiante o con algo de experiencia. Los días que puedes entrenar no dicen cuánta experiencia tienes.
+  const activities: Activity[] = answers.considerations.includes("beginner") ? ["walking"] : ["some"];
   const list = areas.map((area) => areaNames[area]);
   const caution = list.length
     ? `Cuidaremos ${list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} y ${list.at(-1)}`}. Empieza suave y detente si aparece dolor agudo; si persiste, consulta a un profesional.`

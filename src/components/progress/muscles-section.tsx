@@ -3,8 +3,8 @@
 import { MuscleMap } from "@/components/ui/muscle-map";
 import { MuscleEvidence, MuscleList, muscleHeat, muscleVolume } from "@/components/progress/muscle-volume";
 import { summarizePeriod } from "@/components/progress/period";
-import { levelFromActivities, trainingLevel } from "@/lib/generator";
-import { useProfile, useWorkouts } from "@/lib/store";
+import { levelFromActivities, trainingGoal, trainingLevel } from "@/lib/generator";
+import { useNutritionProfile, useProfile, useWorkouts } from "@/lib/store";
 import { useNow } from "@/lib/use-now";
 
 /**
@@ -13,12 +13,14 @@ import { useNow } from "@/lib/use-now";
  */
 export function MusclesView() {
   const [profile] = useProfile();
+  const [nutrition] = useNutritionProfile();
   const [workouts] = useWorkouts();
   const now = useNow();
   if (!now) return null;
   const level = now ? trainingLevel(profile?.activities, workouts, new Date(now)) : levelFromActivities(profile?.activities);
+  const goal = trainingGoal(profile?.goals, nutrition?.goal);
   const week = summarizePeriod(workouts, "semana", now);
-  const data = muscleVolume(workouts, week.start, week.end, week.activeWeeks, level);
+  const data = muscleVolume(workouts, week.start, week.end, week.activeWeeks, level, goal);
 
   return (
     <div className="prog-muscles-view">
@@ -37,7 +39,7 @@ export function MusclesView() {
         </div>
       </div>
       <MuscleList data={data} />
-      <MuscleEvidence level={level} />
+      <MuscleEvidence level={level} goal={goal} />
     </div>
   );
 }

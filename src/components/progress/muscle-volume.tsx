@@ -3,7 +3,8 @@
 import { BookOpen } from "lucide-react";
 import { muscleLabels } from "@/data/catalog";
 import { allMuscles, muscleSetsBetween } from "@/lib/analytics";
-import { weeklySetTarget } from "@/lib/selection";
+import { weeklyTarget } from "@/lib/volume";
+import type { VolumeGoal } from "@/lib/volume";
 import { formatNumber } from "@/lib/utils";
 import type { ExerciseLevel, MuscleGroup, WorkoutEntry } from "@/types";
 
@@ -21,8 +22,8 @@ export interface MuscleVolumeData {
 }
 
 /** Series de trabajo por músculo en el periodo, expresadas por semana para compararlas con la referencia de tu nivel. */
-export function muscleVolume(workouts: WorkoutEntry[], start: string, end: string, weeks: number, level: ExerciseLevel): MuscleVolumeData {
-  const [low, high] = weeklySetTarget(level);
+export function muscleVolume(workouts: WorkoutEntry[], start: string, end: string, weeks: number, level: ExerciseLevel, goal: VolumeGoal): MuscleVolumeData {
+  const { low, high } = weeklyTarget(level, goal);
   const total = muscleSetsBetween(workouts, start, end);
   const sets = Object.fromEntries(allMuscles.map((muscle) => [muscle, total[muscle] / Math.max(1, weeks)])) as Record<MuscleGroup, number>;
   const rows = [...allMuscles].sort((a, b) => sets[b] - sets[a] || muscleLabels[a].localeCompare(muscleLabels[b]));
@@ -47,18 +48,20 @@ export function MuscleList({ data }: { data: MuscleVolumeData }) {
   );
 }
 
-const evidence: Record<ExerciseLevel, string> = {
-  1: "Al empezar, 4–8 series semanales por músculo ya dan buenos resultados.",
-  2: "8–12 series semanales por músculo es una buena referencia para seguir progresando.",
-  3: "Con experiencia, 10–20 series semanales por músculo, según cómo te recuperes.",
-};
+/** La referencia en una frase, según tu objetivo y tu nivel. */
+function evidence(level: ExerciseLevel, goal: VolumeGoal) {
+  const { low, high } = weeklyTarget(level, goal);
+  if (goal === "muscle") return `${low}–${high} series semanales por músculo es una buena referencia para ganar músculo${level === 1 ? " al empezar" : level === 3 ? ", según cómo te recuperes" : ""}.`;
+  if (goal === "strength") return `Para ganar fuerza bastan unas ${low}–${high} series semanales por músculo, con lo principal 2 o 3 veces por semana.`;
+  return `Para mantenerte fuerte y funcional bastan unas ${low}–${high} series semanales por músculo.`;
+}
 
-export function MuscleEvidence({ level }: { level: ExerciseLevel }) {
+export function MuscleEvidence({ level, goal }: { level: ExerciseLevel; goal: VolumeGoal }) {
   return (
     <p className="prog-evidence">
       <BookOpen size={16} aria-hidden="true" />
       <span>
-        {evidence[level]} Más no siempre es mejor: cada serie extra suma menos y cuesta más recuperarse. Cuentan las series de trabajo: 1 para el músculo principal y 0,5 para los secundarios.
+        {evidence(level, goal)} Más no siempre es mejor: cada serie extra suma menos y cuesta más recuperarse. Cuentan las series de trabajo: 1 para el músculo principal y 0,5 para los secundarios.
       </span>
     </p>
   );

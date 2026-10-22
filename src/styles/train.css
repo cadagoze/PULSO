@@ -93,6 +93,33 @@
 .train-why li span { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
 .train-why-note { margin-top: 12px; font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
 .train-hero-adjusted { align-self: flex-start; text-align: left; font-size: 13px; line-height: 1.35; }
+/* Tu plan: estructura semanal, su porqué en una línea y las próximas sesiones. */
+.train-plan { display: flex; flex-direction: column; gap: 12px; }
+.train-plan-name { font-family: var(--font-display); font-stretch: var(--stretch-title); font-size: clamp(30px, 8.6vw, 40px); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); line-height: 1; }
+.train-plan-meta { margin-top: -6px; }
+.train-plan-why { display: flex; flex-direction: column; gap: 4px; padding-left: 14px; border-left: 3px solid var(--accent); }
+.train-plan-why p:not(.meta) { max-width: 52ch; font-size: 15px; line-height: 1.45; }
+.train-plan-extra { color: var(--ink-2); }
+.adjust-list { display: flex; flex-direction: column; gap: 10px; }
+.adjust-group { display: flex; flex-direction: column; gap: 6px; }
+.adjust-reason { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.adjust-reason svg { flex: none; margin-top: 3px; }
+.adjust-group.is-up svg { color: var(--accent-text); }
+.adjust-group.is-down svg { color: var(--warning); }
+.adjust-regions { list-style: none; margin: 0; padding: 0 0 0 22px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--ink-2); }
+.adjust-regions strong, .adjust-regions b { color: var(--ink); font-weight: 600; }
+.train-plan-days { list-style: none; margin: 0; padding: 0; }
+.train-plan-day { width: 100%; text-align: left; }
+.train-plan-day .grow { display: flex; flex-direction: column; gap: 2px; }
+.train-plan-note { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.train-options { display: flex; flex-direction: column; gap: 8px; }
+.train-option { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); text-align: left; transition: background-color var(--motion-base) var(--ease-standard); }
+.train-option .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.train-option strong { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.train-option small { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.train-option.is-active { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.train-option.is-active svg { flex: none; color: var(--accent-text); }
+.train-plan-exercises { list-style: none; margin: 0; padding: 0; }
 .train-ex-empty { padding: 20px; border-radius: var(--radius); background: var(--surface-2); color: var(--ink-2); font-size: 14px; text-align: center; }
 .train-ex-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .train-save.is-saved, .train-save.is-saved:hover { background: var(--accent-soft); color: var(--accent-text); }

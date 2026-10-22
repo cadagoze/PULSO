@@ -108,6 +108,8 @@ export interface TrainingRoutine {
 
 export type WorkoutSource =
   | { type: "generated" }
+  /** Un día de «Tu plan» (A, B, Torso A…): con él se sabe cuál sigue. */
+  | { type: "plan"; dayId: string }
   | { type: "routine"; routineId: string }
   | { type: "program"; programId: string; week: number; day: number }
   | { type: "free" };
@@ -260,6 +262,8 @@ export interface Settings {
   /** Nivel que PULSO ya te anunció y el día en que lo alcanzaste (para avisarlo una sola vez). */
   levelReached?: ExerciseLevel;
   levelReachedOn?: string;
+  /** Estructura de entrenamiento que elegiste (Full Body, Torso / Pierna…); sin valor, la que PULSO recomienda. */
+  planSplit?: "full-body" | "upper-lower" | "full-upper-lower" | "ppl-upper-lower" | "push-pull-legs";
   /** Lunes de la última semana cuya revisión ya viste («Entendido»): se muestra una vez por semana. */
   weekReviewSeen?: string;
   barWeight: number;

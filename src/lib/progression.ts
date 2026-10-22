@@ -142,8 +142,8 @@ export interface Suggestion {
   value: number;
   load: number;
   message: string;
-  /** Si cómo te fue cambió la sugerencia: fácil, difícil, dos difíciles seguidas o una molestia. */
-  because?: "easy" | "hard" | "hard-streak" | "pain";
+  /** Si cómo te fue cambió la sugerencia: fácil, difícil, dos difíciles seguidas, una molestia o una pausa larga. */
+  because?: "easy" | "hard" | "hard-streak" | "pain" | "break";
 }
 
 /**
@@ -155,15 +155,22 @@ export interface EffortContext {
   effort?: number;
   hardStreak: number;
   pain?: boolean;
+  /** Sesiones seguidas con molestia en este ejercicio (con tres, se deja de insistir). */
+  painStreak?: number;
+  /** Días desde la última vez con este ejercicio. */
+  gapDays?: number;
 }
 
 const feelEffort = { easy: 2, good: 3, hard: 4, pain: 4 } as const;
 
 /** Lo que marcaste en las últimas sesiones con este ejercicio (sin contar un entrenamiento, si se indica). */
-export function effortFor(workouts: WorkoutEntry[], exerciseId: number, excludeId?: string): EffortContext {
+export function effortFor(workouts: WorkoutEntry[], exerciseId: number, excludeId?: string, now = Date.now()): EffortContext {
   let effort: number | undefined;
   let pain: boolean | undefined;
   let hardStreak = 0;
+  let painStreak = 0;
+  let painEnded = false;
+  let gapDays: number | undefined;
   for (const workout of sortedWorkouts(workouts)) {
     const record = workout.id === excludeId ? undefined : workout.records?.find((item) => item.exerciseId === exerciseId && item.sets.some((set) => set.done));
     if (!record) continue;
@@ -171,11 +178,14 @@ export function effortFor(workouts: WorkoutEntry[], exerciseId: number, excludeI
     if (effort === undefined) {
       effort = value ?? 3;
       pain = record.feel === "pain";
+      gapDays = Math.max(0, Math.floor((now - Date.parse(workout.completedAt)) / 86_400_000));
     }
+    if (record.feel === "pain" && !painEnded) painStreak += 1;
+    else painEnded = true;
     if ((value ?? 0) >= 4) hardStreak += 1;
-    else break;
+    else if (painEnded) break;
   }
-  return { effort, hardStreak, ...(pain ? { pain } : {}) };
+  return { effort, hardStreak, ...(pain ? { pain } : {}), ...(painStreak ? { painStreak } : {}), ...(gapDays !== undefined ? { gapDays } : {}) };
 }
 
 /**
@@ -193,9 +203,19 @@ export function suggestNext(exercise: Exercise, last?: ExerciseRecord, unitLabel
   const sets = workingDone(last);
   const topLoad = Math.max(0, ...sets.map((set) => set.load));
   const minValue = Math.min(...sets.filter((set) => set.load === topLoad).map((set) => set.value));
+  // Con tres sesiones seguidas con molestia en el ejercicio, se deja de insistir: otra variante y, si persiste, un profesional.
+  if ((context.painStreak ?? 0) >= 3) {
+    return { kind: "hold", value: minValue, load: topLoad, because: "pain", message: `Llevas ${context.painStreak} sesiones seguidas con molestia en este ejercicio: déjalo por ahora, prueba otra variante y, si la molestia persiste, consulta a un profesional de salud.` };
+  }
   // Con molestia, nunca se sube: se repite y se propone cambiar a una variante más tolerable.
   if (context.pain) {
     return { kind: "hold", value: minValue, load: topLoad, because: "pain", message: `La última vez te molestó: repite ${minValue} ${word}${withLoad(topLoad)} o cambia a otra variante desde su menú.` };
+  }
+  // Tras una pausa larga se vuelve con algo menos de carga (3 semanas: −10 %; 6 o más: −20 %) y se recupera el ritmo.
+  if ((context.gapDays ?? 0) >= 21 && topLoad > 0) {
+    const weeks = Math.floor((context.gapDays ?? 0) / 7);
+    const reduced = Math.max(0, roundTo(topLoad * ((context.gapDays ?? 0) >= 42 ? 0.8 : 0.9), exercise.increment || 1));
+    return { kind: "hold", value: low, load: reduced, because: "break", message: `Vuelves tras ${weeks} semanas: empieza con ${toDisplay(reduced)} ${unitLabel} (un poco menos) y recupera el ritmo.` };
   }
   if (context.hardStreak >= 2) {
     return { kind: "hold", value: low, load: topLoad, because: "hard-streak", message: `Tras dos sesiones difíciles seguidas, apunta a ${low} ${word}${withLoad(topLoad)}.` };
@@ -273,6 +293,7 @@ const holdReasons = {
   pain: "Te molestó la última vez: no subimos y puedes cambiar de variante.",
   hard: "Tu última sesión fue difícil: repetimos antes de subir.",
   "hard-streak": "Llevas dos sesiones difíciles seguidas: apuntamos a la parte baja del rango.",
+  break: "Vuelves tras una pausa: empezamos con un poco menos de carga.",
 } as const;
 
 /** La carga más alta de las series y las repeticiones (o segundos) más bajas con ella. */
@@ -296,6 +317,9 @@ export function describeAdjustment(exercise: Exercise, last: ExerciseRecord | un
   const word = exercise.unit === "reps" ? "rep." : "s";
   const load = (kg: number) => `${formatNumber(toDisplay(kg), 2)} ${unitLabel}`;
 
+  if (suggestion.because === "break") {
+    return { change: `${formatNumber(toDisplay(from.load), 2)} → ${load(to.load)}`, reason: holdReasons.break, direction: "down" };
+  }
   if (suggestion.because && suggestion.because !== "easy") {
     return { change: `Mantiene ${to.load > 0 ? load(to.load) : `${to.value} ${word}`}`, reason: holdReasons[suggestion.because], direction: "hold" };
   }

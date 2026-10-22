@@ -1,10 +1,11 @@
 import { exercises } from "@/data/mock-data";
 import { painfulExercises } from "@/lib/adaptation";
 import { muscleSetsBetween, weekRange, weeklySeries } from "@/lib/analytics";
-import { isCompound, prescribe, roleOf } from "@/lib/prescription";
+import { isCompound, prescribe, roleOf, type ExerciseRole } from "@/lib/prescription";
 import { effortFor, progressedSets } from "@/lib/progression";
 import { exerciseTrend, historyScore, leastNeeded, scoreCandidate, sessionOrder, whyExercise, type ExerciseTrend, type ExerciseWhy, type ScoreContext } from "@/lib/selection";
 import { isWorkingSet, lastRecordFor } from "@/lib/training";
+import { estimateMinutes } from "@/lib/duration";
 import { localDaySeed } from "@/lib/utils";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, ExerciseRecord, MovementPattern, MuscleGroup, NutritionGoal, ReadinessEntry, TrainingLocation, TrainingPreference, WorkoutEntry } from "@/types";
 import { capabilitiesOf, fullGym } from "@/data/equipment";
@@ -26,7 +27,7 @@ export const focusLabels: Record<WorkoutFocus, string> = {
   mobility: "Movilidad",
 };
 
-export const durationOptions = [10, 20, 30, 45, 60] as const;
+export const durationOptions = [10, 20, 30, 45, 60, 75] as const;
 
 const slots: Record<WorkoutFocus, MovementPattern[][]> = {
   full: [["squat", "lunge"], ["horizontal-push", "vertical-push"], ["hinge"], ["horizontal-pull", "vertical-pull"], ["core"], ["lunge", "squat"], ["vertical-push", "horizontal-push"], ["isolation", "carry"]],
@@ -122,7 +123,7 @@ function exerciseCount(minutes: number, focus: WorkoutFocus) {
 }
 
 /** Una serie de trabajo menos en los ejercicios que tienen tres o más. */
-function oneSetLess(records: ExerciseRecord[]): ExerciseRecord[] {
+export function oneSetLess(records: ExerciseRecord[]): ExerciseRecord[] {
   return records.map((record) => {
     const working = record.sets.filter(isWorkingSet);
     if (working.length < 3) return record;
@@ -131,52 +132,41 @@ function oneSetLess(records: ExerciseRecord[]): ExerciseRecord[] {
   });
 }
 
-export function estimateMinutes(records: ExerciseRecord[], restSeconds: number) {
-  const seconds = records.reduce((sum, record) => {
-    const rest = record.restSeconds ?? restSeconds;
-    return sum + record.sets.reduce((acc, set) => acc + (record.unit === "seconds" ? set.value : set.value * 3 + 15) + rest, 0) - rest + 45;
-  }, 0);
-  return Math.max(5, Math.round(seconds / 60));
+export { estimateMinutes } from "@/lib/duration";
+
+/**
+ * Lo que comparten la sesión de hoy y el plan semanal: tu equipo y tus pesas, tu nivel, lo que sabemos de
+ * tu historial (cómo viene cada ejercicio, qué te molestó, qué músculos llevan pocas series) y los ejercicios
+ * que sirven (los que tienes, que no exigen una zona a cuidar y que tus pesas permiten).
+ */
+export interface Workspace {
+  input: GeneratorInput;
+  goal: WorkoutGoal;
+  level: ExerciseLevel;
+  limitations: BodyArea[];
+  equipment: Set<Equipment>;
+  loads: ReturnType<typeof availableLoads>;
+  seed: number;
+  now: number;
+  history: WorkoutEntry[];
+  context: ScoreContext;
+  usable: Exercise[];
 }
 
-export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
-  // Con energía moderada, la misma sesión de un día normal con menos volumen: un ejercicio y una serie
-  // menos (nunca más ejercicios que esa, aunque con menos series cupieran más en el tiempo).
-  if (input.readiness === "short") {
-    const full = generateWorkout({ ...input, readiness: undefined });
-    const records = oneSetLess(full.records.length > 3 ? full.records.slice(0, -1) : full.records);
-    return { ...full, records, estimatedMinutes: estimateMinutes(records, full.restSeconds), notes: ["Energía moderada: menos volumen, los mismos ejercicios clave, para sumar sin acumular fatiga.", ...full.notes] };
-  }
+export function createWorkspace(input: GeneratorInput, chosen: Exercise[] = []): Workspace {
   const goal = input.goal ?? "strength";
   const level = input.level ?? 1;
   const limitations = input.limitations ?? [];
   const equipment = availableEquipment(input.preference);
   const loads = availableLoads(input.preference);
   const seed = input.seed ?? 0;
-  const recovery = input.recovery;
-  const notes: string[] = [];
-  const focus = input.focus;
-  let count = exerciseCount(input.minutes, focus);
-  let setDelta = 0;
-
-  if (input.readiness === "recovery" && focus !== "mobility") {
-    notes.push("Tu chequeo pide recuperar: sesión más liviana, con menos series y variantes accesibles.");
-    count = Math.max(3, count - 2);
-    setDelta = -1;
-  }
-  if (limitations.length) notes.push("Se evitan ejercicios que exigen las zonas que indicaste cuidar.");
-
-  const chosen: Exercise[] = [];
-  const skippedForRecovery = new Set<string>();
-  // Lo que la selección sabe de tu historial: cómo viene cada ejercicio, qué te molestó y qué músculos
-  // llevan pocas series esta semana.
   const now = input.now ?? Date.now();
   const history = input.workouts ?? [];
   const week = weekRange(new Date(now));
   const context: ScoreContext = {
     goal,
     level,
-    recovery,
+    recovery: input.recovery,
     chosen,
     avoid: input.avoid,
     painful: painfulExercises(history, now),
@@ -207,6 +197,83 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     && exercise.level <= Math.min(3, level + (input.readiness === "recovery" ? 0 : 1))
     && !(input.exclude ?? []).includes(exercise.id));
   for (const exercise of usable) context.trends.set(exercise.id, history.length ? exerciseTrend(history, exercise.id, now) : null);
+  return { input, goal, level, limitations, equipment, loads, seed, now, history, context, usable };
+}
+
+/**
+ * El registro de un ejercicio listo para entrenar: series, rango, margen (RIR) y descanso de la prescripción,
+ * las series prellenadas con tu progresión y la carga más cercana a las pesas que tienes. `sets` fija el
+ * número de series (si no, el de la prescripción) y `focus` acorta los descansos de movilidad y cardio.
+ */
+export function buildRecord(ws: Workspace, exercise: Exercise, { role, minutes, easier = false, sets, focus, rest: restLimit }: {
+  role: ExerciseRole;
+  minutes: number;
+  easier?: boolean;
+  sets?: number;
+  focus?: WorkoutFocus;
+  /** Descanso máximo en segundos (sesiones cortas): nunca pasa de aquí, aunque el ejercicio haya salido difícil. */
+  rest?: number;
+}): { record: ExerciseRecord; adaptedReps: boolean; suggestedLoads: boolean } {
+  const { history, goal, level, input } = ws;
+  // Prescripción: series, rango, margen (RIR) y descanso según tu objetivo, nivel y el papel del ejercicio.
+  const plan = prescribe(exercise, { goal, level, role, minutes, easier });
+  const effort = history.length ? effortFor(history, exercise.id) : undefined;
+  // Muy difícil la última vez: 30 s más de descanso; dos difíciles seguidas: una serie menos.
+  const count = Math.max(2, (sets ?? plan.sets) - ((effort?.hardStreak ?? 0) >= 2 ? 1 : 0));
+  const rest = focus === "mobility" ? 15 : focus === "conditioning" ? 30 : Math.min(restLimit ?? 240, plan.rest + ((effort?.effort ?? 0) >= 4 ? 30 : 0));
+  const prescribed = plan.range[0] !== exercise.range[0] || plan.range[1] !== exercise.range[1];
+  const record: ExerciseRecord = {
+    exerciseId: exercise.id,
+    unit: exercise.unit,
+    sets: progressedSets({ ...exercise, range: plan.range }, count, history.length ? lastRecordFor(history, exercise.id) : undefined, effort),
+    restSeconds: rest,
+    ...(prescribed ? { range: plan.range } : {}),
+    ...(exercise.category === "strength" && exercise.unit === "reps" ? { rir: plan.rir } : {}),
+  };
+  // Ajuste a tus pesas: carga más cercana a la ideal y repeticiones (o una serie más) para compensar.
+  const capability = ws.loads ? loadCapability(exercise, ws.equipment) : undefined;
+  const available = capability ? ws.loads?.[capability] : undefined;
+  if (!available?.length) return { record, adaptedReps: false, suggestedLoads: false };
+  const fresh = record.sets.every((set) => set.load === 0);
+  const fit = fitLoad(exercise, fresh ? startingLoad(exercise, input.bodyKg, level) : record.sets[0].load, available, plan.range);
+  const [low, high] = fit.range;
+  record.sets = record.sets.map((set) => ({ ...set, load: fit.load, value: fresh ? low : Math.min(high, Math.max(low, set.value)) }));
+  if (fit.adapted) record.range = fit.range;
+  if (fit.extraSet && record.sets.length < 5) record.sets.push({ ...record.sets[record.sets.length - 1] });
+  return { record, adaptedReps: fit.adapted, suggestedLoads: fresh };
+}
+
+/** El porqué de un ejercicio (y si reemplaza a uno que te molestó, del mismo patrón). */
+export function whyFor(ws: Workspace, exercise: Exercise): ExerciseWhy {
+  const replaced = exercises.find((item) => ws.context.painful.has(item.id) && item.pattern === exercise.pattern && item.id !== exercise.id);
+  return whyExercise(exercise, { location: ws.input.preference.location, limitations: ws.limitations, level: ws.level, trend: ws.context.trends.get(exercise.id), favorite: ws.context.favorites?.has(exercise.id), replacedForPain: replaced?.name });
+}
+
+export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
+  // Con energía moderada, la misma sesión de un día normal con menos volumen: un ejercicio y una serie
+  // menos (nunca más ejercicios que esa, aunque con menos series cupieran más en el tiempo).
+  if (input.readiness === "short") {
+    const full = generateWorkout({ ...input, readiness: undefined });
+    const records = oneSetLess(full.records.length > 3 ? full.records.slice(0, -1) : full.records);
+    return { ...full, records, estimatedMinutes: estimateMinutes(records, full.restSeconds), notes: ["Energía moderada: menos volumen, los mismos ejercicios clave, para sumar sin acumular fatiga.", ...full.notes] };
+  }
+  const chosen: Exercise[] = [];
+  const ws = createWorkspace(input, chosen);
+  const { level, limitations, seed, context, usable } = ws;
+  const recovery = input.recovery;
+  const notes: string[] = [];
+  const focus = input.focus;
+  let count = exerciseCount(input.minutes, focus);
+  let setDelta = 0;
+
+  if (input.readiness === "recovery" && focus !== "mobility") {
+    notes.push("Tu chequeo pide recuperar: sesión más liviana, con menos series y variantes accesibles.");
+    count = Math.max(3, count - 2);
+    setDelta = -1;
+  }
+  if (limitations.length) notes.push("Se evitan ejercicios que exigen las zonas que indicaste cuidar.");
+
+  const skippedForRecovery = new Set<string>();
 
   const zone = zoneById(input.zone);
   if (zone) {
@@ -270,36 +337,12 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
   let suggestedLoads = false;
   let mainPicked = false;
   const records: ExerciseRecord[] = ordered.map((exercise) => {
-    // Prescripción: series, rango, margen (RIR) y descanso según tu objetivo, nivel y el papel del ejercicio.
     const role = roleOf(exercise, !mainPicked && isCompound(exercise));
     if (role === "main") mainPicked = true;
-    const plan = prescribe(exercise, { goal, level, role, minutes: input.minutes, easier: setDelta < 0 });
-    const effort = history.length ? effortFor(history, exercise.id) : undefined;
-    // Muy difícil la última vez: 30 s más de descanso; dos difíciles seguidas: una serie menos.
-    const count = Math.max(2, plan.sets - ((effort?.hardStreak ?? 0) >= 2 ? 1 : 0));
-    const rest = focus === "mobility" ? 15 : focus === "conditioning" ? 30 : Math.min(240, plan.rest + ((effort?.effort ?? 0) >= 4 ? 30 : 0));
-    const prescribed = plan.range[0] !== exercise.range[0] || plan.range[1] !== exercise.range[1];
-    const record: ExerciseRecord = {
-      exerciseId: exercise.id,
-      unit: exercise.unit,
-      sets: progressedSets({ ...exercise, range: plan.range }, count, history.length ? lastRecordFor(history, exercise.id) : undefined, effort),
-      restSeconds: rest,
-      ...(prescribed ? { range: plan.range } : {}),
-      ...(exercise.category === "strength" && exercise.unit === "reps" ? { rir: plan.rir } : {}),
-    };
-    // Ajuste a tus pesas: carga más cercana a la ideal y repeticiones (o una serie más) para compensar.
-    const capability = loads ? loadCapability(exercise, equipment) : undefined;
-    const available = capability ? loads?.[capability] : undefined;
-    if (!available?.length) return record;
-    const fresh = record.sets.every((set) => set.load === 0);
-    const fit = fitLoad(exercise, fresh ? startingLoad(exercise, input.bodyKg, level) : record.sets[0].load, available, plan.range);
-    if (fresh) suggestedLoads = true;
-    if (fit.adapted) adaptedReps = true;
-    const [low, high] = fit.range;
-    record.sets = record.sets.map((set) => ({ ...set, load: fit.load, value: fresh ? low : Math.min(high, Math.max(low, set.value)) }));
-    if (fit.adapted) record.range = fit.range;
-    if (fit.extraSet && record.sets.length < 5) record.sets.push({ ...record.sets[record.sets.length - 1] });
-    return record;
+    const built = buildRecord(ws, exercise, { role, minutes: input.minutes, easier: setDelta < 0, focus });
+    adaptedReps ||= built.adaptedReps;
+    suggestedLoads ||= built.suggestedLoads;
+    return built.record;
   });
   const restSeconds = Math.round(records.reduce((sum, record) => sum + (record.restSeconds ?? 60), 0) / Math.max(1, records.length) / 15) * 15 || 60;
   if (adaptedReps) notes.push("Ajustamos repeticiones y series a las pesas que tienes: con peso liviano, más repeticiones y bajada lenta.");
@@ -314,11 +357,10 @@ export function generateWorkout(input: GeneratorInput): GeneratedWorkout {
     else break;
   }
 
-  // El porqué de cada ejercicio (y si reemplaza a uno que te molestó, del mismo patrón).
+  // El porqué de cada ejercicio.
   const why = Object.fromEntries(records.map((record) => {
     const exercise = exercises.find((item) => item.id === record.exerciseId);
-    const replaced = exercise ? exercises.find((item) => context.painful.has(item.id) && item.pattern === exercise.pattern && item.id !== exercise.id) : undefined;
-    return [record.exerciseId, exercise ? whyExercise(exercise, { location: input.preference.location, limitations, level, trend: context.trends.get(exercise.id), favorite: context.favorites?.has(exercise.id), replacedForPain: replaced?.name }) : { role: "", variant: "" }];
+    return [record.exerciseId, exercise ? whyFor(ws, exercise) : { role: "", variant: "" }];
   }));
 
   return {
@@ -345,15 +387,23 @@ export function suggestedFocus(recovery: Record<MuscleGroup, number> | undefined
 }
 
 /**
- * Nivel para elegir ejercicios: el de tu evaluación y, con constancia, más. Cuenta las semanas con dos o
- * más sesiones entre las últimas 11 terminadas: con 5, intermedio; con 10, avanzado. Nunca baja de lo que
- * respondiste al empezar.
+ * Nivel para elegir ejercicios y volumen: no sale de cuántos años dices que entrenas, sino de lo que haces.
+ * Quien empieza parte del nivel 1; quien dice tener experiencia, del 2 (la app arranca conservadora). Con 5
+ * semanas de dos o más sesiones entre las últimas 11 se llega a intermedio; con 10 y progreso real (al menos
+ * dos ejercicios que suben en las últimas semanas), a avanzado. Nunca baja de lo que respondiste al empezar
+ * (con un tope de intermedio): lo avanzado se gana con el historial.
  */
 export function trainingLevel(activities: string[] | undefined, workouts: WorkoutEntry[], now: Date): ExerciseLevel {
-  const base = levelFromActivities(activities);
+  const declared = levelFromActivities(activities);
   const steady = weeklySeries(workouts, 12, now).slice(0, -1).filter((week) => week.sessions >= 2).length;
-  const earned: ExerciseLevel = steady >= 10 ? 3 : steady >= 5 ? 2 : 1;
-  return Math.max(base, earned) as ExerciseLevel;
+  let earned: ExerciseLevel = steady >= 5 ? 2 : 1;
+  if (steady >= 10) {
+    const nowMs = now.getTime();
+    const ids = new Set(workouts.flatMap((workout) => (workout.records ?? []).map((record) => record.exerciseId)));
+    const progressing = [...ids].filter((id) => exerciseTrend(workouts, id, nowMs)?.progressing).length;
+    if (progressing >= 2) earned = 3;
+  }
+  return Math.max(Math.min(declared, 2), earned) as ExerciseLevel;
 }
 
 /** Nivel orientativo a partir de la evaluación inicial. */

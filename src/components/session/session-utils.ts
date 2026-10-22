@@ -202,6 +202,7 @@ export function sourceLabel(source?: WorkoutSource) {
     case "program": return `Programa · semana ${source.week}`;
     case "routine": return "Rutina guardada";
     case "generated": return "Sesión sugerida";
+    case "plan": return "Tu plan";
     default: return "Entrenamiento libre";
   }
 }

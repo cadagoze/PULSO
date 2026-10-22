@@ -56,7 +56,8 @@ export function useHomeCoach(now: number) {
     recovery: today.recovery ?? fresh,
     focus: today.focus,
     // La recuperación explica el enfoque sólo si lo eligió ella (no tú, ni un programa).
-    focusByRecovery: source === "custom" && !today.zone && !today.edited && today.focus === today.suggested,
+    focusByRecovery: source === "custom" && !today.zone && !today.edited && !today.planDay && today.focus === today.suggested,
+    planDay: today.planDay ? { name: today.planDay.name, split: today.planDay.split, note: today.planDay.note } : undefined,
     workouts,
     week,
     short: today.short,

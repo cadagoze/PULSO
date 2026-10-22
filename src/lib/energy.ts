@@ -44,7 +44,7 @@ export interface GoalGuide {
   intervals: { min: number; max: number } | null;
   /** Minutos de actividad moderada por semana (salud general). */
   activityMinutes: number | null;
-  /** Series semanales por grupo muscular (al ganar músculo): de 4 al empezar a 20 con experiencia (ver `weeklySetTarget`). */
+  /** Series semanales por grupo muscular (al ganar músculo): de 4 al empezar a 20 con experiencia (ver `weeklyTarget`). */
   setsPerMuscle: { min: number; max: number } | null;
   steps: string;
   focus: string;

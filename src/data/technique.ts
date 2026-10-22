@@ -31,7 +31,7 @@ export function tempoCue(exercise: Exercise) {
 export function normalEffort(exercise: Exercise) {
   if (exercise.category === "mobility") return "Un estiramiento suave y cómodo, nunca dolor.";
   if (exercise.category === "cardio") return "El pulso y la respiración suben: deberías poder decir frases cortas.";
-  return "Es normal el cansancio, el ardor en el músculo y respirar agitado.";
+  return "Es normal el cansancio, el ardor en el músculo y respirar agitado. Las agujetas, al empezar o con ejercicios nuevos, también; no miden qué tan bueno fue el entrenamiento.";
 }
 
 /** Señales para detenerse (distintas del esfuerzo normal). */

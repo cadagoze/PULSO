@@ -19,13 +19,13 @@ export function featuredPrograms({ location, level, hasDumbbells }: { location: 
 }
 
 /**
- * El que PULSO recomienda según tus días: 2 o 3, Full Body; 4, Torso / Pierna; 5 o más, Push / Pull / Legs,
- * sólo desde nivel intermedio (a quien empieza, Torso / Pierna). En casa, Full Body.
+ * El que PULSO recomienda según tus días y tu nivel: Full Body para quien empieza, para 2 o 3 días y en casa;
+ * Torso / Pierna desde 4 días; Push / Pull / Legs sólo con experiencia (nivel avanzado) y 5 días o más.
  */
 export function recommendedProgram(featured: Program[], { location, days, level = 2 }: { location: TrainingLocation; days: number; level?: number }): Program | undefined {
   const find = (id: string) => featured.find((program) => program.id === id);
-  if (location === "home" || days <= 3) return featured[0];
-  if (days >= 5 && level >= 2) return find("push-pull-legs") ?? find("torso-pierna") ?? featured[0];
+  if (location === "home" || days <= 3 || level <= 1) return featured[0];
+  if (days >= 5 && level >= 3) return find("push-pull-legs") ?? find("torso-pierna") ?? featured[0];
   return find("torso-pierna") ?? featured[0];
 }
 

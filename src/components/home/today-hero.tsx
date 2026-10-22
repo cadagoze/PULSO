@@ -90,15 +90,15 @@ export function TodayHero({ now, home }: { now: number; home: HomeCoach }) {
   const recovering = coach.recommendation === "recovery" || coach.recommendation === "mobility";
   const sessionTitle = program?.next
     ? program.day ? `${program.day.name} · ${program.day.focus}` : programSessionName(program.program, program.next.week, program.next.day)
-    : zoneById(today.zone)?.label ?? focusLabels[today.focus];
+    : zoneById(today.zone)?.label ?? today.planDay?.name ?? focusLabels[today.focus];
   const sessionPlace = program && program.program.location !== "any" ? (program.program.location === "gym" ? "Gimnasio" : "Casa") : place;
   const begin = () => {
     if (program?.next) {
       void startSession(program.program, program.next.week, program.next.day, { easier: coach.recommendation === "train-reduced", short: today.short });
       return;
     }
-    const name = today.short ? today.name.replace(/\d+ min$/, `${SHORT_MINUTES} min`) : today.name;
-    void start({ name, records: today.fullRecords, restSeconds: today.restSeconds, source: { type: "generated" } });
+    const name = today.short ? `${today.name.replace(/ · \d+ min$/, "")} · ${SHORT_MINUTES} min` : today.name;
+    void start({ name, records: today.fullRecords, restSeconds: today.restSeconds, source: today.planDay ? { type: "plan", dayId: today.planDay.id } : { type: "generated" } });
   };
   const photoKind = recovering ? "mobility"
     : program ? heroKind({ programGoal: program.program.goal, location: program.program.location === "any" ? preference.location : program.program.location })

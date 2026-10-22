@@ -1,8 +1,10 @@
 import { equipmentLabels, muscleLabels } from "@/data/catalog";
+import { defaultQuality, exerciseQuality } from "@/data/exercise-quality";
 import { estimateOneRepMax } from "@/lib/progression";
 import { isCompound } from "@/lib/prescription";
 import { isWorkingSet } from "@/lib/training";
 import { joinList } from "@/lib/utils";
+import { weeklyTarget } from "@/lib/volume";
 import type { BodyArea, Equipment, Exercise, ExerciseLevel, MovementPattern, MuscleGroup, TrainingLocation, WorkoutEntry } from "@/types";
 
 /**
@@ -15,11 +17,6 @@ import type { BodyArea, Equipment, Exercise, ExerciseLevel, MovementPattern, Mus
 type SelectionGoal = "strength" | "muscle" | "weight" | "energy" | "habits";
 const DAY = 86_400_000;
 
-/** Series semanales por músculo como referencia de producto (no norma médica): principiante 4–8, intermedio 8–12, avanzado 10–20. */
-export function weeklySetTarget(level: ExerciseLevel): [number, number] {
-  return level === 1 ? [4, 8] : level === 2 ? [8, 12] : [10, 20];
-}
-
 export interface ExerciseTrend {
   /** Sesiones con el ejercicio en las últimas 6 semanas. */
   sessions: number;
@@ -27,7 +24,7 @@ export interface ExerciseTrend {
   weeks: number;
   /** Mejoró desde la primera de esas sesiones (más carga estimada, repeticiones o segundos). */
   progressing: boolean;
-  /** Tres o más sesiones sin superar su mejor marca anterior. */
+  /** Tres sesiones en 10 días o más sin superar su mejor marca anterior. */
   stalled: boolean;
 }
 
@@ -46,7 +43,9 @@ export function exerciseTrend(workouts: WorkoutEntry[], exerciseId: number, now:
   if (!points.length) return null;
   const last = points[points.length - 1];
   const best = (list: typeof points) => Math.max(...list.map((point) => point.value));
-  const stalled = points.length >= 3 && best(points.slice(-3)) <= best(points.slice(0, -3).length ? points.slice(0, -3) : points.slice(0, 1));
+  // Estancado: tres exposiciones, repartidas en al menos 10 días, sin superar tu mejor marca anterior (una sola mala sesión no cuenta).
+  const lastThree = points.slice(-3);
+  const stalled = points.length >= 3 && lastThree[2].at - lastThree[0].at >= 10 * DAY && best(lastThree) <= best(points.slice(0, -3).length ? points.slice(0, -3) : points.slice(0, 1));
   return {
     sessions: points.length,
     weeks: Math.max(1, Math.round((last.at - points[0].at) / (7 * DAY))),
@@ -110,15 +109,18 @@ export function historyScore(exercise: Exercise, context: Pick<ScoreContext, "av
 export function scoreCandidate(exercise: Exercise, context: ScoreContext) {
   const fresh = freshness(exercise, context.recovery);
   const progression = exercise.increment > 0 ? 14 : exercise.harder ? 8 : 4;
-  const levelFit = 10 - Math.abs(exercise.level - context.level) * 6;
+  // Un ejercicio más difícil que tu nivel pesa mucho en contra; uno más fácil, poco (los básicos sirven a todos).
+  const levelFit = 10 - Math.max(0, exercise.level - context.level) * 6 - Math.max(0, context.level - exercise.level) * 2;
   const overlap = context.chosen.some((item) => item.primary.some((muscle) => exercise.primary.includes(muscle))) ? -25 : 0;
-  const [low] = weeklySetTarget(context.level);
+  const low = weeklyTarget(context.level, context.goal).low;
   const need = context.weekSets && exercise.primary.length
     ? (exercise.primary.reduce((sum, muscle) => sum + Math.max(0, low - (context.weekSets?.[muscle] ?? 0)) / low, 0) / exercise.primary.length) * 12
     : 0;
   // El desempate cambia con «Otra variante»; sin pedirla, pesa poco: nada de variedad al azar.
   const rotation = hash(exercise.id * 7919 + context.seed) % (context.exploring ? 30 : 8);
-  return { fresh, score: fresh * 0.5 + progression + levelFit + overlap + goalFit(exercise, context.goal) + need + historyScore(exercise, context) + rotation };
+  // Entre ejercicios que trabajan lo mismo, el que más personas controlan, toleran y progresan.
+  const quality = (exerciseQuality[exercise.id] ?? defaultQuality) * 3;
+  return { fresh, score: fresh * 0.5 + progression + levelFit + overlap + goalFit(exercise, context.goal) + need + historyScore(exercise, context) + rotation + quality };
 }
 
 /** Prioridad entre compuestos: lo que más exige (sentadilla, bisagra) primero y el trabajo a una pierna al final. */

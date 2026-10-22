@@ -11,6 +11,7 @@ import { PlaceBar } from "@/components/train/place-picker";
 import { RoutineEditor } from "@/components/train/routine-editor";
 import type { Routine } from "@/components/train/routines-section";
 import { TodayCard } from "@/components/train/today-card";
+import { PlanCard } from "@/components/train/plan-card";
 import { TodayExercises } from "@/components/train/today-exercises";
 import { useActiveProgram, useTodayPlan } from "@/components/train/today-plan";
 import type { TodaySource } from "@/components/train/today-plan";
@@ -94,6 +95,7 @@ export function TrainHub() {
       <div className="train-extra">
         <TodayExercises source={source} today={today} active={active} visible={listOpen} onSaveRoutine={saveToday} />
       </div>
+      {source === "custom" && <PlanCard today={today} now={now} />}
       <TrainMore initial={initialPanel} onCreate={createRoutine} onEdit={(routine) => openEditor(routine, false)} notify={toast.show} />
 
       <AdjustSheet

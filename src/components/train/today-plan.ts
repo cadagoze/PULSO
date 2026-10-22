@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { muscleRecovery } from "@/lib/analytics";
 import { availableEquipment, estimateMinutes, generateWorkout, levelFromActivities, suggestedFocus, todayGeneratorInput, todayLimitations, trainingGoal, trainingLevel } from "@/lib/generator";
+import { buildTrainingPlan, planInputFor, planSession, todayPlanDay } from "@/lib/training-plan";
 import type { WorkoutFocus } from "@/lib/generator";
 import { nextProgramSession, programById, programSessionRecords, programTotalSessions, sessionKey } from "@/lib/programs";
 import { carriedPain, recentHardStreak } from "@/lib/adaptation";
@@ -68,21 +69,41 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   const learnedShort = !readiness && (adaptation.carriedPain.length > 0 || adaptation.hardStreak >= 2);
   const recommendation = readiness?.recommendation ?? (learnedShort ? "short" : undefined);
   const suggested = suggestedFocus(recovery, recommendation);
-  const focus = focusChoice ?? suggested;
   const minutes = minutesChoice ?? profile?.recommendation.sessionMinutes ?? 30;
 
   // Una sola sesión de hoy para Inicio y Entrenar (aquí se puede ajustar). Se arma con la hora en punto:
   // la semilla es del día y la recuperación cambia de hora en hora, así no se rehace cada minuto.
   const pain = readiness ? readiness.pain : adaptation.carriedPain.length ? adaptation.carriedPain : undefined;
   const avoid = settings.swappedOut;
+
+  // Tu plan: la estructura semanal (Full Body A/B, Torso / Pierna…). Hoy toca el día que sigue en el ciclo;
+  // si eliges otro enfoque o una zona, o tu chequeo pide recuperar, se arma la sesión como siempre.
+  const trainingPlan = useMemo(() => {
+    if (!hydrated) return null;
+    return buildTrainingPlan(planInputFor({ profile, nutritionGoal: nutrition?.goal, settings, preference, workouts, favorites, bodyKg, now: hourNow }));
+  }, [bodyKg, favorites, hydrated, hourNow, nutrition?.goal, preference, profile, settings, workouts]);
+  const fromPlan = Boolean(trainingPlan) && focusChoice === null && !zone && recommendation !== "recovery";
+  const planned = useMemo(() => {
+    if (!fromPlan || !trainingPlan) return null;
+    const base = planInputFor({ profile, nutritionGoal: nutrition?.goal, settings, preference, workouts, favorites, bodyKg, now: hourNow });
+    const { day, note } = todayPlanDay(trainingPlan, workouts, hourNow, recovery);
+    // Con un chequeo de molestias, otro tiempo o «Otra variante», el día se rearma con eso; si no, es el del plan.
+    const adapted = Boolean(pain?.length) || minutesChoice !== null || variant > 0;
+    const input = adapted ? { ...base, limitations: todayLimitations(profile?.limitations, pain), minutesOverride: minutesChoice ?? undefined, variant } : base;
+    const work = adapted ? buildTrainingPlan(input) : trainingPlan;
+    const chosen = work.days.find((item) => item.id === day.id) ?? day;
+    return { session: planSession(input, work, chosen, { readiness: recommendation === "short" ? "short" : undefined }), day: chosen, note };
+  }, [bodyKg, favorites, fromPlan, hourNow, minutesChoice, nutrition?.goal, pain, preference, profile, recommendation, recovery, settings, trainingPlan, variant, workouts]);
+  const focus = focusChoice ?? planned?.session.focus ?? suggested;
   const plan = useMemo(() => {
     if (!hydrated) return null;
+    if (planned) return planned.session;
     return generateWorkout(todayGeneratorInput({ profile, nutritionGoal: nutrition?.goal, preference, workouts, readiness: recommendation, pain, recovery, now: hourNow, minutes, focus, zone: zone ?? undefined, variant, bodyKg, avoid, favorites }));
-  }, [avoid, bodyKg, favorites, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, preference, profile, recommendation, recovery, variant, workouts, zone]);
+  }, [avoid, bodyKg, favorites, hydrated, focus, minutes, hourNow, nutrition?.goal, pain, planned, preference, profile, recommendation, recovery, variant, workouts, zone]);
   const limitations = useMemo(() => todayLimitations(profile?.limitations, pain), [pain, profile?.limitations]);
 
   // La lista editable se reinicia cuando cambian las entradas del generador.
-  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", JSON.stringify(avoid ?? {}), favorites.join(","), workouts.length, todayKey].join("|");
+  const planKey = [zone ?? "", preference.location, preference.equipment.join(","), (preference.gymEquipment ?? []).join(","), JSON.stringify(preference.loads ?? {}), minutes, focus, variant, recommendation ?? "", (pain ?? []).join(","), nutrition?.goal ?? "", JSON.stringify(avoid ?? {}), favorites.join(","), planned?.day.id ?? "", trainingPlan?.split ?? "", workouts.length, todayKey].join("|");
   const edited = edits !== null && edits.key === planKey;
   const baseRecords = useMemo(() => (edits !== null && edits.key === planKey ? edits.records : plan?.records ?? []), [edits, plan, planKey]);
   const restSeconds = plan?.restSeconds ?? settings.defaultRest;
@@ -120,6 +141,9 @@ export function useTodayPlan(now: number, initialZone?: string | null) {
   return {
     ready: Boolean(plan),
     plan,
+    trainingPlan,
+    /** El día de «Tu plan» que toca hoy (null si armaste otro enfoque o una zona). */
+    planDay: planned && trainingPlan ? { id: planned.day.id, name: planned.day.name, split: trainingPlan.label, note: planned.note } : null,
     name,
     focus,
     zone,

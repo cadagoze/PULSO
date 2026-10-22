@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { ArrowDown, ArrowUp, Equal } from "lucide-react";
 import { Button } from "@/components/ui";
 import { trainingReview } from "@/lib/training-review";
+import { AdjustmentList } from "@/components/train/adjustment-list";
+import { useWeekAdjustments } from "@/components/train/use-week-adjustments";
 import { useSettings, useWorkouts } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,8 @@ export function WeekReview({ now }: { now: number }) {
     () => (now ? trainingReview(workouts, { now: new Date(now), goal: Math.max(1, settings.weeklyGoal), unit: settings.unit, seen: settings.weekReviewSeen }) : null),
     [now, settings.unit, settings.weekReviewSeen, settings.weeklyGoal, workouts],
   );
+  // Lo que PULSO ajustó en las series de esta semana, con su motivo (sólo si hay revisión que mostrar).
+  const adjustments = useWeekAdjustments(now, review !== null);
   if (!review) return null;
   return (
     <section className="home-review" aria-labelledby="home-review-title">
@@ -27,6 +31,7 @@ export function WeekReview({ now }: { now: number }) {
       <ul className="home-review-lines">
         {review.lines.map((line) => <li key={line}>{line}</li>)}
       </ul>
+      {adjustments.length > 0 && <AdjustmentList items={adjustments} />}
       {review.next.length > 0 && (
         <div className="home-review-next">
           <p className="meta">Para esta semana</p>
